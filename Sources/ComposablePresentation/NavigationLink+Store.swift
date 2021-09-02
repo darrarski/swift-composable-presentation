@@ -1,24 +1,23 @@
 import ComposableArchitecture
 import SwiftUI
 
-public extension NavigationLink {
+extension NavigationLink {
   /// Creates `NavigationLink` using a `Store` with an optional `State`.
   ///
-  /// - Link is active if `State` is non-`nil` and inactive when it's `nil`.
-  /// - Link's destination is generated using last non-`nil` state value.
+  /// The link is active if `State` is non-`nil` and inactive when it's `nil`.
   ///
   /// - Parameters:
-  ///   - store: A store with optional state.
-  ///   - destination: A closure that creates link's destination view.
-  ///   - destinationStore: A store with non-optional state.
-  ///   - action: A closure invoked when the link is activated or deactivated.
-  ///   - isActive: Determines if the link is active or inactive.
-  ///   - label: The link's label.
-  /// - Returns: Navigation link wrapped in a `WithViewStore`.
-  static func store<State, Action, DestinationContent>(
+  ///   - store: Store with an optional state.
+  ///   - state: Optional closure that takes `State?` and returns `State?` used to create destination view. Default value returns unchnaged state.
+  ///   - destination: Closure that creates destination view with a store with non-optional state.
+  ///   - setActive: Closure invoked when link is activated and deactivated.
+  ///   - label: View used as a link's label.
+  /// - Returns: `NavigationLink` wrapped in a `WithViewStore`.
+  public static func store<State, Action, DestinationContent>(
     _ store: Store<State?, Action>,
-    destination: @escaping (_ destinationStore: Store<State, Action>) -> DestinationContent,
-    action: @escaping (_ isActive: Bool) -> Void,
+    state: @escaping (State?) -> State? = { $0 },
+    destination: @escaping (Store<State, Action>) -> DestinationContent,
+    setActive: @escaping (Bool) -> Void,
     label: @escaping () -> Label
   ) -> some View
   where DestinationContent: View,
@@ -27,12 +26,12 @@ public extension NavigationLink {
     WithViewStore(store.scope(state: { $0 != nil })) { viewStore in
       NavigationLink(
         destination: IfLetStore(
-          store.scope(state: replayNonNil()),
+          store.scope(state: state),
           then: destination
         ),
         isActive: Binding(
           get: { viewStore.state },
-          set: action
+          set: setActive
         ),
         label: label
       )
@@ -40,31 +39,30 @@ public extension NavigationLink {
   }
 }
 
-public extension View {
+extension View {
   /// Adds `NavigationLink` without a label, using `Store` with an optional `State`.
   ///
-  /// - Link is active if `State` is non-`nil` and inactive when it's `nil`.
-  /// - Link's destination is generated using last non-`nil` state value.
+  /// The link is active if `State?` is non-`nil` and inactive when it's `nil`.
   ///
   /// - Parameters:
-  ///   - store: store with optional state
-  ///   - destination: closure that creates link's destination view
-  ///   - destinationStore: store with non-optional state
-  ///   - onDismiss: closure invoked when link is deactivated
-  /// - Returns: view with label-less `NavigationLink` added as a background view
-  func navigationLink<State, Action, DestinationContent>(
+  ///   - store: Store with an optional state.
+  ///   - state: Optional closure that takes `State?` and returns `State?` used to create destination view. Default value returns unchnaged state.
+  ///   - destination: Closure that creates destination view with a store with non-optional state.
+  ///   - onDismiss: Closure invoked when link is deactivated.
+  /// - Returns: View with label-less `NavigationLink` added in a background view.
+  public func navigationLink<State, Action, Destination: View>(
     _ store: Store<State?, Action>,
-    destination: @escaping (_ destinationStore: Store<State, Action>) -> DestinationContent,
+    state: @escaping (State?) -> State? = { $0 },
+    destination: @escaping (Store<State, Action>) -> Destination,
     onDismiss: @escaping () -> Void
-  ) -> some View
-  where DestinationContent: View
-  {
+  ) -> some View {
     background(
       NavigationLink.store(
         store,
+        state: state,
         destination: destination,
-        action: { isActive in
-          if isActive == false {
+        setActive: { active in
+          if active == false {
             onDismiss()
           }
         },

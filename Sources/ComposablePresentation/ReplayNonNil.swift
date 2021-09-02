@@ -15,7 +15,7 @@ public func replayNonNil<A, B>(_ inputClosure: @escaping (A) -> B?) -> (A) -> B?
   }
 }
 
-/// Creates a closure (T?) -> T? that returns last non-`nil` T passed to it.
+/// Creates a closure `(T?) -> T?` that returns last non-`nil` `T` passed to it.
 ///
 /// - Returns: The closure.
 public func replayNonNil<T>() -> (T?) -> T? {

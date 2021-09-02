@@ -30,21 +30,11 @@ final class ReducerPresentesTests: XCTestCase {
     store.send(.detail(.performEffect))
 
     XCTAssertTrue(didSubscribeToEffect)
-    didSubscribeToEffect = false
 
     store.send(.dismissDetail) {
       $0.detail = nil
     }
 
-    XCTAssertTrue(didCancelEffect)
-    didCancelEffect = false
-
-    // All actions sent to the store at this point will be dispatched with a last non-`nil` state.
-    // Effects returned by these actions will be canceled immediately.
-
-    store.send(.detail(.performEffect))
-
-    XCTAssertTrue(didSubscribeToEffect)
     XCTAssertTrue(didCancelEffect)
   }
 }
@@ -82,7 +72,7 @@ private let masterReducer = MasterReducer { state, action, env in
   }
 }
 .presents(
-  detailReducer,
+  detailReducer.optional(),
   state: \.detail,
   action: /MasterAction.detail,
   environment: \.detail
