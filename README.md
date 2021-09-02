@@ -5,7 +5,7 @@
 
 ## 📝 Description
 
-Presentation helpers for [ComposableArchitecture](https://github.com/pointfreeco/swift-composable-architecture/) to be used in SwiftUI applications.
+Navigation helpers for SwiftUI applications build with [ComposableArchitecture](https://github.com/pointfreeco/swift-composable-architecture/).
 
 More info about the concept can be found in the article: [Thoughts on SwiftUI navigation](https://github.com/darrarski/darrarski/blob/main/2021/04/Thoughts-on-SwiftUI-navigation/README.md).
 
