@@ -9,15 +9,15 @@ extension NavigationLink {
   /// - Parameters:
   ///   - store: Store with an optional state.
   ///   - state: Optional closure that takes `State?` and returns `State?` used to create destination view. Default value returns unchnaged state.
-  ///   - destination: Closure that creates destination view with a store with non-optional state.
   ///   - setActive: Closure invoked when link is activated and deactivated.
+  ///   - destination: Closure that creates destination view with a store with non-optional state.
   ///   - label: View used as a link's label.
   /// - Returns: `NavigationLink` wrapped in a `WithViewStore`.
   public static func store<State, Action, DestinationContent>(
     _ store: Store<State?, Action>,
     state: @escaping (State?) -> State? = { $0 },
-    destination: @escaping (Store<State, Action>) -> DestinationContent,
     setActive: @escaping (Bool) -> Void,
+    destination: @escaping (Store<State, Action>) -> DestinationContent,
     label: @escaping () -> Label
   ) -> some View
   where DestinationContent: View,
@@ -47,25 +47,25 @@ extension View {
   /// - Parameters:
   ///   - store: Store with an optional state.
   ///   - state: Optional closure that takes `State?` and returns `State?` used to create destination view. Default value returns unchnaged state.
-  ///   - destination: Closure that creates destination view with a store with non-optional state.
   ///   - onDismiss: Closure invoked when link is deactivated.
+  ///   - destination: Closure that creates destination view with a store with non-optional state.
   /// - Returns: View with label-less `NavigationLink` added in a background view.
   public func navigationLink<State, Action, Destination: View>(
     _ store: Store<State?, Action>,
     state: @escaping (State?) -> State? = { $0 },
-    destination: @escaping (Store<State, Action>) -> Destination,
-    onDismiss: @escaping () -> Void
+    onDismiss: @escaping () -> Void,
+    destination: @escaping (Store<State, Action>) -> Destination
   ) -> some View {
     background(
       NavigationLink.store(
         store,
         state: state,
-        destination: destination,
         setActive: { active in
           if active == false {
             onDismiss()
           }
         },
+        destination: destination,
         label: EmptyView.init
       )
     )

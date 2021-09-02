@@ -15,11 +15,16 @@ struct App: SwiftUI.App {
   }
 }
 
+// MARK: - App component
+
 struct AppState {
   var first = FirstState()
 }
 
 enum AppAction {
+  case dismissSecond
+  case dismissThird
+  case dismissFourth
   case first(FirstAction)
 }
 
@@ -27,34 +32,8 @@ let appReducer = Reducer<AppState, AppAction, Void>.combine(
   firstReducer.pullback(
     state: \.first,
     action: /AppAction.first,
-    environment: { $0 }
-  ),
-
-  Reducer { state, action, _ in
-    switch action {
-    case .first(.didTapPresentSecond):
-      state.first.second = SecondState()
-      return .none
-
-    case .first(.didDismissSecond),
-         .first(.second(.didTapDismissSecond)),
-         .first(.second(.third(.didTapDismissSecond))):
-      state.first.second = nil
-      return .none
-
-    case .first(.second(.didTapPresentThird)):
-      state.first.second?.third = ThirdState()
-      return .none
-
-    case .first(.second(.didDismissThird)),
-         .first(.second(.third(.didTapDismissThird))):
-      state.first.second?.third = nil
-      return .none
-
-    case .first(_):
-      return .none
-    }
-  }
+    environment: { () }
+  )
 )
 
 struct AppView: View {
@@ -130,13 +109,17 @@ struct TimerView: View {
 struct FirstState {
   var timer = TimerState()
   var second: SecondState?
+  var sheet: SheetState?
 }
 
 enum FirstAction {
   case didTapPresentSecond
   case didDismissSecond
+  case didTapPresentSheet
+  case didDismissSheet
   case timer(TimerAction)
   case second(SecondAction)
+  case sheet(SheetAction)
 }
 
 let firstReducer = Reducer<FirstState, FirstAction, Void>.combine(
@@ -144,12 +127,50 @@ let firstReducer = Reducer<FirstState, FirstAction, Void>.combine(
     state: \.timer,
     action: /FirstAction.timer,
     environment: { () }
-  )
+  ),
+
+  Reducer { state, action, _ in
+    switch action {
+    case .didTapPresentSecond:
+      state.second = SecondState()
+      return .none
+
+    case .didDismissSecond,
+         .second(.didTapDismissSecond),
+         .second(.third(.didTapDismissSecond)):
+      state.second = nil
+      return .none
+
+    case .didTapPresentSheet:
+      state.sheet = SheetState()
+      return .none
+
+    case .didDismissSheet,
+         .sheet(.didTapDismiss):
+      state.sheet = nil
+      return .none
+
+    case .timer(_):
+      return .none
+
+    case .second(_):
+      return .none
+
+    case .sheet(_):
+      return .none
+    }
+  }
 )
 .presents(
   secondReducer.optional(),
   state: \.second,
   action: /FirstAction.second,
+  environment: { () }
+)
+.presents(
+  sheetReducer.optional(),
+  state: \.sheet,
+  action: /FirstAction.sheet,
   environment: { () }
 )
 
@@ -164,9 +185,13 @@ struct FirstView: View {
           action: FirstAction.timer
         ))
         .padding()
-        
+
         Button(action: { viewStore.send(.didTapPresentSecond) }) {
           Text("Present Second").padding()
+        }
+
+        Button(action: { viewStore.send(.didTapPresentSheet) }) {
+          Text("Present Sheet").padding()
         }
       }
     }
@@ -176,8 +201,14 @@ struct FirstView: View {
     .navigationLink(
       store.scope(state: \.second, action: FirstAction.second),
       state: replayNonNil(),
-      destination: SecondView.init(store:),
-      onDismiss: { ViewStore(store.stateless).send(.didDismissSecond) }
+      onDismiss: { ViewStore(store.stateless).send(.didDismissSecond) },
+      destination: SecondView.init(store:)
+    )
+    .sheet(
+      store.scope(state: \.sheet, action: FirstAction.sheet),
+      state: replayNonNil(),
+      onDismiss: { ViewStore(store.stateless).send(.didDismissSheet) },
+      destination: SheetView.init(store:)
     )
   }
 }
@@ -201,8 +232,30 @@ let secondReducer = Reducer<SecondState, SecondAction, Void>.combine(
   timerReducer.pullback(
     state: \.timer,
     action: /SecondAction.timer,
-    environment: { $0 }
-  )
+    environment: { () }
+  ),
+
+  Reducer { state, action, _ in
+    switch action {
+    case .didTapDismissSecond:
+      return .none
+
+    case .didTapPresentThird:
+      state.third = ThirdState()
+      return .none
+
+    case .didDismissThird,
+         .third(.didTapDismissThird):
+      state.third = nil
+      return .none
+
+    case .timer(_):
+      return .none
+
+    case .third(_):
+      return .none
+    }
+  }
 )
 .presents(
   thirdReducer.optional(),
@@ -238,8 +291,8 @@ struct SecondView: View {
     .navigationLink(
       store.scope(state: \.third, action: SecondAction.third),
       state: replayNonNil(),
-      destination: ThirdView.init(store:),
-      onDismiss: { ViewStore(store.stateless).send(.didDismissThird) }
+      onDismiss: { ViewStore(store.stateless).send(.didDismissThird) },
+      destination: ThirdView.init(store:)
     )
   }
 }
@@ -260,8 +313,21 @@ let thirdReducer = Reducer<ThirdState, ThirdAction, Void>.combine(
   timerReducer.pullback(
     state: \.timer,
     action: /ThirdAction.timer,
-    environment: { $0 }
-  )
+    environment: { () }
+  ),
+
+  Reducer { state, action, _ in
+    switch action {
+    case .didTapDismissSecond:
+      return .none
+
+    case .didTapDismissThird:
+      return .none
+
+    case .timer(_):
+      return .none
+    }
+  }
 )
 
 struct ThirdView: View {
@@ -288,5 +354,56 @@ struct ThirdView: View {
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(Color.gray.ignoresSafeArea())
     .navigationTitle("Third")
+  }
+}
+
+// MARK: - Sheet component
+
+struct SheetState {
+  var timer = TimerState()
+}
+
+enum SheetAction {
+  case didTapDismiss
+  case timer(TimerAction)
+}
+
+let sheetReducer = Reducer<SheetState, SheetAction, Void>.combine(
+  timerReducer.pullback(
+    state: \.timer,
+    action: /SheetAction.timer,
+    environment: { () }
+  ),
+
+  Reducer { state, action, _ in
+    switch action {
+    case .didTapDismiss:
+      return .none
+
+    case .timer(_):
+      return .none
+    }
+  }
+)
+
+struct SheetView: View {
+  let store: Store<SheetState, SheetAction>
+
+  var body: some View {
+    WithViewStore(store.stateless) { viewStore in
+      VStack {
+        TimerView(store: store.scope(
+          state: \.timer,
+          action: SheetAction.timer
+        ))
+        .padding()
+
+        Button(action: { viewStore.send(.didTapDismiss) }) {
+          Text("Dismiss").padding()
+        }
+      }
+    }
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .background(Color.green.ignoresSafeArea())
   }
 }
