@@ -20,13 +20,13 @@ assignees: ''
 
 <!-- A clear and concise description of what you expected to happen. -->
 
-5. <!-- e.g. Expected to see ... -->
+4. <!-- e.g. Expected to see ... -->
 
 ## Actual behavior
 
 <!-- What actually happened - describe the unexpected behavior. -->
 
-5. <!-- e.g. An error occured ... -->
+4. <!-- e.g. An error occured ... -->
 
 ## Attachments
 
