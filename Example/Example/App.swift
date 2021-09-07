@@ -137,7 +137,8 @@ let firstReducer = Reducer<FirstState, FirstAction, Void>.combine(
 
     case .didDismissSecond,
          .second(.didTapDismissSecond),
-         .second(.third(.didTapDismissSecond)):
+         .second(.third(.didTapDismissSecond)),
+         .second(.fourth(.didTapDismissSecond)):
       state.second = nil
       return .none
 
@@ -162,13 +163,13 @@ let firstReducer = Reducer<FirstState, FirstAction, Void>.combine(
   }
 )
 .presents(
-  secondReducer.optional(),
+  secondReducer,
   state: \.second,
   action: /FirstAction.second,
   environment: { () }
 )
 .presents(
-  sheetReducer.optional(),
+  sheetReducer,
   state: \.sheet,
   action: /FirstAction.sheet,
   environment: { () }
@@ -216,16 +217,24 @@ struct FirstView: View {
 // MARK: - Second component
 
 struct SecondState {
+  enum Next {
+    case third(ThirdState)
+    case fourth(FourthState)
+  }
+
   var timer = TimerState()
-  var third: ThirdState?
+  var next: Next?
 }
 
 enum SecondAction {
   case didTapDismissSecond
   case didTapPresentThird
+  case didTapPresentFourth
   case didDismissThird
+  case didDismissFourth
   case timer(TimerAction)
   case third(ThirdAction)
+  case fourth(FourthAction)
 }
 
 let secondReducer = Reducer<SecondState, SecondAction, Void>.combine(
@@ -241,12 +250,21 @@ let secondReducer = Reducer<SecondState, SecondAction, Void>.combine(
       return .none
 
     case .didTapPresentThird:
-      state.third = ThirdState()
+      state.next = .third(ThirdState())
       return .none
 
     case .didDismissThird,
          .third(.didTapDismissThird):
-      state.third = nil
+      state.next = nil
+      return .none
+
+    case .didTapPresentFourth:
+      state.next = .fourth(FourthState())
+      return .none
+
+    case .didDismissFourth,
+         .fourth(.didTapDismissFourth):
+      state.next = nil
       return .none
 
     case .timer(_):
@@ -254,13 +272,30 @@ let secondReducer = Reducer<SecondState, SecondAction, Void>.combine(
 
     case .third(_):
       return .none
+
+    case .fourth(_):
+      return .none
     }
   }
 )
 .presents(
-  thirdReducer.optional(),
-  state: \.third,
+  thirdReducer.pullback(
+    state: /SecondState.Next.third,
+    action: /.self,
+    environment: { $0 }
+  ),
+  state: \.next,
   action: /SecondAction.third,
+  environment: { () }
+)
+.presents(
+  fourthReducer.pullback(
+    state: /SecondState.Next.fourth,
+    action: /.self,
+    environment: { $0 }
+  ),
+  state: \.next,
+  action: /SecondAction.fourth,
   environment: { () }
 )
 
@@ -283,16 +318,32 @@ struct SecondView: View {
         Button(action: { viewStore.send(.didTapPresentThird) }) {
           Text("Present Third").padding()
         }
+
+        Button(action: { viewStore.send(.didTapPresentFourth) }) {
+          Text("Present Fourth").padding()
+        }
       }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(Color.green.ignoresSafeArea())
     .navigationTitle("Second")
     .navigationLink(
-      store.scope(state: \.third, action: SecondAction.third),
+      store.scope(state: \.next).scope(
+        state: (/SecondState.Next.third).extract,
+        action: SecondAction.third
+      ),
       state: replayNonNil(),
       onDismiss: { ViewStore(store.stateless).send(.didDismissThird) },
       destination: ThirdView.init(store:)
+    )
+    .navigationLink(
+      store.scope(state: \.next).scope(
+        state: (/SecondState.Next.fourth).extract,
+        action: SecondAction.fourth
+      ),
+      state: replayNonNil(),
+      onDismiss: { ViewStore(store.stateless).send(.didDismissFourth) },
+      destination: FourthView.init(store:)
     )
   }
 }
@@ -354,6 +405,66 @@ struct ThirdView: View {
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(Color.gray.ignoresSafeArea())
     .navigationTitle("Third")
+  }
+}
+
+// MARK: - Fourth component
+
+struct FourthState {
+  var timer = TimerState()
+}
+
+enum FourthAction {
+  case didTapDismissSecond
+  case didTapDismissFourth
+  case timer(TimerAction)
+}
+
+let fourthReducer = Reducer<FourthState, FourthAction, Void>.combine(
+  timerReducer.pullback(
+    state: \.timer,
+    action: /FourthAction.timer,
+    environment: { () }
+  ),
+
+  Reducer { state, action, _ in
+    switch action {
+    case .didTapDismissSecond:
+      return .none
+
+    case .didTapDismissFourth:
+      return .none
+
+    case .timer(_):
+      return .none
+    }
+  }
+)
+
+struct FourthView: View {
+  let store: Store<FourthState, FourthAction>
+
+  var body: some View {
+    WithViewStore(store.stateless) { viewStore in
+      VStack {
+        TimerView(store: store.scope(
+          state: \.timer,
+          action: FourthAction.timer
+        ))
+        .padding()
+
+        Button(action: { viewStore.send(.didTapDismissSecond) }) {
+          Text("Dismiss Second").padding()
+        }
+
+        Button(action: { viewStore.send(.didTapDismissFourth) }) {
+          Text("Dismiss Fourth").padding()
+        }
+      }
+    }
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .background(Color.purple.ignoresSafeArea())
+    .navigationTitle("Fourth")
   }
 }
 
