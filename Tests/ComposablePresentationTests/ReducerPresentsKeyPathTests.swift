@@ -3,7 +3,7 @@ import ComposableArchitecture
 import XCTest
 @testable import ComposablePresentation
 
-final class ReducerPresentesTests: XCTestCase {
+final class ReducerPresentsKeyPathTests: XCTestCase {
   func testCancelEffectsOnDismiss() {
     var didSubscribeToEffect = false
     var didCancelEffect = false
@@ -72,7 +72,7 @@ private let masterReducer = MasterReducer { state, action, env in
   }
 }
 .presents(
-  detailReducer.optional(),
+  detailReducer,
   state: \.detail,
   action: /MasterAction.detail,
   environment: \.detail

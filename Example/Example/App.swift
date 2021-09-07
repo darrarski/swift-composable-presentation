@@ -162,13 +162,13 @@ let firstReducer = Reducer<FirstState, FirstAction, Void>.combine(
   }
 )
 .presents(
-  secondReducer.optional(),
+  secondReducer,
   state: \.second,
   action: /FirstAction.second,
   environment: { () }
 )
 .presents(
-  sheetReducer.optional(),
+  sheetReducer,
   state: \.sheet,
   action: /FirstAction.sheet,
   environment: { () }
@@ -258,7 +258,7 @@ let secondReducer = Reducer<SecondState, SecondAction, Void>.combine(
   }
 )
 .presents(
-  thirdReducer.optional(),
+  thirdReducer,
   state: \.third,
   action: /SecondAction.third,
   environment: { () }
