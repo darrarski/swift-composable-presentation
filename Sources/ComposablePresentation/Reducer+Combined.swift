@@ -1,12 +1,12 @@
 import ComposableArchitecture
 
 extension Reducer {
-  /// Combines the reducer with another reducer that works on the same state, action and environment.
+  /// Combines the reducer with another reducer that works on the same state, action, and environment.
   ///
-  /// - The another reducer is run before the reducer on which the function is invoked.
+  /// - Another reducer is run before the reducer on which the function is invoked.
   /// - All effects returned by the reducers are merged.
   /// - The `cancelEffects` closure is run with a `State` reduced by both reducers.
-  /// - If the closure returns `true`, all effects returned by the another reducer are cancelled.
+  /// - If the closure returns `true`, all effects returned by another reducer are canceled.
   ///
   /// Based on [Reducer.presents function](https://github.com/pointfreeco/swift-composable-architecture/blob/9ec4b71e5a84f448dedb063a21673e4696ce135f/Sources/ComposableArchitecture/Reducer.swift#L549-L572) from `iso` branch of `swift-composable-architecture` repository.
   ///
