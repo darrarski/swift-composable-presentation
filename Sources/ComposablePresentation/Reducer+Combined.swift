@@ -19,7 +19,7 @@ extension Reducer {
   public func combined(
     with other: Reducer<State, Action, Environment>,
     runs: @escaping (State, Action) -> Bool,
-    cancelEffects: @escaping (State) -> Bool
+    cancelEffects: @escaping (inout State) -> Bool
   ) -> Self {
     let otherEffectsId = EffectsId()
     return Reducer { state, action, environment in
@@ -36,7 +36,8 @@ extension Reducer {
 
       effects.append(run(&state, action, environment))
 
-      let shouldCancelOtherEffects = cancelEffects(state)
+      let shouldCancelOtherEffects = cancelEffects(&state)
+
       if shouldCancelOtherEffects {
         effects.append(.cancel(id: otherEffectsId))
       }
