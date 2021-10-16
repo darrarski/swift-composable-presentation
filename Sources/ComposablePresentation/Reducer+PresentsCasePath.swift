@@ -24,7 +24,7 @@ extension Reducer {
         environment: toLocalEnvironment
       ),
       runs: { state, action in
-          true
+        toLocalAction.extract(from: action) != nil
       },
       cancelEffects: { state in
         toLocalState.extract(from: state) == nil
