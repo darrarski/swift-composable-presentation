@@ -31,8 +31,18 @@ extension Reducer {
         toLocalAction.extract(from: action) != nil
       },
       cancelEffects: { state in
-        state[keyPath: toLocalState] == nil
+        let shouldCancel = state[keyPath: toLocalState] == nil
+#if DEBUG
+        if shouldCancel {
+          presentsKeyPathCancelCounter += 1
+        }
+#endif
+        return shouldCancel
       }
     )
   }
 }
+
+#if DEBUG
+var presentsKeyPathCancelCounter: Int = 0
+#endif

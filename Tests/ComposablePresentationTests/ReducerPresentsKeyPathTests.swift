@@ -23,19 +23,33 @@ final class ReducerPresentsKeyPathTests: XCTestCase {
       )
     )
 
+    presentsKeyPathCancelCounter = 0
+
+    store.send(.noop)
+
+    XCTAssertEqual(presentsKeyPathCancelCounter, 1,
+                   "effects are cancelled before state ever existed")
+
     store.send(.presentDetail) {
       $0.detail = DetailState()
     }
 
     store.send(.detail(.performEffect))
 
+    XCTAssertEqual(presentsKeyPathCancelCounter, 1)
     XCTAssertTrue(didSubscribeToEffect)
 
     store.send(.dismissDetail) {
       $0.detail = nil
     }
 
+    XCTAssertEqual(presentsKeyPathCancelCounter, 2)
     XCTAssertTrue(didCancelEffect)
+
+    store.send(.noop)
+
+    XCTAssertEqual(presentsKeyPathCancelCounter, 3,
+                   "effects are cancelled every time")
   }
 }
 
@@ -46,6 +60,7 @@ private struct MasterState: Equatable {
 }
 
 private enum MasterAction: Equatable {
+  case noop
   case presentDetail
   case dismissDetail
   case detail(DetailAction)
@@ -59,6 +74,8 @@ private typealias MasterReducer = Reducer<MasterState, MasterAction, MasterEnvir
 
 private let masterReducer = MasterReducer { state, action, env in
   switch action {
+  case .noop:
+    return .none
   case .presentDetail:
     state.detail = DetailState()
     return .none
