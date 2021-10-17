@@ -88,7 +88,7 @@ private let masterReducer = MasterReducer { state, action, env in
     return .none
   }
 }
-  .presents(
+  .presented(
     detailReducer,
     state: \.$detail,
     action: /MasterAction.detail,
