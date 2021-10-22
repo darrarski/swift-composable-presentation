@@ -54,7 +54,7 @@ var presentedKeyPathCancelCounter: Int = 0
 /// Property Wrapper that manages state for presented data. The wrapped value
 /// can be nil or non-nil to indicate presentation. When it becomes nil,
 /// the presentation's effects are cleaned up automatically.
-public struct Presented<State: Equatable> {
+public struct Presented<State> {
 
   public init(wrappedValue: State?) {
     self.wrappedValue = wrappedValue
@@ -83,8 +83,8 @@ fileprivate extension Presented {
   }
 }
 
-extension Presented: Equatable {
-  // Don't expose `hadState` to TCA TestStore assertions.
+extension Presented: Equatable where State: Equatable {
+  // Propagate equality of only the wrapped value, not internal state.
   public static func ==(lhs: Self, rhs: Self) -> Bool {
     lhs.wrappedValue == rhs.wrappedValue
   }
