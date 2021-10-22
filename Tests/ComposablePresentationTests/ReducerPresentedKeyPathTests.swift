@@ -3,7 +3,7 @@ import ComposableArchitecture
 import XCTest
 @testable import ComposablePresentation
 
-final class ReducerPresentsKeyPathTests: XCTestCase {
+final class ReducerPresentedKeyPathTests: XCTestCase {
   func testCancelEffectsOnDismiss() {
     var didSubscribeToEffect = false
     var didCancelEffect = false
@@ -23,12 +23,12 @@ final class ReducerPresentsKeyPathTests: XCTestCase {
       )
     )
 
-    presentsKeyPathCancelCounter = 0
+    presentedKeyPathCancelCounter = 0
 
     store.send(.noop)
 
-    XCTAssertEqual(presentsKeyPathCancelCounter, 1,
-                   "effects are cancelled before state ever existed")
+    XCTAssertEqual(presentedKeyPathCancelCounter, 0,
+                   "effects are NOT cancelled before state ever existed")
 
     store.send(.presentDetail) {
       $0.detail = DetailState()
@@ -36,27 +36,27 @@ final class ReducerPresentsKeyPathTests: XCTestCase {
 
     store.send(.detail(.performEffect))
 
-    XCTAssertEqual(presentsKeyPathCancelCounter, 1)
+    XCTAssertEqual(presentedKeyPathCancelCounter, 0)
     XCTAssertTrue(didSubscribeToEffect)
 
     store.send(.dismissDetail) {
       $0.detail = nil
     }
 
-    XCTAssertEqual(presentsKeyPathCancelCounter, 2)
+    XCTAssertEqual(presentedKeyPathCancelCounter, 1)
     XCTAssertTrue(didCancelEffect)
 
     store.send(.noop)
 
-    XCTAssertEqual(presentsKeyPathCancelCounter, 3,
-                   "effects are cancelled every time")
+    XCTAssertEqual(presentedKeyPathCancelCounter, 1,
+                   "effects are not cancelled again")
   }
 }
 
 // MARK: - Master component
 
 private struct MasterState: Equatable {
-  var detail: DetailState?
+  @Presented var detail: DetailState? = nil
 }
 
 private enum MasterAction: Equatable {
@@ -88,12 +88,12 @@ private let masterReducer = MasterReducer { state, action, env in
     return .none
   }
 }
-.presents(
-  detailReducer,
-  state: \.detail,
-  action: /MasterAction.detail,
-  environment: \.detail
-)
+  .presented(
+    detailReducer,
+    state: \.$detail,
+    action: /MasterAction.detail,
+    environment: \.detail
+  )
 
 // MARK: - Detail component
 
