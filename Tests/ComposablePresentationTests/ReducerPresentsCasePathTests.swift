@@ -5,6 +5,10 @@ import XCTest
 @testable import ComposablePresentation
 
 final class ReducerPresentsCasePathTests: XCTestCase {
+  override func setUp() {
+    combinedReducerOtherEffectsCancellationCount = 0
+  }
+
   func testCancelEffectsOnDismiss() {
     var didSubscribeToFirstEffect = 0
     var didCancelFirstEffect = 0
@@ -40,7 +44,7 @@ final class ReducerPresentsCasePathTests: XCTestCase {
     XCTAssertEqual(didCancelFirstEffect, 0)
     XCTAssertEqual(didSubscribeToSecondEffect, 0)
     XCTAssertEqual(didCancelSecondEffect, 0)
-
+    XCTAssertEqual(combinedReducerOtherEffectsCancellationCount, 1)
 
     store.send(.presentSecondDetail) {
       $0 = .second(SecondDetailState())
@@ -50,6 +54,7 @@ final class ReducerPresentsCasePathTests: XCTestCase {
     XCTAssertEqual(didCancelFirstEffect, 1)
     XCTAssertEqual(didSubscribeToSecondEffect, 0)
     XCTAssertEqual(didCancelSecondEffect, 0)
+    XCTAssertEqual(combinedReducerOtherEffectsCancellationCount, 2)
 
     store.send(.second(.performEffect))
 
@@ -57,6 +62,7 @@ final class ReducerPresentsCasePathTests: XCTestCase {
     XCTAssertEqual(didCancelFirstEffect, 1)
     XCTAssertEqual(didSubscribeToSecondEffect, 1)
     XCTAssertEqual(didCancelSecondEffect, 0)
+    XCTAssertEqual(combinedReducerOtherEffectsCancellationCount, 3)
 
     store.send(.presentFirstDetail) {
       $0 = .first(FirstDetailState())
@@ -66,6 +72,7 @@ final class ReducerPresentsCasePathTests: XCTestCase {
     XCTAssertEqual(didCancelFirstEffect, 1)
     XCTAssertEqual(didSubscribeToSecondEffect, 1)
     XCTAssertEqual(didCancelSecondEffect, 1)
+    XCTAssertEqual(combinedReducerOtherEffectsCancellationCount, 4)
   }
 }
 

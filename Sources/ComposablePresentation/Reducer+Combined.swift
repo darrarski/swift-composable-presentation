@@ -29,6 +29,12 @@ extension Reducer {
       let newState = state
       let shouldCancelOtherEffects = cancelEffects(oldState, newState)
 
+      #if DEBUG
+      if shouldCancelOtherEffects {
+        combinedReducerOtherEffectsCancellationCount += 1
+      }
+      #endif
+
       return .merge(
         otherEffects,
         effects,
@@ -41,3 +47,7 @@ extension Reducer {
 private struct EffectsId: Hashable {
   let id = UUID()
 }
+
+#if DEBUG
+var combinedReducerOtherEffectsCancellationCount: Int = 0
+#endif

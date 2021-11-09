@@ -4,6 +4,10 @@ import XCTest
 @testable import ComposablePresentation
 
 final class ReducerPresentsKeyPathTests: XCTestCase {
+  override func setUp() {
+    combinedReducerOtherEffectsCancellationCount = 0
+  }
+
   func testCancelEffectsOnDismiss() {
     var didSubscribeToEffect = 0
     var didCancelEffect = 0
@@ -29,11 +33,13 @@ final class ReducerPresentsKeyPathTests: XCTestCase {
 
     XCTAssertEqual(didSubscribeToEffect, 0)
     XCTAssertEqual(didCancelEffect, 0)
+    XCTAssertEqual(combinedReducerOtherEffectsCancellationCount, 0)
 
     store.send(.detail(.performEffect))
 
     XCTAssertEqual(didSubscribeToEffect, 1)
     XCTAssertEqual(didCancelEffect, 0)
+    XCTAssertEqual(combinedReducerOtherEffectsCancellationCount, 0)
 
     store.send(.dismissDetail) {
       $0.detail = nil
@@ -41,11 +47,13 @@ final class ReducerPresentsKeyPathTests: XCTestCase {
 
     XCTAssertEqual(didSubscribeToEffect, 1)
     XCTAssertEqual(didCancelEffect, 1)
+    XCTAssertEqual(combinedReducerOtherEffectsCancellationCount, 1)
 
     store.send(.dismissDetail)
 
     XCTAssertEqual(didSubscribeToEffect, 1)
     XCTAssertEqual(didCancelEffect, 1)
+    XCTAssertEqual(combinedReducerOtherEffectsCancellationCount, 2)
   }
 }
 
