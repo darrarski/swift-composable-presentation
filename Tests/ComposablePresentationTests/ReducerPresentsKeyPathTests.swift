@@ -5,8 +5,8 @@ import XCTest
 
 final class ReducerPresentsKeyPathTests: XCTestCase {
   func testCancelEffectsOnDismiss() {
-    var didSubscribeToEffect = false
-    var didCancelEffect = false
+    var didSubscribeToEffect = 0
+    var didCancelEffect = 0
 
     let store = TestStore(
       initialState: MasterState(),
@@ -15,8 +15,8 @@ final class ReducerPresentsKeyPathTests: XCTestCase {
         detail: DetailEnvironment(effect: {
           Empty(completeImmediately: false)
             .handleEvents(
-              receiveSubscription: { _ in didSubscribeToEffect = true },
-              receiveCancel: { didCancelEffect = true }
+              receiveSubscription: { _ in didSubscribeToEffect += 1 },
+              receiveCancel: { didCancelEffect += 1 }
             )
             .eraseToEffect()
         })
@@ -27,15 +27,25 @@ final class ReducerPresentsKeyPathTests: XCTestCase {
       $0.detail = DetailState()
     }
 
+    XCTAssertEqual(didSubscribeToEffect, 0)
+    XCTAssertEqual(didCancelEffect, 0)
+
     store.send(.detail(.performEffect))
 
-    XCTAssertTrue(didSubscribeToEffect)
+    XCTAssertEqual(didSubscribeToEffect, 1)
+    XCTAssertEqual(didCancelEffect, 0)
 
     store.send(.dismissDetail) {
       $0.detail = nil
     }
 
-    XCTAssertTrue(didCancelEffect)
+    XCTAssertEqual(didSubscribeToEffect, 1)
+    XCTAssertEqual(didCancelEffect, 1)
+
+    store.send(.dismissDetail)
+
+    XCTAssertEqual(didSubscribeToEffect, 1)
+    XCTAssertEqual(didCancelEffect, 1)
   }
 }
 

@@ -6,10 +6,10 @@ import XCTest
 
 final class ReducerPresentsCasePathTests: XCTestCase {
   func testCancelEffectsOnDismiss() {
-    var didSubscribeToFirstEffect = false
-    var didCancelFirstEffect = false
-    var didSubscribeToSecondEffect = false
-    var didCancelSecondEffect = false
+    var didSubscribeToFirstEffect = 0
+    var didCancelFirstEffect = 0
+    var didSubscribeToSecondEffect = 0
+    var didCancelSecondEffect = 0
 
     let store = TestStore(
       initialState: MasterState.first(FirstDetailState()),
@@ -18,16 +18,16 @@ final class ReducerPresentsCasePathTests: XCTestCase {
         firstDetail: FirstDetailEnvironment(effect: {
           Empty(completeImmediately: false)
             .handleEvents(
-              receiveSubscription: { _ in didSubscribeToFirstEffect = true },
-              receiveCancel: { didCancelFirstEffect = true }
+              receiveSubscription: { _ in didSubscribeToFirstEffect += 1 },
+              receiveCancel: { didCancelFirstEffect += 1 }
             )
             .eraseToEffect()
         }),
         secondDetail: SecondDetailEnvironment(effect: {
           Empty(completeImmediately: false)
             .handleEvents(
-              receiveSubscription: { _ in didSubscribeToSecondEffect = true },
-              receiveCancel: { didCancelSecondEffect = true }
+              receiveSubscription: { _ in didSubscribeToSecondEffect += 1 },
+              receiveCancel: { didCancelSecondEffect += 1 }
             )
             .eraseToEffect()
         })
@@ -36,23 +36,36 @@ final class ReducerPresentsCasePathTests: XCTestCase {
 
     store.send(.first(.performEffect))
 
-    XCTAssertTrue(didSubscribeToFirstEffect)
+    XCTAssertEqual(didSubscribeToFirstEffect, 1)
+    XCTAssertEqual(didCancelFirstEffect, 0)
+    XCTAssertEqual(didSubscribeToSecondEffect, 0)
+    XCTAssertEqual(didCancelSecondEffect, 0)
+
 
     store.send(.presentSecondDetail) {
       $0 = .second(SecondDetailState())
     }
 
-    XCTAssertTrue(didCancelFirstEffect)
+    XCTAssertEqual(didSubscribeToFirstEffect, 1)
+    XCTAssertEqual(didCancelFirstEffect, 1)
+    XCTAssertEqual(didSubscribeToSecondEffect, 0)
+    XCTAssertEqual(didCancelSecondEffect, 0)
 
     store.send(.second(.performEffect))
 
-    XCTAssertTrue(didSubscribeToSecondEffect)
+    XCTAssertEqual(didSubscribeToFirstEffect, 1)
+    XCTAssertEqual(didCancelFirstEffect, 1)
+    XCTAssertEqual(didSubscribeToSecondEffect, 1)
+    XCTAssertEqual(didCancelSecondEffect, 0)
 
     store.send(.presentFirstDetail) {
       $0 = .first(FirstDetailState())
     }
 
-    XCTAssertTrue(didCancelSecondEffect)
+    XCTAssertEqual(didSubscribeToFirstEffect, 1)
+    XCTAssertEqual(didCancelFirstEffect, 1)
+    XCTAssertEqual(didSubscribeToSecondEffect, 1)
+    XCTAssertEqual(didCancelSecondEffect, 1)
   }
 }
 
