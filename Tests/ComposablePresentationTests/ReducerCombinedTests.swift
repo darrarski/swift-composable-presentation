@@ -1,14 +1,20 @@
 import Combine
 import ComposableArchitecture
+import CustomDump
 import XCTest
 @testable import ComposablePresentation
 
 final class ReducerCombinedTests: XCTestCase {
+  struct DidCancelEffects: Equatable {
+    var oldState: [String]
+    var newState: [String]
+  }
+
   var reducer: Reducer<[String], String, Void>!
   var shouldCancelChildEffect: Bool!
   var mainEffectSubject: PassthroughSubject<String, Never>!
   var childEffectSubject: PassthroughSubject<String, Never>!
-  var didCallCancelEffectsOnState: [[String]]!
+  var didCallCancelEffectsOnState: [DidCancelEffects]!
   var didCancelMainEffect: Bool!
   var didCancelChildEffect: Bool!
 
@@ -34,8 +40,8 @@ final class ReducerCombinedTests: XCTestCase {
           .map { "child-effect-\($0)" }
           .eraseToEffect()
       },
-      cancelEffects: { state in
-        self.didCallCancelEffectsOnState.append(state)
+      cancelEffects: { oldState, newState in
+        self.didCallCancelEffectsOnState.append(DidCancelEffects(oldState: oldState, newState: newState))
         return self.shouldCancelChildEffect
       }
     )
@@ -53,7 +59,7 @@ final class ReducerCombinedTests: XCTestCase {
 
   func testCancelChildEffects() {
     let store = TestStore(
-      initialState: [],
+      initialState: ["init"],
       reducer: reducer,
       environment: ()
     )
@@ -65,7 +71,10 @@ final class ReducerCombinedTests: XCTestCase {
     }
 
     XCTAssertEqual(didCallCancelEffectsOnState.count, 1)
-    XCTAssertEqual(didCallCancelEffectsOnState.last, ["child-reducer-1", "main-reducer-1"])
+    XCTAssertNoDifference(didCallCancelEffectsOnState.last, DidCancelEffects(
+      oldState: ["init"],
+      newState: ["init", "child-reducer-1", "main-reducer-1"]
+    ))
     XCTAssertFalse(didCancelMainEffect)
     XCTAssertTrue(didCancelChildEffect)
 
@@ -82,7 +91,7 @@ final class ReducerCombinedTests: XCTestCase {
 
   func testNotCancelChildEffects() {
     let store = TestStore(
-      initialState: [],
+      initialState: ["init"],
       reducer: reducer,
       environment: ()
     )
@@ -94,7 +103,10 @@ final class ReducerCombinedTests: XCTestCase {
     }
 
     XCTAssertEqual(didCallCancelEffectsOnState.count, 1)
-    XCTAssertEqual(didCallCancelEffectsOnState.last, ["child-reducer-1", "main-reducer-1"])
+    XCTAssertNoDifference(didCallCancelEffectsOnState.last, DidCancelEffects(
+      oldState: ["init"],
+      newState: ["init", "child-reducer-1", "main-reducer-1"]
+    ))
     XCTAssertFalse(didCancelMainEffect)
     XCTAssertFalse(didCancelChildEffect)
 

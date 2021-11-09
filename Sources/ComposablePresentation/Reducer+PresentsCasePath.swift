@@ -23,8 +23,8 @@ extension Reducer {
         action: toLocalAction,
         environment: toLocalEnvironment
       ),
-      cancelEffects: { state in
-        toLocalState.extract(from: state) == nil
+      cancelEffects: { _, newState in
+        toLocalState.extract(from: newState) == nil
       }
     )
   }
