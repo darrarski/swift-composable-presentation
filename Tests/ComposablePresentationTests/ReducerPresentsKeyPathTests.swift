@@ -53,7 +53,7 @@ final class ReducerPresentsKeyPathTests: XCTestCase {
 
     XCTAssertEqual(didSubscribeToEffect, 1)
     XCTAssertEqual(didCancelEffect, 1)
-    XCTAssertEqual(combinedReducerOtherEffectsCancellationCount, 2)
+    XCTAssertEqual(combinedReducerOtherEffectsCancellationCount, 1)
   }
 }
 

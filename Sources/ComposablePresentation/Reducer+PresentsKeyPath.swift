@@ -27,8 +27,10 @@ extension Reducer {
         action: toLocalAction,
         environment: toLocalEnvironment
       ),
-      cancelEffects: { _, newState in
-        newState[keyPath: toLocalState] == nil
+      cancelEffects: { oldState, newState in
+        let wasPresented = oldState[keyPath: toLocalState] != nil
+        let isDismissed = newState[keyPath: toLocalState] == nil
+        return wasPresented && isDismissed
       }
     )
   }

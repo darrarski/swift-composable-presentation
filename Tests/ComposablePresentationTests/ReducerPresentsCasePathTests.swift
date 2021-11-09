@@ -44,7 +44,7 @@ final class ReducerPresentsCasePathTests: XCTestCase {
     XCTAssertEqual(didCancelFirstEffect, 0)
     XCTAssertEqual(didSubscribeToSecondEffect, 0)
     XCTAssertEqual(didCancelSecondEffect, 0)
-    XCTAssertEqual(combinedReducerOtherEffectsCancellationCount, 1)
+    XCTAssertEqual(combinedReducerOtherEffectsCancellationCount, 0)
 
     store.send(.presentSecondDetail) {
       $0 = .second(SecondDetailState())
@@ -54,7 +54,7 @@ final class ReducerPresentsCasePathTests: XCTestCase {
     XCTAssertEqual(didCancelFirstEffect, 1)
     XCTAssertEqual(didSubscribeToSecondEffect, 0)
     XCTAssertEqual(didCancelSecondEffect, 0)
-    XCTAssertEqual(combinedReducerOtherEffectsCancellationCount, 2)
+    XCTAssertEqual(combinedReducerOtherEffectsCancellationCount, 1)
 
     store.send(.second(.performEffect))
 
@@ -62,7 +62,7 @@ final class ReducerPresentsCasePathTests: XCTestCase {
     XCTAssertEqual(didCancelFirstEffect, 1)
     XCTAssertEqual(didSubscribeToSecondEffect, 1)
     XCTAssertEqual(didCancelSecondEffect, 0)
-    XCTAssertEqual(combinedReducerOtherEffectsCancellationCount, 3)
+    XCTAssertEqual(combinedReducerOtherEffectsCancellationCount, 1)
 
     store.send(.presentFirstDetail) {
       $0 = .first(FirstDetailState())
@@ -72,7 +72,7 @@ final class ReducerPresentsCasePathTests: XCTestCase {
     XCTAssertEqual(didCancelFirstEffect, 1)
     XCTAssertEqual(didSubscribeToSecondEffect, 1)
     XCTAssertEqual(didCancelSecondEffect, 1)
-    XCTAssertEqual(combinedReducerOtherEffectsCancellationCount, 4)
+    XCTAssertEqual(combinedReducerOtherEffectsCancellationCount, 2)
   }
 }
 
