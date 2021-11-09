@@ -5,11 +5,9 @@ import XCTest
 @testable import ComposablePresentation
 
 final class ReducerPresentsCasePathTests: XCTestCase {
-  override func setUp() {
-    combinedReducerOtherEffectsCancellationCount = 0
-  }
-
   func testCancelEffectsOnDismiss() {
+    var didCancelFirstPresentedEffects = 0
+    var didCancelSecondPresentedEffects = 0
     var didSubscribeToFirstEffect = 0
     var didCancelFirstEffect = 0
     var didSubscribeToSecondEffect = 0
@@ -17,7 +15,21 @@ final class ReducerPresentsCasePathTests: XCTestCase {
 
     let store = TestStore(
       initialState: MasterState.first(FirstDetailState()),
-      reducer: masterReducer,
+      reducer: masterReducer
+        .presents(
+          firstDetailReducer,
+          state: /MasterState.first,
+          action: /MasterAction.first,
+          environment: \.firstDetail,
+          onCancel: { didCancelFirstPresentedEffects += 1 }
+        )
+        .presents(
+          secondDetailReducer,
+          state: /MasterState.second,
+          action: /MasterAction.second,
+          environment: \.secondDetail,
+          onCancel: { didCancelSecondPresentedEffects += 1 }
+        ),
       environment: MasterEnvironment(
         firstDetail: FirstDetailEnvironment(effect: {
           Empty(completeImmediately: false)
@@ -40,39 +52,43 @@ final class ReducerPresentsCasePathTests: XCTestCase {
 
     store.send(.first(.performEffect))
 
+    XCTAssertEqual(didCancelFirstPresentedEffects, 0)
+    XCTAssertEqual(didCancelSecondPresentedEffects, 0)
     XCTAssertEqual(didSubscribeToFirstEffect, 1)
     XCTAssertEqual(didCancelFirstEffect, 0)
     XCTAssertEqual(didSubscribeToSecondEffect, 0)
     XCTAssertEqual(didCancelSecondEffect, 0)
-    XCTAssertEqual(combinedReducerOtherEffectsCancellationCount, 0)
 
     store.send(.presentSecondDetail) {
       $0 = .second(SecondDetailState())
     }
 
+    XCTAssertEqual(didCancelFirstPresentedEffects, 1)
+    XCTAssertEqual(didCancelSecondPresentedEffects, 0)
     XCTAssertEqual(didSubscribeToFirstEffect, 1)
     XCTAssertEqual(didCancelFirstEffect, 1)
     XCTAssertEqual(didSubscribeToSecondEffect, 0)
     XCTAssertEqual(didCancelSecondEffect, 0)
-    XCTAssertEqual(combinedReducerOtherEffectsCancellationCount, 1)
 
     store.send(.second(.performEffect))
 
+    XCTAssertEqual(didCancelFirstPresentedEffects, 1)
+    XCTAssertEqual(didCancelSecondPresentedEffects, 0)
     XCTAssertEqual(didSubscribeToFirstEffect, 1)
     XCTAssertEqual(didCancelFirstEffect, 1)
     XCTAssertEqual(didSubscribeToSecondEffect, 1)
     XCTAssertEqual(didCancelSecondEffect, 0)
-    XCTAssertEqual(combinedReducerOtherEffectsCancellationCount, 1)
 
     store.send(.presentFirstDetail) {
       $0 = .first(FirstDetailState())
     }
 
+    XCTAssertEqual(didCancelFirstPresentedEffects, 1)
+    XCTAssertEqual(didCancelSecondPresentedEffects, 1)
     XCTAssertEqual(didSubscribeToFirstEffect, 1)
     XCTAssertEqual(didCancelFirstEffect, 1)
     XCTAssertEqual(didSubscribeToSecondEffect, 1)
     XCTAssertEqual(didCancelSecondEffect, 1)
-    XCTAssertEqual(combinedReducerOtherEffectsCancellationCount, 2)
   }
 }
 
@@ -110,18 +126,6 @@ private let masterReducer = Reducer<MasterState, MasterAction, MasterEnvironment
     return .none
   }
 }
-.presents(
-  firstDetailReducer,
-  state: /MasterState.first,
-  action: /MasterAction.first,
-  environment: \.firstDetail
-)
-.presents(
-  secondDetailReducer,
-  state: /MasterState.second,
-  action: /MasterAction.second,
-  environment: \.secondDetail
-)
 
 // MARK: - FirstDetail component
 

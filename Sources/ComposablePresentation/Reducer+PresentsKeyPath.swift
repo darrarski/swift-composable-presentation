@@ -13,13 +13,16 @@ extension Reducer {
   ///   - toLocalState: A key path that can get/set `LocalState` inside `State`.
   ///   - toLocalAction: A case path that can extract/embed `LocalAction` from `Action`.
   ///   - toLocalEnvironment: A function that transforms `Environment` into `LocalEnvironment`.
+  ///   - onCancel: A closure invoked when effects produced by another reducer are being cancelled.
+  ///       Defaults to an empty closure.
   /// - Returns: A single, combined reducer.
   public func presents<LocalState, LocalAction, LocalEnvironment>(
     _ localReducer: Reducer<LocalState, LocalAction, LocalEnvironment>,
     breakpointOnNil: Bool = true,
     state toLocalState: WritableKeyPath<State, LocalState?>,
     action toLocalAction: CasePath<Action, LocalAction>,
-    environment toLocalEnvironment: @escaping (Environment) -> LocalEnvironment
+    environment toLocalEnvironment: @escaping (Environment) -> LocalEnvironment,
+    onCancel: @escaping () -> Void = {}
   ) -> Self {
     combined(
       with: localReducer.optional(breakpointOnNil: breakpointOnNil).pullback(
@@ -30,7 +33,9 @@ extension Reducer {
       cancelEffects: { oldState, newState in
         let wasPresented = oldState[keyPath: toLocalState] != nil
         let isDismissed = newState[keyPath: toLocalState] == nil
-        return wasPresented && isDismissed
+        let shouldCancel = wasPresented && isDismissed
+        if shouldCancel { onCancel() }
+        return shouldCancel
       }
     )
   }

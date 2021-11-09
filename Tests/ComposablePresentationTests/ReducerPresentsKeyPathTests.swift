@@ -4,17 +4,21 @@ import XCTest
 @testable import ComposablePresentation
 
 final class ReducerPresentsKeyPathTests: XCTestCase {
-  override func setUp() {
-    combinedReducerOtherEffectsCancellationCount = 0
-  }
-
   func testCancelEffectsOnDismiss() {
+    var didCancelPresentedEffects = 0
     var didSubscribeToEffect = 0
     var didCancelEffect = 0
 
     let store = TestStore(
       initialState: MasterState(),
-      reducer: masterReducer,
+      reducer: masterReducer
+        .presents(
+          detailReducer,
+          state: \.detail,
+          action: /MasterAction.detail,
+          environment: \.detail,
+          onCancel: { didCancelPresentedEffects += 1 }
+        ),
       environment: MasterEnvironment(
         detail: DetailEnvironment(effect: {
           Empty(completeImmediately: false)
@@ -31,29 +35,29 @@ final class ReducerPresentsKeyPathTests: XCTestCase {
       $0.detail = DetailState()
     }
 
+    XCTAssertEqual(didCancelPresentedEffects, 0)
     XCTAssertEqual(didSubscribeToEffect, 0)
     XCTAssertEqual(didCancelEffect, 0)
-    XCTAssertEqual(combinedReducerOtherEffectsCancellationCount, 0)
 
     store.send(.detail(.performEffect))
 
+    XCTAssertEqual(didCancelPresentedEffects, 0)
     XCTAssertEqual(didSubscribeToEffect, 1)
     XCTAssertEqual(didCancelEffect, 0)
-    XCTAssertEqual(combinedReducerOtherEffectsCancellationCount, 0)
 
     store.send(.dismissDetail) {
       $0.detail = nil
     }
 
+    XCTAssertEqual(didCancelPresentedEffects, 1)
     XCTAssertEqual(didSubscribeToEffect, 1)
     XCTAssertEqual(didCancelEffect, 1)
-    XCTAssertEqual(combinedReducerOtherEffectsCancellationCount, 1)
 
     store.send(.dismissDetail)
 
+    XCTAssertEqual(didCancelPresentedEffects, 1)
     XCTAssertEqual(didSubscribeToEffect, 1)
     XCTAssertEqual(didCancelEffect, 1)
-    XCTAssertEqual(combinedReducerOtherEffectsCancellationCount, 1)
   }
 }
 
@@ -89,12 +93,6 @@ private let masterReducer = MasterReducer { state, action, env in
     return .none
   }
 }
-.presents(
-  detailReducer,
-  state: \.detail,
-  action: /MasterAction.detail,
-  environment: \.detail
-)
 
 // MARK: - Detail component
 
