@@ -37,14 +37,14 @@ final class ReducerPresentsKeyPathTests: XCTestCase {
       $0.detail = DetailState()
     }
 
-    XCTAssertEqual(didRunPresentedReducer, 1)
+    XCTAssertEqual(didRunPresentedReducer, 0)
     XCTAssertEqual(didCancelPresentedEffects, 0)
     XCTAssertEqual(didSubscribeToEffect, 0)
     XCTAssertEqual(didCancelEffect, 0)
 
     store.send(.detail(.performEffect))
 
-    XCTAssertEqual(didRunPresentedReducer, 2)
+    XCTAssertEqual(didRunPresentedReducer, 1)
     XCTAssertEqual(didCancelPresentedEffects, 0)
     XCTAssertEqual(didSubscribeToEffect, 1)
     XCTAssertEqual(didCancelEffect, 0)
@@ -53,14 +53,14 @@ final class ReducerPresentsKeyPathTests: XCTestCase {
       $0.detail = nil
     }
 
-    XCTAssertEqual(didRunPresentedReducer, 3)
+    XCTAssertEqual(didRunPresentedReducer, 1)
     XCTAssertEqual(didCancelPresentedEffects, 1)
     XCTAssertEqual(didSubscribeToEffect, 1)
     XCTAssertEqual(didCancelEffect, 1)
 
     store.send(.dismissDetail)
 
-    XCTAssertEqual(didRunPresentedReducer, 4)
+    XCTAssertEqual(didRunPresentedReducer, 1)
     XCTAssertEqual(didCancelPresentedEffects, 1)
     XCTAssertEqual(didSubscribeToEffect, 1)
     XCTAssertEqual(didCancelEffect, 1)

@@ -29,7 +29,7 @@ extension Reducer {
         environment: toLocalEnvironment
       ),
       run: { action in
-        let shouldRun = true // TODO: check action
+        let shouldRun = toLocalAction.extract(from: action) != nil
         if shouldRun { onRun() }
         return shouldRun
       },
