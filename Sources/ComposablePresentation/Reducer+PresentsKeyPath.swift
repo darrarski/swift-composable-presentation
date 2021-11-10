@@ -32,12 +32,12 @@ extension Reducer {
         action: toLocalAction,
         environment: toLocalEnvironment
       ),
-      run: { action in
+      shouldRun: { action in
         let shouldRun = toLocalAction.extract(from: action) != nil
         if shouldRun { onRun() }
         return shouldRun
       },
-      cancelEffects: { oldState, newState in
+      shouldCancelEffects: { oldState, newState in
         let wasPresented = oldState[keyPath: toLocalState] != nil
         let isDismissed = newState[keyPath: toLocalState] == nil
         let shouldCancel = wasPresented && isDismissed

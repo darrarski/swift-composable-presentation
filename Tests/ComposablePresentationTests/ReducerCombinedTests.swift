@@ -43,11 +43,11 @@ final class ReducerCombinedTests: XCTestCase {
           .map { "child-effect-\($0)" }
           .eraseToEffect()
       },
-      run: { action in
+      shouldRun: { action in
         self.didCallRunOnAction.append(action)
         return self.shouldRunChildReducer
       },
-      cancelEffects: { oldState, newState in
+      shouldCancelEffects: { oldState, newState in
         self.didCallCancelEffectsOnState.append(DidCancelEffects(oldState: oldState, newState: newState))
         return self.shouldCancelChildEffect
       }
