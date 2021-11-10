@@ -12,27 +12,35 @@ extension Reducer {
   ///
   /// - Parameters:
   ///   - other: Another reducer.
+  ///   - shouldRun: Closure used to determine if the other reducer should be run.
+  ///       It takes `Action` as a parameter.
   ///   - cancelEffects: Closure used to determine if the effects returned by the another reducer should be cancelled.
   ///       It takes two parameters of type `State`: the state before and after running the reducer.
   /// - Returns: A single, combined reducer.
   public func combined(
     with other: Reducer<State, Action, Environment>,
-    cancelEffects: @escaping (State, State) -> Bool
+    run shouldRun: @escaping (Action) -> Bool,
+    cancelEffects shouldCancelEffects: @escaping (State, State) -> Bool
   ) -> Self {
     let otherEffectsId = EffectsId()
     return Reducer { state, action, environment in
       let oldState = state
-      let otherEffects = other
-        .run(&state, action, environment)
-        .cancellable(id: otherEffectsId)
+      let otherEffects: Effect<Action, Never>
+      if shouldRun(action) {
+        otherEffects = other
+          .run(&state, action, environment)
+          .cancellable(id: otherEffectsId)
+      } else {
+        otherEffects = .none
+      }
       let effects = run(&state, action, environment)
       let newState = state
-      let shouldCancelOtherEffects = cancelEffects(oldState, newState)
+      let shouldCancelEffects = shouldCancelEffects(oldState, newState)
 
       return .merge(
         otherEffects,
         effects,
-        shouldCancelOtherEffects ? .cancel(id: otherEffectsId) : .none
+        shouldCancelEffects ? .cancel(id: otherEffectsId) : .none
       )
     }
   }

@@ -6,6 +6,8 @@ import XCTest
 
 final class ReducerPresentsCasePathTests: XCTestCase {
   func testCancelEffectsOnDismiss() {
+    var didRunFirstPresentedReducer = 0
+    var didRunSecondPresentedReducer = 0
     var didCancelFirstPresentedEffects = 0
     var didCancelSecondPresentedEffects = 0
     var didSubscribeToFirstEffect = 0
@@ -21,6 +23,7 @@ final class ReducerPresentsCasePathTests: XCTestCase {
           state: /MasterState.first,
           action: /MasterAction.first,
           environment: \.firstDetail,
+          onRun: { didRunFirstPresentedReducer += 1 },
           onCancel: { didCancelFirstPresentedEffects += 1 }
         )
         .presents(
@@ -28,6 +31,7 @@ final class ReducerPresentsCasePathTests: XCTestCase {
           state: /MasterState.second,
           action: /MasterAction.second,
           environment: \.secondDetail,
+          onRun: { didRunSecondPresentedReducer += 1 },
           onCancel: { didCancelSecondPresentedEffects += 1 }
         ),
       environment: MasterEnvironment(
@@ -52,6 +56,8 @@ final class ReducerPresentsCasePathTests: XCTestCase {
 
     store.send(.first(.performEffect))
 
+    XCTAssertEqual(didRunFirstPresentedReducer, 1)
+    XCTAssertEqual(didRunSecondPresentedReducer, 1)
     XCTAssertEqual(didCancelFirstPresentedEffects, 0)
     XCTAssertEqual(didCancelSecondPresentedEffects, 0)
     XCTAssertEqual(didSubscribeToFirstEffect, 1)
@@ -63,6 +69,8 @@ final class ReducerPresentsCasePathTests: XCTestCase {
       $0 = .second(SecondDetailState())
     }
 
+    XCTAssertEqual(didRunFirstPresentedReducer, 2)
+    XCTAssertEqual(didRunSecondPresentedReducer, 2)
     XCTAssertEqual(didCancelFirstPresentedEffects, 1)
     XCTAssertEqual(didCancelSecondPresentedEffects, 0)
     XCTAssertEqual(didSubscribeToFirstEffect, 1)
@@ -72,6 +80,8 @@ final class ReducerPresentsCasePathTests: XCTestCase {
 
     store.send(.second(.performEffect))
 
+    XCTAssertEqual(didRunFirstPresentedReducer, 3)
+    XCTAssertEqual(didRunSecondPresentedReducer, 3)
     XCTAssertEqual(didCancelFirstPresentedEffects, 1)
     XCTAssertEqual(didCancelSecondPresentedEffects, 0)
     XCTAssertEqual(didSubscribeToFirstEffect, 1)
@@ -83,6 +93,8 @@ final class ReducerPresentsCasePathTests: XCTestCase {
       $0 = .first(FirstDetailState())
     }
 
+    XCTAssertEqual(didRunFirstPresentedReducer, 4)
+    XCTAssertEqual(didRunSecondPresentedReducer, 4)
     XCTAssertEqual(didCancelFirstPresentedEffects, 1)
     XCTAssertEqual(didCancelSecondPresentedEffects, 1)
     XCTAssertEqual(didSubscribeToFirstEffect, 1)

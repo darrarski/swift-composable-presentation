@@ -10,6 +10,7 @@ extension Reducer {
   ///   - toLocalState: A case path that can extract/embed `LocalState` from `State`.
   ///   - toLocalAction: A case path that can extract/embed `LocalAction` from `Action`.
   ///   - toLocalEnvironment: A function that transforms `Environment` into `LocalEnvironment`.
+  ///   - onRun: A closure invoked when another reducer is run. Defaults to an empty closure.
   ///   - onCancel: A closure invoked when effects produced by another reducer are being cancelled.
   ///       Defaults to an empty closure.
   /// - Returns: A single, combined reducer.
@@ -18,6 +19,7 @@ extension Reducer {
     state toLocalState: CasePath<State, LocalState>,
     action toLocalAction: CasePath<Action, LocalAction>,
     environment toLocalEnvironment: @escaping (Environment) -> LocalEnvironment,
+    onRun: @escaping () -> Void = {},
     onCancel: @escaping () -> Void = {}
   ) -> Self {
     combined(
@@ -26,6 +28,11 @@ extension Reducer {
         action: toLocalAction,
         environment: toLocalEnvironment
       ),
+      run: { action in
+        let shouldRun = true // TODO: check action
+        if shouldRun { onRun() }
+        return shouldRun
+      },
       cancelEffects: { oldState, newState in
         let wasPresented = toLocalState.extract(from: oldState) != nil
         let isDismissed = toLocalState.extract(from: newState) == nil

@@ -11,9 +11,11 @@ final class ReducerCombinedTests: XCTestCase {
   }
 
   var reducer: Reducer<[String], String, Void>!
+  var shouldRunChildReducer: Bool!
   var shouldCancelChildEffect: Bool!
   var mainEffectSubject: PassthroughSubject<String, Never>!
   var childEffectSubject: PassthroughSubject<String, Never>!
+  var didCallRunOnAction: [String]!
   var didCallCancelEffectsOnState: [DidCancelEffects]!
   var didCancelMainEffect: Bool!
   var didCancelChildEffect: Bool!
@@ -21,6 +23,7 @@ final class ReducerCombinedTests: XCTestCase {
   override func setUp() {
     mainEffectSubject = PassthroughSubject()
     childEffectSubject = PassthroughSubject()
+    didCallRunOnAction = []
     didCallCancelEffectsOnState = []
     didCancelMainEffect = false
     didCancelChildEffect = false
@@ -40,6 +43,10 @@ final class ReducerCombinedTests: XCTestCase {
           .map { "child-effect-\($0)" }
           .eraseToEffect()
       },
+      run: { action in
+        self.didCallRunOnAction.append(action)
+        return self.shouldRunChildReducer
+      },
       cancelEffects: { oldState, newState in
         self.didCallCancelEffectsOnState.append(DidCancelEffects(oldState: oldState, newState: newState))
         return self.shouldCancelChildEffect
@@ -49,12 +56,55 @@ final class ReducerCombinedTests: XCTestCase {
 
   override func tearDown() {
     reducer = nil
+    shouldRunChildReducer = nil
     shouldCancelChildEffect = nil
     mainEffectSubject = nil
     childEffectSubject = nil
+    didCallRunOnAction = nil
     didCallCancelEffectsOnState = nil
     didCancelMainEffect = nil
     didCancelChildEffect = nil
+  }
+
+  func testRunChildReducer() {
+    let store = TestStore(
+      initialState: ["init"],
+      reducer: reducer,
+      environment: ()
+    )
+
+    shouldRunChildReducer = true
+    shouldCancelChildEffect = false
+
+    store.send("1") {
+      $0.append(contentsOf: ["child-reducer-1", "main-reducer-1"])
+    }
+
+    XCTAssertEqual(didCallRunOnAction.count, 1)
+    XCTAssertEqual(didCallRunOnAction.last, "1")
+
+    mainEffectSubject.send(completion: .finished)
+    childEffectSubject.send(completion: .finished)
+  }
+
+  func testDontRunChildReducer() {
+    let store = TestStore(
+      initialState: ["init"],
+      reducer: reducer,
+      environment: ()
+    )
+
+    shouldRunChildReducer = false
+    shouldCancelChildEffect = false
+
+    store.send("1") {
+      $0.append("main-reducer-1")
+    }
+
+    XCTAssertEqual(didCallRunOnAction.count, 1)
+    XCTAssertEqual(didCallRunOnAction.last, "1")
+
+    mainEffectSubject.send(completion: .finished)
   }
 
   func testCancelChildEffects() {
@@ -64,6 +114,7 @@ final class ReducerCombinedTests: XCTestCase {
       environment: ()
     )
 
+    shouldRunChildReducer = true
     shouldCancelChildEffect = true
 
     store.send("1") {
@@ -96,6 +147,7 @@ final class ReducerCombinedTests: XCTestCase {
       environment: ()
     )
 
+    shouldRunChildReducer = true
     shouldCancelChildEffect = false
 
     store.send("1") {
