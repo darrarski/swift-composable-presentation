@@ -5,18 +5,28 @@ import XCTest
 
 final class ReducerPresentsKeyPathTests: XCTestCase {
   func testCancelEffectsOnDismiss() {
-    var didSubscribeToEffect = false
-    var didCancelEffect = false
+    var didRunPresentedReducer = 0
+    var didCancelPresentedEffects = 0
+    var didSubscribeToEffect = 0
+    var didCancelEffect = 0
 
     let store = TestStore(
       initialState: MasterState(),
-      reducer: masterReducer,
+      reducer: masterReducer
+        .presents(
+          detailReducer,
+          state: \.detail,
+          action: /MasterAction.detail,
+          environment: \.detail,
+          onRun: { didRunPresentedReducer += 1 },
+          onCancel: { didCancelPresentedEffects += 1 }
+        ),
       environment: MasterEnvironment(
         detail: DetailEnvironment(effect: {
           Empty(completeImmediately: false)
             .handleEvents(
-              receiveSubscription: { _ in didSubscribeToEffect = true },
-              receiveCancel: { didCancelEffect = true }
+              receiveSubscription: { _ in didSubscribeToEffect += 1 },
+              receiveCancel: { didCancelEffect += 1 }
             )
             .eraseToEffect()
         })
@@ -27,15 +37,33 @@ final class ReducerPresentsKeyPathTests: XCTestCase {
       $0.detail = DetailState()
     }
 
+    XCTAssertEqual(didRunPresentedReducer, 0)
+    XCTAssertEqual(didCancelPresentedEffects, 0)
+    XCTAssertEqual(didSubscribeToEffect, 0)
+    XCTAssertEqual(didCancelEffect, 0)
+
     store.send(.detail(.performEffect))
 
-    XCTAssertTrue(didSubscribeToEffect)
+    XCTAssertEqual(didRunPresentedReducer, 1)
+    XCTAssertEqual(didCancelPresentedEffects, 0)
+    XCTAssertEqual(didSubscribeToEffect, 1)
+    XCTAssertEqual(didCancelEffect, 0)
 
     store.send(.dismissDetail) {
       $0.detail = nil
     }
 
-    XCTAssertTrue(didCancelEffect)
+    XCTAssertEqual(didRunPresentedReducer, 1)
+    XCTAssertEqual(didCancelPresentedEffects, 1)
+    XCTAssertEqual(didSubscribeToEffect, 1)
+    XCTAssertEqual(didCancelEffect, 1)
+
+    store.send(.dismissDetail)
+
+    XCTAssertEqual(didRunPresentedReducer, 1)
+    XCTAssertEqual(didCancelPresentedEffects, 1)
+    XCTAssertEqual(didSubscribeToEffect, 1)
+    XCTAssertEqual(didCancelEffect, 1)
   }
 }
 
@@ -71,12 +99,6 @@ private let masterReducer = MasterReducer { state, action, env in
     return .none
   }
 }
-.presents(
-  detailReducer,
-  state: \.detail,
-  action: /MasterAction.detail,
-  environment: \.detail
-)
 
 // MARK: - Detail component
 
