@@ -8,7 +8,7 @@ extension View {
   ///
   /// - Parameters:
   ///   - store: Store with an optional state.
-  ///   - scopeState: Maps the state. Defaults to a closure that returns unchanged state.
+  ///   - mapState: Maps the state. Defaults to a closure that returns unchanged state.
   ///   - onDismiss: Invoked when popover is dismissed.
   ///   - attachmentAnchor: The positioning anchor that defines the attachment point of the popover in macOS.
   ///       The default is `.rect(.bounds)`. iOS ignores this parameter.
@@ -18,7 +18,7 @@ extension View {
   /// - Returns: View with popover added in a background view.
   public func popover<State, Action, Content: View>(
     _ store: Store<State?, Action>,
-    scopeState: @escaping (State?) -> State? = { $0 },
+    mapState: @escaping (State?) -> State? = { $0 },
     onDismiss: @escaping () -> Void,
     attachmentAnchor: PopoverAttachmentAnchor = .rect(.bounds),
     arrowEdge: Edge = .top,
@@ -40,7 +40,7 @@ extension View {
             arrowEdge: arrowEdge,
             content: {
               IfLetStore(
-                store.scope(state: scopeState),
+                store.scope(state: mapState),
                 then: content
               )
             }

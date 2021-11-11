@@ -12,26 +12,26 @@ where Destination: View,
   ///
   /// - Parameters:
   ///   - store: Store with an optional state.
-  ///   - scopeState: Maps the state. Defaults to a closure that returns unchanged state.
+  ///   - mapState: Maps the state. Defaults to a closure that returns unchanged state.
   ///   - setActive: Invoked when link is activated and deactivated.
   ///   - destination: Creates destination view with a store with unwrapped state.
   ///   - label: View used as a link's label.
   public init(
     _ store: Store<State?, Action>,
-    scopeState: @escaping (State?) -> State? = { $0 },
+    mapState: @escaping (State?) -> State? = { $0 },
     setActive: @escaping (Bool) -> Void,
     destination: @escaping (Store<State, Action>) -> Destination,
     label: @escaping () -> Label
   ) {
     self.store = store
-    self.scopeState = scopeState
+    self.mapState = mapState
     self.setActive = setActive
     self.destination = destination
     self.label = label
   }
 
   let store: Store<State?, Action>
-  let scopeState: (State?) -> State?
+  let mapState: (State?) -> State?
   let setActive: (Bool) -> Void
   let destination: (Store<State, Action>) -> Destination
   let label: () -> Label
@@ -45,7 +45,7 @@ where Destination: View,
         ),
         destination: {
           IfLetStore(
-            store.scope(state: scopeState),
+            store.scope(state: mapState),
             then: destination
           )
         },
@@ -63,18 +63,18 @@ extension NavigationLinkWithStore where Label == EmptyView {
   ///
   /// - Parameters:
   ///   - store: Store with an optional state.
-  ///   - scopeState: Maps the state. Defaults to a closure that returns unchanged state.
+  ///   - mapState: Maps the state. Defaults to a closure that returns unchanged state.
   ///   - onDeactivate: Invoked when link is deactivated (dismissed).
   ///   - destination: Creates destination view with a store with unwrapped state.
   public init(
     _ store: Store<State?, Action>,
-    scopeState: @escaping (State?) -> State? = { $0 },
+    mapState: @escaping (State?) -> State? = { $0 },
     onDeactivate: @escaping () -> Void,
     destination: @escaping (Store<State, Action>) -> Destination
   ) {
     self.init(
       store,
-      scopeState: scopeState,
+      mapState: mapState,
       setActive: { active in
         if active == false {
           onDeactivate()

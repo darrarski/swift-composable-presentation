@@ -8,13 +8,13 @@ extension View {
   ///
   /// - Parameters:
   ///   - store: Store with an optional state.
-  ///   - scopeState: Maps the state. Defaults to a closure that returns unchanged state.
+  ///   - mapState: Maps the state. Defaults to a closure that returns unchanged state.
   ///   - onDismiss: Invoked when sheet is dismissed.
   ///   - content: Creates content view with a store with unwrapped state.
   /// - Returns: View with sheet added in a background view.
   public func sheet<State, Action, Content: View>(
     _ store: Store<State?, Action>,
-    scopeState: @escaping (State?) -> State? = { $0 },
+    mapState: @escaping (State?) -> State? = { $0 },
     onDismiss: @escaping () -> Void,
     content: @escaping (Store<State, Action>) -> Content
   ) -> some View {
@@ -32,7 +32,7 @@ extension View {
             ),
             content: {
               IfLetStore(
-                store.scope(state: scopeState),
+                store.scope(state: mapState),
                 then: content
               )
             }

@@ -202,14 +202,14 @@ struct FirstView: View {
     .background(
       NavigationLinkWithStore(
         store.scope(state: \.second, action: FirstAction.second),
-        scopeState: replayNonNil(),
+        mapState: replayNonNil(),
         onDeactivate: { ViewStore(store.stateless).send(.didDismissSecond) },
         destination: SecondView.init(store:)
       )
     )
     .sheet(
       store.scope(state: \.sheet, action: FirstAction.sheet),
-      scopeState: replayNonNil(),
+      mapState: replayNonNil(),
       onDismiss: { ViewStore(store.stateless).send(.didDismissSheet) },
       content: SheetView.init(store:)
     )
@@ -335,7 +335,7 @@ struct SecondView: View {
           state: (/SecondState.Next.third).extract,
           action: SecondAction.third
         ),
-        scopeState: replayNonNil(),
+        mapState: replayNonNil(),
         onDeactivate: { ViewStore(store.stateless).send(.didDismissThird) },
         destination: ThirdView.init(store:)
       )
@@ -346,7 +346,7 @@ struct SecondView: View {
           state: (/SecondState.Next.fourth).extract,
           action: SecondAction.fourth
         ),
-        scopeState: replayNonNil(),
+        mapState: replayNonNil(),
         onDeactivate: { ViewStore(store.stateless).send(.didDismissFourth) },
         destination: FourthView.init(store:)
       )
