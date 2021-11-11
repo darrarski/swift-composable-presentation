@@ -209,9 +209,9 @@ struct FirstView: View {
     )
     .sheet(
       store.scope(state: \.sheet, action: FirstAction.sheet),
-      state: replayNonNil(),
+      scopeState: replayNonNil(),
       onDismiss: { ViewStore(store.stateless).send(.didDismissSheet) },
-      destination: SheetView.init(store:)
+      content: SheetView.init(store:)
     )
   }
 }
