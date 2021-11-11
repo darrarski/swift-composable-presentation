@@ -13,7 +13,7 @@ extension Reducer {
   /// - Parameters:
   ///   - other: Another reducer.
   ///   - shouldRun: Closure used to determine if the other reducer should be run.
-  ///       It takes `Action` as a parameter. Defaults to a closure thtat always returns `true`.
+  ///       It takes `Action` as a parameter. Defaults to a closure that always returns `true`.
   ///   - shouldCancelEffects: Closure used to determine if the effects returned by the another reducer should be
   ///       cancelled. It takes two parameters of type `State`: the state before and after running the reducer.
   ///       Defaults to a closure that always retruns `false`.
