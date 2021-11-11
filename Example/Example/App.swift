@@ -199,11 +199,13 @@ struct FirstView: View {
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(Color.orange.ignoresSafeArea())
     .navigationTitle("First")
-    .navigationLink(
-      store.scope(state: \.second, action: FirstAction.second),
-      state: replayNonNil(),
-      onDismiss: { ViewStore(store.stateless).send(.didDismissSecond) },
-      destination: SecondView.init(store:)
+    .background(
+      NavigationLinkWithStore(
+        store.scope(state: \.second, action: FirstAction.second),
+        scopeState: replayNonNil(),
+        onDeactivate: { ViewStore(store.stateless).send(.didDismissSecond) },
+        destination: SecondView.init(store:)
+      )
     )
     .sheet(
       store.scope(state: \.sheet, action: FirstAction.sheet),
@@ -327,23 +329,27 @@ struct SecondView: View {
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(Color.green.ignoresSafeArea())
     .navigationTitle("Second")
-    .navigationLink(
-      store.scope(state: \.next).scope(
-        state: (/SecondState.Next.third).extract,
-        action: SecondAction.third
-      ),
-      state: replayNonNil(),
-      onDismiss: { ViewStore(store.stateless).send(.didDismissThird) },
-      destination: ThirdView.init(store:)
+    .background(
+      NavigationLinkWithStore(
+        store.scope(state: \.next).scope(
+          state: (/SecondState.Next.third).extract,
+          action: SecondAction.third
+        ),
+        scopeState: replayNonNil(),
+        onDeactivate: { ViewStore(store.stateless).send(.didDismissThird) },
+        destination: ThirdView.init(store:)
+      )
     )
-    .navigationLink(
-      store.scope(state: \.next).scope(
-        state: (/SecondState.Next.fourth).extract,
-        action: SecondAction.fourth
-      ),
-      state: replayNonNil(),
-      onDismiss: { ViewStore(store.stateless).send(.didDismissFourth) },
-      destination: FourthView.init(store:)
+    .background(
+      NavigationLinkWithStore(
+        store.scope(state: \.next).scope(
+          state: (/SecondState.Next.fourth).extract,
+          action: SecondAction.fourth
+        ),
+        scopeState: replayNonNil(),
+        onDeactivate: { ViewStore(store.stateless).send(.didDismissFourth) },
+        destination: FourthView.init(store:)
+      )
     )
   }
 }
