@@ -4,7 +4,7 @@ import ComposableArchitecture
 import XCTest
 @testable import ComposablePresentation
 
-final class ReducerPresentsCasePathTests: XCTestCase {
+final class ReducerPresentingCasePathTests: XCTestCase {
   func testCancelEffectsOnDismiss() {
     var didRunFirstPresentedReducer = 0
     var didRunSecondPresentedReducer = 0
@@ -18,7 +18,7 @@ final class ReducerPresentsCasePathTests: XCTestCase {
     let store = TestStore(
       initialState: MasterState.first(FirstDetailState()),
       reducer: masterReducer
-        .presents(
+        .presenting(
           firstDetailReducer,
           state: /MasterState.first,
           action: /MasterAction.first,
@@ -26,7 +26,7 @@ final class ReducerPresentsCasePathTests: XCTestCase {
           onRun: { didRunFirstPresentedReducer += 1 },
           onCancel: { didCancelFirstPresentedEffects += 1 }
         )
-        .presents(
+        .presenting(
           secondDetailReducer,
           state: /MasterState.second,
           action: /MasterAction.second,

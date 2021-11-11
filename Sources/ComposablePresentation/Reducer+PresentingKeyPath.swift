@@ -17,7 +17,7 @@ extension Reducer {
   ///   - onCancel: A closure invoked when effects produced by another reducer are being cancelled.
   ///       Defaults to an empty closure.
   /// - Returns: A single, combined reducer.
-  public func presents<LocalState, LocalAction, LocalEnvironment>(
+  public func presenting<LocalState, LocalAction, LocalEnvironment>(
     _ localReducer: Reducer<LocalState, LocalAction, LocalEnvironment>,
     breakpointOnNil: Bool = true,
     state toLocalState: WritableKeyPath<State, LocalState?>,
