@@ -15,7 +15,7 @@
     {
       "parallelizable" : true,
       "target" : {
-        "containerPath" : "container:",
+        "containerPath" : "container:..",
         "identifier" : "ComposablePresentationTests",
         "name" : "ComposablePresentationTests"
       }
