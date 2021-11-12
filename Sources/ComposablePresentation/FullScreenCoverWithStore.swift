@@ -1,6 +1,8 @@
 import ComposableArchitecture
 import SwiftUI
 
+#if os(iOS)
+
 extension View {
   /// Adds full screen cover using `Store` with an optional `State`
   ///
@@ -41,3 +43,5 @@ extension View {
     )
   }
 }
+
+#endif
