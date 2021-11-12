@@ -1,7 +1,7 @@
 # Swift Composable Presentation
 
 ![Swift v5.4](https://img.shields.io/badge/swift-v5.4-orange.svg)
-![platforms iOS](https://img.shields.io/badge/platforms-iOS-blue.svg)
+![platforms iOS macOS](https://img.shields.io/badge/platforms-iOS_macOS-blue.svg)
 
 ## 📝 Description
 
