@@ -162,13 +162,13 @@ let firstReducer = Reducer<FirstState, FirstAction, Void>.combine(
     }
   }
 )
-.presents(
+.presenting(
   secondReducer,
   state: \.second,
   action: /FirstAction.second,
   environment: { () }
 )
-.presents(
+.presenting(
   sheetReducer,
   state: \.sheet,
   action: /FirstAction.sheet,
@@ -199,17 +199,19 @@ struct FirstView: View {
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(Color.orange.ignoresSafeArea())
     .navigationTitle("First")
-    .navigationLink(
-      store.scope(state: \.second, action: FirstAction.second),
-      state: replayNonNil(),
-      onDismiss: { ViewStore(store.stateless).send(.didDismissSecond) },
-      destination: SecondView.init(store:)
+    .background(
+      NavigationLinkWithStore(
+        store.scope(state: \.second, action: FirstAction.second),
+        mapState: replayNonNil(),
+        onDeactivate: { ViewStore(store.stateless).send(.didDismissSecond) },
+        destination: SecondView.init(store:)
+      )
     )
     .sheet(
       store.scope(state: \.sheet, action: FirstAction.sheet),
-      state: replayNonNil(),
+      mapState: replayNonNil(),
       onDismiss: { ViewStore(store.stateless).send(.didDismissSheet) },
-      destination: SheetView.init(store:)
+      content: SheetView.init(store:)
     )
   }
 }
@@ -278,7 +280,7 @@ let secondReducer = Reducer<SecondState, SecondAction, Void>.combine(
     }
   }
 )
-.presents(
+.presenting(
   thirdReducer.pullback(
     state: /SecondState.Next.third,
     action: /.self,
@@ -288,7 +290,7 @@ let secondReducer = Reducer<SecondState, SecondAction, Void>.combine(
   action: /SecondAction.third,
   environment: { () }
 )
-.presents(
+.presenting(
   fourthReducer.pullback(
     state: /SecondState.Next.fourth,
     action: /.self,
@@ -327,23 +329,27 @@ struct SecondView: View {
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(Color.green.ignoresSafeArea())
     .navigationTitle("Second")
-    .navigationLink(
-      store.scope(state: \.next).scope(
-        state: (/SecondState.Next.third).extract,
-        action: SecondAction.third
-      ),
-      state: replayNonNil(),
-      onDismiss: { ViewStore(store.stateless).send(.didDismissThird) },
-      destination: ThirdView.init(store:)
+    .background(
+      NavigationLinkWithStore(
+        store.scope(state: \.next).scope(
+          state: (/SecondState.Next.third).extract,
+          action: SecondAction.third
+        ),
+        mapState: replayNonNil(),
+        onDeactivate: { ViewStore(store.stateless).send(.didDismissThird) },
+        destination: ThirdView.init(store:)
+      )
     )
-    .navigationLink(
-      store.scope(state: \.next).scope(
-        state: (/SecondState.Next.fourth).extract,
-        action: SecondAction.fourth
-      ),
-      state: replayNonNil(),
-      onDismiss: { ViewStore(store.stateless).send(.didDismissFourth) },
-      destination: FourthView.init(store:)
+    .background(
+      NavigationLinkWithStore(
+        store.scope(state: \.next).scope(
+          state: (/SecondState.Next.fourth).extract,
+          action: SecondAction.fourth
+        ),
+        mapState: replayNonNil(),
+        onDeactivate: { ViewStore(store.stateless).send(.didDismissFourth) },
+        destination: FourthView.init(store:)
+      )
     )
   }
 }

@@ -8,15 +8,15 @@ extension View {
   ///
   /// - Parameters:
   ///   - store: Store with an optional state.
-  ///   - state: Optional closure that takes `State?` and returns `State?` used to create destination view. Default value returns unchnaged state.
-  ///   - onDismiss: Closure invoked when sheet is dismissed.
-  ///   - destination: Closure that creates destination view with a store with non-optional state.
+  ///   - mapState: Maps the state. Defaults to a closure that returns unchanged state.
+  ///   - onDismiss: Invoked when sheet is dismissed.
+  ///   - content: Creates content view with a store with unwrapped state.
   /// - Returns: View with sheet added in a background view.
   public func sheet<State, Action, Content: View>(
     _ store: Store<State?, Action>,
-    state: @escaping (State?) -> State? = { $0 },
+    mapState: @escaping (State?) -> State? = { $0 },
     onDismiss: @escaping () -> Void,
-    destination: @escaping (Store<State, Action>) -> Content
+    content: @escaping (Store<State, Action>) -> Content
   ) -> some View {
     background(
       WithViewStore(store.scope(state: { $0 != nil })) { viewStore in
@@ -24,16 +24,16 @@ extension View {
           .sheet(
             isPresented: Binding(
               get: { viewStore.state },
-              set: { presented in
-                if presented == false {
+              set: { isPresented in
+                if isPresented == false {
                   onDismiss()
                 }
               }
             ),
             content: {
               IfLetStore(
-                store.scope(state: state),
-                then: destination
+                store.scope(state: mapState),
+                then: content
               )
             }
           )
