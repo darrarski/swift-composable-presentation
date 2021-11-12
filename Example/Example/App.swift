@@ -357,22 +357,18 @@ struct SecondView: View {
 // MARK: - Third component
 
 struct ThirdState {
-  var timer = TimerState()
+  var timers: IdentifiedArrayOf<TimerState> = [TimerState()]
 }
 
 enum ThirdAction {
   case didTapDismissSecond
   case didTapDismissThird
-  case timer(TimerAction)
+  case didTapAddTimer
+  case didDeleteTimer(IndexSet)
+  case timer(id: TimerState.ID, action: TimerAction)
 }
 
 let thirdReducer = Reducer<ThirdState, ThirdAction, Void>.combine(
-  timerReducer.pullback(
-    state: \.timer,
-    action: /ThirdAction.timer,
-    environment: { () }
-  ),
-
   Reducer { state, action, _ in
     switch action {
     case .didTapDismissSecond:
@@ -381,10 +377,26 @@ let thirdReducer = Reducer<ThirdState, ThirdAction, Void>.combine(
     case .didTapDismissThird:
       return .none
 
-    case .timer(_):
+    case .didTapAddTimer:
+      state.timers.insert(TimerState(), at: state.timers.startIndex)
+      return .none
+
+    case let .didDeleteTimer(indexSet):
+      indexSet.forEach { index in
+        _ = state.timers.remove(at: index)
+      }
+      return .none
+
+    case .timer(_, _):
       return .none
     }
   }
+)
+.presenting(
+  forEach: timerReducer,
+  state: \.timers,
+  action: /ThirdAction.timer(id:action:),
+  environment: { () }
 )
 
 struct ThirdView: View {
@@ -392,19 +404,33 @@ struct ThirdView: View {
 
   var body: some View {
     WithViewStore(store.stateless) { viewStore in
-      VStack {
-        TimerView(store: store.scope(
-          state: \.timer,
-          action: ThirdAction.timer
-        ))
-        .padding()
+      List {
+        Section {
+          Button(action: { viewStore.send(.didTapDismissSecond) }) {
+            Text("Dismiss Second")
+          }
 
-        Button(action: { viewStore.send(.didTapDismissSecond) }) {
-          Text("Dismiss Second").padding()
+          Button(action: { viewStore.send(.didTapDismissThird) }) {
+            Text("Dismiss Third")
+          }
+
+          Button(action: { withAnimation { viewStore.send(.didTapAddTimer) } }) {
+            Text("Add Timer")
+          }
         }
 
-        Button(action: { viewStore.send(.didTapDismissThird) }) {
-          Text("Dismiss Third").padding()
+        Section {
+          ForEachStore(
+            store.scope(
+              state: \.timers,
+              action: ThirdAction.timer(id:action:)
+            ),
+            content: TimerView.init(store:)
+          ).onDelete { indexSet in
+            viewStore.send(.didDeleteTimer(indexSet))
+          }
+        } header: {
+          Text("Timers")
         }
       }
     }
