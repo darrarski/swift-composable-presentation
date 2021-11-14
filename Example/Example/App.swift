@@ -1,552 +1,77 @@
-import ComposableArchitecture
-import ComposablePresentation
 import SwiftUI
 
 @main
 struct App: SwiftUI.App {
   var body: some Scene {
     WindowGroup {
-      AppView(store: Store(
-        initialState: AppState(),
-        reducer: appReducer.debug(),
-        environment: ()
-      ))
+      AppView()
     }
   }
 }
-
-// MARK: - App component
-
-struct AppState {
-  var first = FirstState()
-}
-
-enum AppAction {
-  case dismissSecond
-  case dismissThird
-  case dismissFourth
-  case first(FirstAction)
-}
-
-let appReducer = Reducer<AppState, AppAction, Void>.combine(
-  firstReducer.pullback(
-    state: \.first,
-    action: /AppAction.first,
-    environment: { () }
-  )
-)
 
 struct AppView: View {
-  let store: Store<AppState, AppAction>
+  enum Destination: String, CaseIterable {
+    case sheetExample
+    case fullScreenCoverExample
+    case navigationLinkExample
+    case forEachStoreExample
+    case popToRootExample
 
-  var body: some View {
-    NavigationView {
-      FirstView(store: store.scope(
-        state: \.first,
-        action: AppAction.first
-      ))
-    }
-    .navigationViewStyle(StackNavigationViewStyle())
-  }
-}
-
-#if DEBUG
-struct AppView_Previews: PreviewProvider {
-  static var previews: some View {
-    AppView(store: Store(
-      initialState: AppState(),
-      reducer: appReducer,
-      environment: ()
-    ))
-  }
-}
-#endif
-
-// MARK: - Timer component
-
-struct TimerState: Identifiable {
-  struct ID: Hashable {
-    var uuid = UUID()
-  }
-
-  let id = ID()
-  var seconds: Int = 0
-}
-
-enum TimerAction {
-  case start
-  case tick
-}
-
-let timerReducer = Reducer<TimerState, TimerAction, Void> { state, action, _ in
-  switch action {
-  case .start:
-    return Effect.timer(id: state.id, every: 1, on: DispatchQueue.main)
-      .map { _ in TimerAction.tick }
-
-  case .tick:
-    state.seconds += 1
-    return .none
-  }
-}
-
-struct TimerView: View {
-  let store: Store<TimerState, TimerAction>
-
-  var body: some View {
-    WithViewStore(store.scope(state: \.seconds)) { viewStore in
-      Text("\(viewStore.state)")
-        .padding()
-        .foregroundColor(.gray)
-        .background(Color.white)
-        .onAppear { viewStore.send(.start) }
+    var title: String {
+      rawValue[rawValue.startIndex].uppercased() +
+      rawValue[rawValue.index(after: rawValue.startIndex)...]
     }
   }
-}
 
-// MARK: - First component
-
-struct FirstState {
-  var timer = TimerState()
-  var second: SecondState?
-  var sheet: SheetState?
-}
-
-enum FirstAction {
-  case didTapPresentSecond
-  case didDismissSecond
-  case didTapPresentSheet
-  case didDismissSheet
-  case timer(TimerAction)
-  case second(SecondAction)
-  case sheet(SheetAction)
-}
-
-let firstReducer = Reducer<FirstState, FirstAction, Void>.combine(
-  timerReducer.pullback(
-    state: \.timer,
-    action: /FirstAction.timer,
-    environment: { () }
-  ),
-
-  Reducer { state, action, _ in
-    switch action {
-    case .didTapPresentSecond:
-      state.second = SecondState()
-      return .none
-
-    case .didDismissSecond,
-         .second(.didTapDismissSecond),
-         .second(.third(.didTapDismissSecond)),
-         .second(.fourth(.didTapDismissSecond)):
-      state.second = nil
-      return .none
-
-    case .didTapPresentSheet:
-      state.sheet = SheetState()
-      return .none
-
-    case .didDismissSheet,
-         .sheet(.didTapDismiss):
-      state.sheet = nil
-      return .none
-
-    case .timer(_):
-      return .none
-
-    case .second(_):
-      return .none
-
-    case .sheet(_):
-      return .none
-    }
-  }
-)
-.presenting(
-  secondReducer,
-  state: \.second,
-  action: /FirstAction.second,
-  environment: { () }
-)
-.presenting(
-  sheetReducer,
-  state: \.sheet,
-  action: /FirstAction.sheet,
-  environment: { () }
-)
-
-struct FirstView: View {
-  let store: Store<FirstState, FirstAction>
+  @State var destination: Destination?
 
   var body: some View {
-    WithViewStore(store.stateless) { viewStore in
-      VStack {
-        TimerView(store: store.scope(
-          state: \.timer,
-          action: FirstAction.timer
-        ))
-        .padding()
+    if let destination = destination {
+      VStack(spacing: 0) {
+        ZStack {
+          switch destination {
+          case .sheetExample:
+            SheetExample()
 
-        Button(action: { viewStore.send(.didTapPresentSecond) }) {
-          Text("Present Second").padding()
+          case .fullScreenCoverExample:
+            FullScreenCoverExample()
+
+          case .navigationLinkExample:
+            NavigationLinkExample()
+
+          case .forEachStoreExample:
+            ForEachStoreExample()
+
+          case .popToRootExample:
+            PopToRootExample()
+          }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-        Button(action: { viewStore.send(.didTapPresentSheet) }) {
-          Text("Present Sheet").padding()
+        Divider()
+
+        Button(action: { self.destination = nil }) {
+          Text("Quit example").padding()
         }
       }
-    }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .background(Color.orange.ignoresSafeArea())
-    .navigationTitle("First")
-    .background(
-      NavigationLinkWithStore(
-        store.scope(state: \.second, action: FirstAction.second),
-        mapState: replayNonNil(),
-        onDeactivate: { ViewStore(store.stateless).send(.didDismissSecond) },
-        destination: SecondView.init(store:)
-      )
-    )
-    .sheet(
-      store.scope(state: \.sheet, action: FirstAction.sheet),
-      mapState: replayNonNil(),
-      onDismiss: { ViewStore(store.stateless).send(.didDismissSheet) },
-      content: SheetView.init(store:)
-    )
-  }
-}
-
-// MARK: - Second component
-
-struct SecondState {
-  enum Next {
-    case third(ThirdState)
-    case fourth(FourthState)
-  }
-
-  var timer = TimerState()
-  var next: Next?
-}
-
-enum SecondAction {
-  case didTapDismissSecond
-  case didTapPresentThird
-  case didTapPresentFourth
-  case didDismissThird
-  case didDismissFourth
-  case timer(TimerAction)
-  case third(ThirdAction)
-  case fourth(FourthAction)
-}
-
-let secondReducer = Reducer<SecondState, SecondAction, Void>.combine(
-  timerReducer.pullback(
-    state: \.timer,
-    action: /SecondAction.timer,
-    environment: { () }
-  ),
-
-  Reducer { state, action, _ in
-    switch action {
-    case .didTapDismissSecond:
-      return .none
-
-    case .didTapPresentThird:
-      state.next = .third(ThirdState())
-      return .none
-
-    case .didDismissThird,
-         .third(.didTapDismissThird):
-      state.next = nil
-      return .none
-
-    case .didTapPresentFourth:
-      state.next = .fourth(FourthState())
-      return .none
-
-    case .didDismissFourth,
-         .fourth(.didTapDismissFourth):
-      state.next = nil
-      return .none
-
-    case .timer(_):
-      return .none
-
-    case .third(_):
-      return .none
-
-    case .fourth(_):
-      return .none
-    }
-  }
-)
-.presenting(
-  thirdReducer.pullback(
-    state: /SecondState.Next.third,
-    action: /.self,
-    environment: { $0 }
-  ),
-  state: \.next,
-  action: /SecondAction.third,
-  environment: { () }
-)
-.presenting(
-  fourthReducer.pullback(
-    state: /SecondState.Next.fourth,
-    action: /.self,
-    environment: { $0 }
-  ),
-  state: \.next,
-  action: /SecondAction.fourth,
-  environment: { () }
-)
-
-struct SecondView: View {
-  let store: Store<SecondState, SecondAction>
-
-  var body: some View {
-    WithViewStore(store.stateless) { viewStore in
-      VStack {
-        TimerView(store: store.scope(
-          state: \.timer,
-          action: SecondAction.timer
-        ))
-        .padding()
-
-        Button(action: { viewStore.send(.didTapDismissSecond) }) {
-          Text("Dismiss Second").padding()
-        }
-
-        Button(action: { viewStore.send(.didTapPresentThird) }) {
-          Text("Present Third").padding()
-        }
-
-        Button(action: { viewStore.send(.didTapPresentFourth) }) {
-          Text("Present Fourth").padding()
-        }
-      }
-    }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .background(Color.green.ignoresSafeArea())
-    .navigationTitle("Second")
-    .background(
-      NavigationLinkWithStore(
-        store.scope(state: \.next).scope(
-          state: (/SecondState.Next.third).extract,
-          action: SecondAction.third
-        ),
-        mapState: replayNonNil(),
-        onDeactivate: { ViewStore(store.stateless).send(.didDismissThird) },
-        destination: ThirdView.init(store:)
-      )
-    )
-    .background(
-      NavigationLinkWithStore(
-        store.scope(state: \.next).scope(
-          state: (/SecondState.Next.fourth).extract,
-          action: SecondAction.fourth
-        ),
-        mapState: replayNonNil(),
-        onDeactivate: { ViewStore(store.stateless).send(.didDismissFourth) },
-        destination: FourthView.init(store:)
-      )
-    )
-  }
-}
-
-// MARK: - Third component
-
-struct ThirdState {
-  var timers: IdentifiedArrayOf<TimerState> = [TimerState()]
-}
-
-enum ThirdAction {
-  case didTapDismissSecond
-  case didTapDismissThird
-  case didTapAddTimer
-  case didDeleteTimer(IndexSet)
-  case timer(id: TimerState.ID, action: TimerAction)
-}
-
-let thirdReducer = Reducer<ThirdState, ThirdAction, Void>.combine(
-  Reducer { state, action, _ in
-    switch action {
-    case .didTapDismissSecond:
-      return .none
-
-    case .didTapDismissThird:
-      return .none
-
-    case .didTapAddTimer:
-      state.timers.insert(TimerState(), at: state.timers.startIndex)
-      return .none
-
-    case let .didDeleteTimer(indexSet):
-      indexSet.forEach { index in
-        _ = state.timers.remove(at: index)
-      }
-      return .none
-
-    case .timer(_, _):
-      return .none
-    }
-  }
-)
-.presenting(
-  forEach: timerReducer,
-  state: \.timers,
-  action: /ThirdAction.timer(id:action:),
-  environment: { () }
-)
-
-struct ThirdView: View {
-  let store: Store<ThirdState, ThirdAction>
-
-  var body: some View {
-    WithViewStore(store.stateless) { viewStore in
+    } else {
       List {
         Section {
-          Button(action: { viewStore.send(.didTapDismissSecond) }) {
-            Text("Dismiss Second")
-          }
-
-          Button(action: { viewStore.send(.didTapDismissThird) }) {
-            Text("Dismiss Third")
-          }
-
-          Button(action: { withAnimation { viewStore.send(.didTapAddTimer) } }) {
-            Text("Add Timer")
-          }
-        }
-
-        Section {
-          ForEachStore(
-            store.scope(
-              state: \.timers,
-              action: ThirdAction.timer(id:action:)
-            ),
-            content: TimerView.init(store:)
-          ).onDelete { indexSet in
-            viewStore.send(.didDeleteTimer(indexSet))
+          ForEach(Destination.allCases, id: \.self) { destination in
+            Button(action: { self.destination = destination }) {
+              Text(destination.title)
+            }
           }
         } header: {
-          Text("Timers")
+          Text("Examples")
         }
       }
     }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .background(Color.gray.ignoresSafeArea())
-    .navigationTitle("Third")
   }
 }
 
-// MARK: - Fourth component
-
-struct FourthState {
-  var timer = TimerState()
-}
-
-enum FourthAction {
-  case didTapDismissSecond
-  case didTapDismissFourth
-  case timer(TimerAction)
-}
-
-let fourthReducer = Reducer<FourthState, FourthAction, Void>.combine(
-  timerReducer.pullback(
-    state: \.timer,
-    action: /FourthAction.timer,
-    environment: { () }
-  ),
-
-  Reducer { state, action, _ in
-    switch action {
-    case .didTapDismissSecond:
-      return .none
-
-    case .didTapDismissFourth:
-      return .none
-
-    case .timer(_):
-      return .none
-    }
-  }
-)
-
-struct FourthView: View {
-  let store: Store<FourthState, FourthAction>
-
-  var body: some View {
-    WithViewStore(store.stateless) { viewStore in
-      VStack {
-        TimerView(store: store.scope(
-          state: \.timer,
-          action: FourthAction.timer
-        ))
-        .padding()
-
-        Button(action: { viewStore.send(.didTapDismissSecond) }) {
-          Text("Dismiss Second").padding()
-        }
-
-        Button(action: { viewStore.send(.didTapDismissFourth) }) {
-          Text("Dismiss Fourth").padding()
-        }
-      }
-    }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .background(Color.purple.ignoresSafeArea())
-    .navigationTitle("Fourth")
-  }
-}
-
-// MARK: - Sheet component
-
-struct SheetState {
-  var timer = TimerState()
-}
-
-enum SheetAction {
-  case didTapDismiss
-  case timer(TimerAction)
-}
-
-let sheetReducer = Reducer<SheetState, SheetAction, Void>.combine(
-  timerReducer.pullback(
-    state: \.timer,
-    action: /SheetAction.timer,
-    environment: { () }
-  ),
-
-  Reducer { state, action, _ in
-    switch action {
-    case .didTapDismiss:
-      return .none
-
-    case .timer(_):
-      return .none
-    }
-  }
-)
-
-struct SheetView: View {
-  let store: Store<SheetState, SheetAction>
-
-  var body: some View {
-    WithViewStore(store.stateless) { viewStore in
-      VStack {
-        TimerView(store: store.scope(
-          state: \.timer,
-          action: SheetAction.timer
-        ))
-        .padding()
-
-        Button(action: { viewStore.send(.didTapDismiss) }) {
-          Text("Dismiss").padding()
-        }
-      }
-    }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .background(Color.green.ignoresSafeArea())
+struct AppView_Previews: PreviewProvider {
+  static var previews: some View {
+    AppView()
   }
 }
