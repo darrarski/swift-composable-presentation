@@ -29,7 +29,9 @@ extension Reducer {
     environment toLocalEnvironment: @escaping (Environment) -> LocalEnvironment,
     breakpointOnNil: Bool = true,
     onRun: @escaping (LocalState.ID) -> Void = { _ in },
-    onCancel: @escaping (LocalState.ID) -> Void = { _ in }
+    onCancel: @escaping (LocalState.ID) -> Void = { _ in },
+    file: StaticString = #fileID,
+    line: UInt = #line
   ) -> Self {
     let presentationId = UUID()
     return Reducer { state, action, environment in
@@ -43,7 +45,9 @@ extension Reducer {
             state: toLocalState,
             action: toLocalAction,
             environment: toLocalEnvironment,
-            breakpointOnNil: breakpointOnNil
+            breakpointOnNil: breakpointOnNil,
+            file: file,
+            line: line
           )
           .run(&state, action, environment)
           .cancellable(id: CancellationId(
