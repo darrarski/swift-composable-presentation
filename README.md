@@ -60,6 +60,10 @@ SwiftUI example that shows how to dismiss multiple navigation links at once (pop
 
 In most cases, the presentation has a corresponding present and dismiss animations. When we drive it with an optional state, it becomes a problem. Let's say we want to programmatically dismiss a sheet, so we set its state to `nil`. It triggers the dismiss animation, but due to the fact that our state is already `nil`, we can't present the sheet content during this transition. As a workaround, `ComposablePresentation` provides `replayNonNil` function that can be passed to the optional `mapState` parameter of `NavigationLinkWithStore`, `View.sheet`, `View. popover`, and other SwiftUI helper functions.
 
+### ➡️ [SwitchStore example](Example/Example/SwitchStoreExample.swift)
+
+SwiftUI example of a component that conditionally presents one of two child components. The state is modeled as an enum with two cases. All effects produced by the child component are canceled when the child component is removed from the parent component.
+
 ## 🛠 Develop
 
 - Use Xcode ≥ 13.1.
