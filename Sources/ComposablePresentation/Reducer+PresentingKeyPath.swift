@@ -28,28 +28,55 @@ extension Reducer {
     file: StaticString = #fileID,
     line: UInt = #line
   ) -> Self {
-    combined(
-      with: localReducer.optional(
-        breakpointOnNil: breakpointOnNil,
-        file: file,
-        line: line
-      ).pullback(
-        state: toLocalState,
-        action: toLocalAction,
-        environment: toLocalEnvironment
-      ),
-      shouldRun: { action in
-        let shouldRun = toLocalAction.extract(from: action) != nil
-        if shouldRun { onRun() }
-        return shouldRun
-      },
-      shouldCancelEffects: { oldState, newState in
-        let wasPresented = oldState[keyPath: toLocalState] != nil
-        let isDismissed = newState[keyPath: toLocalState] == nil
-        let shouldCancel = wasPresented && isDismissed
-        if shouldCancel { onCancel() }
-        return shouldCancel
+    let localEffectsId = EffectsId()
+
+    let shouldRun: (Action) -> Bool = { action in
+      let shouldRun = toLocalAction.extract(from: action) != nil
+      if shouldRun { onRun() }
+      return shouldRun
+    }
+
+    let shouldCancelEffects: (State, State) -> Bool = { oldState, newState in
+      let wasPresented = oldState[keyPath: toLocalState] != nil
+      let isDismissed = newState[keyPath: toLocalState] == nil
+      let shouldCancel = wasPresented && isDismissed
+      if shouldCancel { onCancel() }
+      return shouldCancel
+    }
+
+    return Reducer { state, action, environment in
+      let oldState = state
+      let localEffects: Effect<Action, Never>
+      if shouldRun(action) {
+        localEffects = localReducer
+          .optional(
+            breakpointOnNil: breakpointOnNil,
+            file: file,
+            line: line
+          )
+          .pullback(
+            state: toLocalState,
+            action: toLocalAction,
+            environment: toLocalEnvironment
+          )
+          .run(&state, action, environment)
+          .cancellable(id: localEffectsId)
+      } else {
+        localEffects = .none
       }
-    )
+      let effects = run(&state, action, environment)
+      let newState = state
+      let cancelEffects = shouldCancelEffects(oldState, newState)
+
+      return .merge(
+        localEffects,
+        effects,
+        cancelEffects ? .cancel(id: localEffectsId) : .none
+      )
+    }
   }
+}
+
+private struct EffectsId: Hashable {
+  let id = UUID()
 }
