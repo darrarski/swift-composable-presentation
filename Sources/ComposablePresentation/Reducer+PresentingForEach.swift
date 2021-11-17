@@ -3,13 +3,12 @@ import ComposableArchitecture
 extension Reducer {
   /// Combines the reducer with another reducer that works on elements of `IdentifiedArray`.
   ///
-  /// - All effects returned by another reducer will be canceled when `LocalState` becomes `nil`.
+  /// - All effects returned by another reducer when reducing a `LocalState` will be canceled
+  ///   when the `LocalState` is removed from `IdentifiedArray`.
+  /// - Inspired by [Reducer.presents function](https://github.com/pointfreeco/swift-composable-architecture/blob/9ec4b71e5a84f448dedb063a21673e4696ce135f/Sources/ComposableArchitecture/Reducer.swift#L549-L572) from `iso` branch of `swift-composable-architecture` repository.
   ///
   /// - Parameters:
   ///   - localReducer: A reducer that works on `LocalState`, `LocalAction`, `LocalEnvironment`.
-  ///   - breakpointOnNil: If `true`, raises `SIGTRAP` signal when an action is sent to the reducer
-  ///       but state is `nil`. This is generally considered a logic error, as a child reducer cannot
-  ///       process a child action for unavailable child state (defaults to `true`).
   ///   - toLocalState: A key path from `State` to `IdentifiedArrayOf<LocalState>`.
   ///   - toLocalAction: A case path that can extract/embed `LocalAction` from `Action`.
   ///   - toLocalEnvironment: A function that transforms `Environment` into `LocalEnvironment`.

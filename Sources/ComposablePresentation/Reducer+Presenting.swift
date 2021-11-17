@@ -4,6 +4,7 @@ extension Reducer {
   /// Combines the reducer with another reducer that works on optionally presented `LocalState`.
   ///
   /// - All effects returned by another reducer will be canceled when `LocalState` becomes `nil`.
+  /// - Inspired by [Reducer.presents function](https://github.com/pointfreeco/swift-composable-architecture/blob/9ec4b71e5a84f448dedb063a21673e4696ce135f/Sources/ComposableArchitecture/Reducer.swift#L549-L572) from `iso` branch of `swift-composable-architecture` repository.
   ///
   /// - Parameters:
   ///   - localReducer: A reducer that works on `LocalState`, `LocalAction`, `LocalEnvironment`.
