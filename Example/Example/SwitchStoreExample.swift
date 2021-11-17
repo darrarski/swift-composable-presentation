@@ -154,7 +154,7 @@ struct SwitchStoreExample: View {
   var body: some View {
     MainView(store: Store(
       initialState: MainState.first(FirstState()),
-      reducer: Self.mainReducer,
+      reducer: Self.mainReducer.debug(),
       environment: ()
     ))
   }

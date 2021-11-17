@@ -76,7 +76,7 @@ struct ForEachStoreExample: View {
   var body: some View {
     ListView(store: Store(
       initialState: ListState(timers: [TimerState()]),
-      reducer: Self.listReducer,
+      reducer: Self.listReducer.debug(),
       environment: ()
     ))
   }

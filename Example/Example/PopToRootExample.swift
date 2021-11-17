@@ -206,7 +206,7 @@ struct PopToRootExample: View {
     NavigationView {
       RootView(store: Store(
         initialState: RootState(),
-        reducer: Self.rootReducer,
+        reducer: Self.rootReducer.debug(),
         environment: ()
       ))
     }

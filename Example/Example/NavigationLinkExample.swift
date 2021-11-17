@@ -89,7 +89,7 @@ struct NavigationLinkExample: View {
     NavigationView {
       MasterView(store: Store(
         initialState: MasterState(),
-        reducer: Self.masterReducer,
+        reducer: Self.masterReducer.debug(),
         environment: ()
       ))
     }

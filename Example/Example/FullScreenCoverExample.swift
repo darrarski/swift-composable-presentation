@@ -98,7 +98,7 @@ struct FullScreenCoverExample: View {
   var body: some View {
     MasterView(store: Store(
       initialState: MasterState(),
-      reducer: Self.masterReducer,
+      reducer: Self.masterReducer.debug(),
       environment: ()
     ))
   }
