@@ -34,11 +34,23 @@ extension Reducer {
     line: UInt = #line
   ) -> Self {
     let presentationId = UUID()
+
+    func elementId(for action: Action) -> LocalState.ID? {
+      guard let (id, _) = toLocalAction.extract(from: action) else {
+        return nil
+      }
+      return id
+    }
+
+    func effectId(for id: LocalState.ID) -> ReducerPresentingForEachEffectId {
+      .init(presentationId: presentationId, elementId: id)
+    }
+
     return Reducer { state, action, environment in
       let oldIds = state[keyPath: toLocalState].ids
       let localEffects: Effect<Action, Never>
 
-      if let (id, _) = toLocalAction.extract(from: action) {
+      if let id = elementId(for: action) {
         onRun(id)
         localEffects = localReducer
           .forEach(
@@ -50,10 +62,7 @@ extension Reducer {
             line: line
           )
           .run(&state, action, environment)
-          .cancellable(id: CancellationId(
-            presentationId: presentationId,
-            elementId: id
-          ))
+          .cancellable(id: effectId(for: id))
       } else {
         localEffects = .none
       }
@@ -65,10 +74,7 @@ extension Reducer {
 
       removedIds.forEach { id in
         onCancel(id)
-        cancellationEffects.append(.cancel(id: CancellationId(
-          presentationId: presentationId,
-          elementId: id
-        )))
+        cancellationEffects.append(.cancel(id: effectId(for: id)))
       }
 
       return .merge(
@@ -80,7 +86,7 @@ extension Reducer {
   }
 }
 
-private struct CancellationId: Hashable {
+struct ReducerPresentingForEachEffectId: Hashable {
   var presentationId: UUID
   var elementId: AnyHashable
 }
