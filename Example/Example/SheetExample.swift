@@ -23,6 +23,10 @@ struct SheetExample: View {
       state.detail = nil
       return .none
 
+    case .detail(.didTapDismiss):
+      state.detail = nil
+      return .none
+
     case .detail(_):
       return .none
     }
@@ -46,6 +50,7 @@ struct SheetExample: View {
             state: \.detail,
             action: MasterAction.detail
           ),
+          mapState: replayNonNil(),
           onDismiss: { viewStore.send(.didDismissDetail) },
           content: DetailView.init(store:)
         )
@@ -58,6 +63,7 @@ struct SheetExample: View {
   }
 
   enum DetailAction {
+    case didTapDismiss
     case timer(TimerAction)
   }
 
@@ -73,12 +79,18 @@ struct SheetExample: View {
     let store: Store<DetailState, DetailAction>
 
     var body: some View {
-      TimerView(store: store.scope(
-        state: \.timer,
-        action: DetailAction.timer
-      ))
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.secondarySystemBackground).ignoresSafeArea())
+      VStack {
+        TimerView(store: store.scope(
+          state: \.timer,
+          action: DetailAction.timer
+        ))
+
+        Button(action: { ViewStore(store.stateless).send(.didTapDismiss) }) {
+          Text("Dismiss").padding()
+        }
+      }
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .background(Color(.secondarySystemBackground).ignoresSafeArea())
     }
   }
 
