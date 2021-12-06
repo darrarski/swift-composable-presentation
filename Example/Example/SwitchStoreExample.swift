@@ -45,12 +45,12 @@ struct SwitchStoreExample: View {
     }
   }.presenting(
     firstReducer,
-    state: /MainState.first,
+    state: .casePath(/MainState.first),
     action: /MainAction.first,
     environment: { () }
   ).presenting(
     secondReducer,
-    state: /MainState.second,
+    state: .casePath(/MainState.second),
     action: /MainAction.second,
     environment: { () }
   )

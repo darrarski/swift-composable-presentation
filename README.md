@@ -21,9 +21,8 @@ More info about the concept can be found in the article: [Thoughts on SwiftUI na
 ComposablePresentation (Xcode Workspace)
  ├─ swift-composable-presentation (Swift Package)
  |   └─ ComposablePresentation (Library)
- ├─ Example (Xcode Project)
- |   └─ Example (iOS Application)
- └─ Tests (Xcode Test Plan)
+ └─ Example (Xcode Project)
+     └─ Example (iOS Application)
 ```
 
 ## 📖 Usage
