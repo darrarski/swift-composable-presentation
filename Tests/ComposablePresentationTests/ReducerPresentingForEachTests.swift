@@ -4,11 +4,69 @@ import XCTest
 @testable import ComposablePresentation
 
 final class ReducerPresentingForEachTests: XCTestCase {
-  func testCancelEffectsOnDismiss() {
-    var didRunPresentedReducer: [DetailState.ID] = []
-    var didCancelPresentedEffects: [DetailState.ID] = []
-    var didSubscribeToEffect: [DetailState.ID] = []
-    var didCancelEffect: [DetailState.ID] = []
+  func testPresenting() {
+    var didPresent = [DetailState.ID]()
+    var didRun = [DetailState.ID]()
+    var didFireEffect = [DetailState.ID]()
+    var didDismiss = [DetailState.ID]()
+    var didCancelEffect = [DetailState.ID]()
+
+    struct MasterState: Equatable {
+      var details: IdentifiedArrayOf<DetailState>
+    }
+
+    enum MasterAction: Equatable {
+      case presentDetail(id: Int)
+      case dismissDetail(id: Int)
+      case detail(id: Int, action: DetailAction)
+    }
+
+    struct MasterEnvironment {
+      var detail: DetailEnvironment
+    }
+
+    let masterReducer = Reducer<MasterState, MasterAction, MasterEnvironment>
+    { state, action, env in
+      switch action {
+      case let .presentDetail(id):
+        state.details.append(DetailState(id: id))
+        return .none
+
+      case let .dismissDetail(id):
+        _ = state.details.remove(id: id)
+        return .none
+
+      case .detail(_, _):
+        return .none
+      }
+    }
+
+    struct DetailState: Equatable, Identifiable {
+      var id: Int
+    }
+
+    enum DetailAction: Equatable {
+      case performEffect
+      case didPerformEffect
+    }
+
+    struct DetailEnvironment {
+      var effect: (DetailState.ID) -> Effect<Void, Never>
+    }
+
+    let detailReducer = Reducer<DetailState, DetailAction, DetailEnvironment>
+    { state, action, env in
+      didRun.append(state.id)
+      switch action {
+      case .performEffect:
+        return env.effect(state.id)
+          .map { _ in DetailAction.didPerformEffect }
+          .eraseToEffect()
+
+      case .didPerformEffect:
+        return .none
+      }
+    }
 
     let store = TestStore(
       initialState: MasterState(details: []),
@@ -18,15 +76,21 @@ final class ReducerPresentingForEachTests: XCTestCase {
           state: \.details,
           action: /MasterAction.detail(id:action:),
           environment: \.detail,
-          onRun: { didRunPresentedReducer.append($0) },
-          onCancel: { didCancelPresentedEffects.append($0) }
+          onPresent: .init { id, _, _ in
+            didPresent.append(id)
+            return .none
+          },
+          onDismiss: .init { id, _, _ in
+            didDismiss.append(id)
+            return .none
+          }
         ),
       environment: MasterEnvironment(
         detail: DetailEnvironment(
           effect: { id in
             Empty(completeImmediately: false)
               .handleEvents(
-                receiveSubscription: { _ in didSubscribeToEffect.append(id) },
+                receiveSubscription: { _ in didFireEffect.append(id) },
                 receiveCancel: { didCancelEffect.append(id) }
               )
               .eraseToEffect()
@@ -39,112 +103,56 @@ final class ReducerPresentingForEachTests: XCTestCase {
       $0.details.append(DetailState(id: 1))
     }
 
-    XCTAssertEqual(didRunPresentedReducer, [])
-    XCTAssertEqual(didCancelPresentedEffects, [])
-    XCTAssertEqual(didSubscribeToEffect, [])
+    XCTAssertEqual(didPresent, [1])
+    XCTAssertEqual(didRun, [])
+    XCTAssertEqual(didFireEffect, [])
+    XCTAssertEqual(didDismiss, [])
     XCTAssertEqual(didCancelEffect, [])
 
     store.send(.detail(id: 1, action: .performEffect))
 
-    XCTAssertEqual(didRunPresentedReducer, [1])
-    XCTAssertEqual(didCancelPresentedEffects, [])
-    XCTAssertEqual(didSubscribeToEffect, [1])
+    XCTAssertEqual(didPresent, [1])
+    XCTAssertEqual(didRun, [1])
+    XCTAssertEqual(didFireEffect, [1])
+    XCTAssertEqual(didDismiss, [])
     XCTAssertEqual(didCancelEffect, [])
 
     store.send(.presentDetail(id: 2)) {
       $0.details.append(DetailState(id: 2))
     }
 
-    XCTAssertEqual(didRunPresentedReducer, [1])
-    XCTAssertEqual(didCancelPresentedEffects, [])
-    XCTAssertEqual(didSubscribeToEffect, [1])
+    XCTAssertEqual(didPresent, [1, 2])
+    XCTAssertEqual(didRun, [1])
+    XCTAssertEqual(didFireEffect, [1])
+    XCTAssertEqual(didDismiss, [])
     XCTAssertEqual(didCancelEffect, [])
 
     store.send(.detail(id: 2, action: .performEffect))
 
-    XCTAssertEqual(didRunPresentedReducer, [1, 2])
-    XCTAssertEqual(didCancelPresentedEffects, [])
-    XCTAssertEqual(didSubscribeToEffect, [1, 2])
+    XCTAssertEqual(didPresent, [1, 2])
+    XCTAssertEqual(didRun, [1, 2])
+    XCTAssertEqual(didFireEffect, [1, 2])
+    XCTAssertEqual(didDismiss, [])
     XCTAssertEqual(didCancelEffect, [])
 
     store.send(.dismissDetail(id: 1)) {
       $0.details.remove(id: 1)
     }
 
-    XCTAssertEqual(didRunPresentedReducer, [1, 2])
-    XCTAssertEqual(didCancelPresentedEffects, [1])
-    XCTAssertEqual(didSubscribeToEffect, [1, 2])
+    XCTAssertEqual(didPresent, [1, 2])
+    XCTAssertEqual(didRun, [1, 2])
+    XCTAssertEqual(didFireEffect, [1, 2])
+    XCTAssertEqual(didDismiss, [1])
     XCTAssertEqual(didCancelEffect, [1])
 
     store.send(.dismissDetail(id: 2)) {
       $0.details.remove(id: 2)
     }
 
-    XCTAssertEqual(didRunPresentedReducer, [1, 2])
-    XCTAssertEqual(didCancelPresentedEffects, [1, 2])
-    XCTAssertEqual(didSubscribeToEffect, [1, 2])
+    XCTAssertEqual(didPresent, [1, 2])
+    XCTAssertEqual(didRun, [1, 2])
+    XCTAssertEqual(didFireEffect, [1, 2])
+    XCTAssertEqual(didDismiss, [1, 2])
     XCTAssertEqual(didCancelEffect, [1, 2])
-  }
-}
-
-// MARK: - Master component
-
-private struct MasterState: Equatable {
-  var details: IdentifiedArrayOf<DetailState>
-}
-
-private enum MasterAction: Equatable {
-  case presentDetail(id: Int)
-  case dismissDetail(id: Int)
-  case detail(id: Int, action: DetailAction)
-}
-
-private struct MasterEnvironment {
-  var detail: DetailEnvironment
-}
-
-private typealias MasterReducer = Reducer<MasterState, MasterAction, MasterEnvironment>
-
-private let masterReducer = MasterReducer { state, action, env in
-  switch action {
-  case let .presentDetail(id):
-    state.details.append(DetailState(id: id))
-    return .none
-
-  case let .dismissDetail(id):
-    _ = state.details.remove(id: id)
-    return .none
-
-  case .detail(_, _):
-    return .none
-  }
-}
-
-// MARK: - Detail component
-
-private struct DetailState: Equatable, Identifiable {
-  var id: Int
-}
-
-private enum DetailAction: Equatable {
-  case performEffect
-  case didPerformEffect
-}
-
-private struct DetailEnvironment {
-  var effect: (DetailState.ID) -> Effect<Void, Never>
-}
-
-private typealias DetailReducer = Reducer<DetailState, DetailAction, DetailEnvironment>
-
-private let detailReducer = DetailReducer { state, action, env in
-  switch action {
-  case .performEffect:
-    return env.effect(state.id)
-      .map { _ in DetailAction.didPerformEffect }
-      .eraseToEffect()
-
-  case .didPerformEffect:
-    return .none
   }
 }

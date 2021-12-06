@@ -1,9 +1,23 @@
 import ComposableArchitecture
 
 extension Reducer {
-  /// Combines the reducer with another reducer that works on elements of `IdentifiedArray`.
+  /// Describes for-each presentation action, like `onPresent` or `onDismiss`.
+  public struct ReducerPresentingForEachAction<LocalState: Identifiable> {
+    public typealias Run = (LocalState.ID, inout State, Environment) -> Effect<Action, Never>
+
+    /// An action that performs no state mutations and returns no effects.
+    public static var empty: Self { .init { _, _, _ in .none } }
+
+    public init(run: @escaping Run) {
+      self.run = run
+    }
+
+    public var run: Run
+  }
+
+  /// Combines the reducer with a local reducer that works on elements of `IdentifiedArray`.
   ///
-  /// - All effects returned by another reducer when reducing a `LocalState` will be canceled
+  /// - All effects returned by the local reducer when reducing a `LocalState` will be canceled
   ///   when the `LocalState` is removed from `IdentifiedArray`.
   /// - Inspired by [Reducer.presents function](https://github.com/pointfreeco/swift-composable-architecture/blob/9ec4b71e5a84f448dedb063a21673e4696ce135f/Sources/ComposableArchitecture/Reducer.swift#L549-L572) from `iso` branch of `swift-composable-architecture` repository.
   ///
@@ -12,23 +26,21 @@ extension Reducer {
   ///   - toLocalState: A key path from `State` to `IdentifiedArrayOf<LocalState>`.
   ///   - toLocalAction: A case path that can extract/embed `LocalAction` from `Action`.
   ///   - toLocalEnvironment: A function that transforms `Environment` into `LocalEnvironment`.
+  ///   - onPresent: An action run when `LocalState` is added to the array. Defaults to an empty action.
+  ///   - onDismiss: An action run when `LocalState` is removed from the array. Defaults to an empty action.
   ///   - breakpointOnNil: If `true`, raises `SIGTRAP` signal when an action is sent to the reducer but the
   ///       identified array does not contain an element with the action's identifier. This is
   ///       generally considered a logic error, as a child reducer cannot process a child action
   ///       for unavailable child state. Default value is `true`.
-  ///   - onRun: A closure invoked when another reducer is run. `LocalState.ID` is passed as an argument.
-  ///       Defaults to an empty closure.
-  ///   - onCancel: A closure invoked when effects produced by another reducer are being cancelled.
-  ///       `LocalState.ID` is passed as an argument. Defaults to an empty closure.
   /// - Returns: A single, combined reducer.
   public func presenting<LocalState, LocalAction, LocalEnvironment>(
     forEach localReducer: Reducer<LocalState, LocalAction, LocalEnvironment>,
     state toLocalState: WritableKeyPath<State, IdentifiedArrayOf<LocalState>>,
     action toLocalAction: CasePath<Action, (LocalState.ID, LocalAction)>,
     environment toLocalEnvironment: @escaping (Environment) -> LocalEnvironment,
+    onPresent: ReducerPresentingForEachAction<LocalState> = .empty,
+    onDismiss: ReducerPresentingForEachAction<LocalState> = .empty,
     breakpointOnNil: Bool = true,
-    onRun: @escaping (LocalState.ID) -> Void = { _ in },
-    onCancel: @escaping (LocalState.ID) -> Void = { _ in },
     file: StaticString = #fileID,
     line: UInt = #line
   ) -> Self {
@@ -50,7 +62,6 @@ extension Reducer {
       let localEffects: Effect<Action, Never>
 
       if let id = elementId(for: action) {
-        onRun(id)
         localEffects = localReducer
           .forEach(
             state: toLocalState,
@@ -67,19 +78,24 @@ extension Reducer {
       }
 
       let effects = run(&state, action, environment)
-      var cancellationEffects: [Effect<Action, Never>] = []
       let newIds = state[keyPath: toLocalState].ids
-      let removedIds = oldIds.subtracting(newIds)
+      let presentedIds = newIds.subtracting(oldIds)
+      let dismissedIds = oldIds.subtracting(newIds)
+      var presentationEffects: [Effect<Action, Never>] = []
 
-      removedIds.forEach { id in
-        onCancel(id)
-        cancellationEffects.append(.cancel(id: effectId(for: id)))
+      dismissedIds.forEach { id in
+        presentationEffects.append(onDismiss.run(id, &state, environment))
+        presentationEffects.append(.cancel(id: effectId(for: id)))
+      }
+
+      presentedIds.forEach { id in
+        presentationEffects.append(onPresent.run(id, &state, environment))
       }
 
       return .merge(
         localEffects,
         effects,
-        .merge(cancellationEffects)
+        .merge(presentationEffects)
       )
     }
   }

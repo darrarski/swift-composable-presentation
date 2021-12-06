@@ -1,9 +1,23 @@
 import ComposableArchitecture
 
 extension Reducer {
-  /// Combines the reducer with another reducer that works on optionally presented `LocalState`.
+  /// Describes presentation action, like `onPresent` or `onDismiss`.
+  public struct ReducerPresentingAction {
+    public typealias Run = (inout State, Environment) -> Effect<Action, Never>
+
+    /// An action that performs no state mutations and returns no effects.
+    public static var empty: Self { .init { _, _ in .none } }
+
+    public init(run: @escaping Run) {
+      self.run = run
+    }
+
+    public var run: Run
+  }
+
+  /// Combines the reducer with a local reducer that works on optionally presented `LocalState`.
   ///
-  /// - All effects returned by another reducer will be canceled when `LocalState` becomes `nil`.
+  /// - All effects returned by the local reducer will be canceled when `LocalState` becomes `nil`.
   /// - Inspired by [Reducer.presents function](https://github.com/pointfreeco/swift-composable-architecture/blob/9ec4b71e5a84f448dedb063a21673e4696ce135f/Sources/ComposableArchitecture/Reducer.swift#L549-L572) from `iso` branch of `swift-composable-architecture` repository.
   ///
   /// - Parameters:
@@ -11,21 +25,20 @@ extension Reducer {
   ///   - toLocalState: A key path that can get/set `LocalState` inside `State`.
   ///   - toLocalAction: A case path that can extract/embed `LocalAction` from `Action`.
   ///   - toLocalEnvironment: A function that transforms `Environment` into `LocalEnvironment`.
+  ///   - onPresent: An action run when `LocalState` is set to an honest value. Defaults to an empty action.
+  ///   - onDismiss: An action run when `LocalState` becomes `nil`. Defaults to an empty action.
   ///   - breakpointOnNil: If `true`, raises `SIGTRAP` signal when an action is sent to the reducer
   ///       but state is `nil`. This is generally considered a logic error, as a child reducer cannot
   ///       process a child action for unavailable child state. Default value is `true`.
-  ///   - onRun: A closure invoked when another reducer is run. Defaults to an empty closure.
-  ///   - onCancel: A closure invoked when effects produced by another reducer are being cancelled.
-  ///       Defaults to an empty closure.
   /// - Returns: A single, combined reducer.
   public func presenting<LocalState, LocalAction, LocalEnvironment>(
     _ localReducer: Reducer<LocalState, LocalAction, LocalEnvironment>,
     state toLocalState: WritableKeyPath<State, LocalState?>,
     action toLocalAction: CasePath<Action, LocalAction>,
     environment toLocalEnvironment: @escaping (Environment) -> LocalEnvironment,
+    onPresent: ReducerPresentingAction = .empty,
+    onDismiss: ReducerPresentingAction = .empty,
     breakpointOnNil: Bool = true,
-    onRun: @escaping () -> Void = {},
-    onCancel: @escaping () -> Void = {},
     file: StaticString = #fileID,
     line: UInt = #line
   ) -> Self {
@@ -34,38 +47,37 @@ extension Reducer {
       state: .keyPath(toLocalState),
       action: toLocalAction,
       environment: toLocalEnvironment,
+      onPresent: onPresent,
+      onDismiss: onDismiss,
       breakpointOnNil: breakpointOnNil,
-      onRun: onRun,
-      onCancel: onCancel,
       file: file,
       line: line
     )
   }
 
-  /// Combines the reducer with another reducer that works on optionally presented `LocalState`.
+  /// Combines the reducer with a local reducer that works on optionally presented `LocalState`.
   ///
-  /// - All effects returned by another reducer will be canceled when `LocalState` becomes `nil`.
+  /// - All effects returned by the local reducer will be canceled when `LocalState` becomes `nil`.
   ///
   /// - Parameters:
   ///   - localReducer: A reducer that works on `LocalState`, `LocalAction`, `LocalEnvironment`.
   ///   - toLocalState: A case path that can extract/embed `LocalState` from `State`.
   ///   - toLocalAction: A case path that can extract/embed `LocalAction` from `Action`.
   ///   - toLocalEnvironment: A function that transforms `Environment` into `LocalEnvironment`.
+  ///   - onPresent: An action run when `LocalState` is set to an honest value. Defaults to an empty action.
+  ///   - onDismiss: An action run when `LocalState` becomes `nil`. Defaults to an empty action.
   ///   - breakpointOnNil: If `true`, raises `SIGTRAP` signal when an action is sent to the reducer
   ///       but state is in invalid case. This is generally considered a logic error, as a child reducer cannot
   ///       process a child action for unavailable child state. Default value is `true`.
-  ///   - onRun: A closure invoked when another reducer is run. Defaults to an empty closure.
-  ///   - onCancel: A closure invoked when effects produced by another reducer are being cancelled.
-  ///       Defaults to an empty closure.
   /// - Returns: A single, combined reducer.
   public func presenting<LocalState, LocalAction, LocalEnvironment>(
     _ localReducer: Reducer<LocalState, LocalAction, LocalEnvironment>,
     state toLocalState: CasePath<State, LocalState>,
     action toLocalAction: CasePath<Action, LocalAction>,
     environment toLocalEnvironment: @escaping (Environment) -> LocalEnvironment,
+    onPresent: ReducerPresentingAction = .empty,
+    onDismiss: ReducerPresentingAction = .empty,
     breakpointOnNil: Bool = true,
-    onRun: @escaping () -> Void = {},
-    onCancel: @escaping () -> Void = {},
     file: StaticString = #fileID,
     line: UInt = #line
   ) -> Self {
@@ -74,9 +86,9 @@ extension Reducer {
       state: .casePath(toLocalState),
       action: toLocalAction,
       environment: toLocalEnvironment,
+      onPresent: onPresent,
+      onDismiss: onDismiss,
       breakpointOnNil: breakpointOnNil,
-      onRun: onRun,
-      onCancel: onCancel,
       file: file,
       line: line
     )
@@ -87,32 +99,20 @@ extension Reducer {
     state toLocalState: ReducerPresentingToLocalState<State, LocalState>,
     action toLocalAction: CasePath<Action, LocalAction>,
     environment toLocalEnvironment: @escaping (Environment) -> LocalEnvironment,
+    onPresent: ReducerPresentingAction = .empty,
+    onDismiss: ReducerPresentingAction = .empty,
     breakpointOnNil: Bool = true,
-    onRun: @escaping () -> Void = {},
-    onCancel: @escaping () -> Void = {},
     file: StaticString = #fileID,
     line: UInt = #line
   ) -> Self {
     let localEffectsId = ReducerPresentingEffectId()
 
-    func shouldRun(for action: Action) -> Bool {
-      let shouldRun = toLocalAction.extract(from: action) != nil
-      if shouldRun { onRun() }
-      return shouldRun
-    }
-
-    func shouldCancelEffects(for oldState: State, _ newState: State) -> Bool {
-      let wasPresented = toLocalState(oldState) != nil
-      let isDismissed = toLocalState(newState) == nil
-      let shouldCancel = wasPresented && isDismissed
-      if shouldCancel { onCancel() }
-      return shouldCancel
-    }
-
     return Reducer { state, action, environment in
       let oldState = state
+
+      let shouldRunLocal = toLocalAction.extract(from: action) != nil
       let localEffects: Effect<Action, Never>
-      if shouldRun(for: action) {
+      if shouldRunLocal {
         localEffects = localReducer
           .pullback(
             state: toLocalState,
@@ -127,14 +127,27 @@ extension Reducer {
       } else {
         localEffects = .none
       }
-      let effects = run(&state, action, environment)
+
+      let effects = self.run(&state, action, environment)
       let newState = state
-      let cancelEffects = shouldCancelEffects(for: oldState, newState)
+      let wasPresented = toLocalState(oldState) != nil
+      let isPresented = toLocalState(newState) != nil
+
+      let presentationEffects: Effect<Action, Never>
+      if !wasPresented && isPresented {
+        presentationEffects = onPresent.run(&state, environment)
+      } else if wasPresented && !isPresented {
+        presentationEffects = onDismiss.run(&state, environment)
+          .append(Effect.cancel(id: localEffectsId))
+          .eraseToEffect()
+      } else {
+        presentationEffects = .none
+      }
 
       return .merge(
         localEffects,
         effects,
-        cancelEffects ? .cancel(id: localEffectsId) : .none
+        presentationEffects
       )
     }
   }
