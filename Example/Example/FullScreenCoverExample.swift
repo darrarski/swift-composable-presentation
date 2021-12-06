@@ -29,7 +29,7 @@ struct FullScreenCoverExample: View {
   }
     .presenting(
       detailReducer,
-      state: \.detail,
+      state: .keyPath(\.detail),
       action: /MasterAction.detail,
       environment: { () }
     )

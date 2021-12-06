@@ -1,20 +1,6 @@
 import ComposableArchitecture
 
 extension Reducer {
-  /// Describes for-each presentation action, like `onPresent` or `onDismiss`.
-  public struct ReducerPresentingForEachAction<LocalState: Identifiable> {
-    public typealias Run = (LocalState.ID, inout State, Environment) -> Effect<Action, Never>
-
-    /// An action that performs no state mutations and returns no effects.
-    public static var empty: Self { .init { _, _, _ in .none } }
-
-    public init(run: @escaping Run) {
-      self.run = run
-    }
-
-    public var run: Run
-  }
-
   /// Combines the reducer with a local reducer that works on elements of `IdentifiedArray`.
   ///
   /// - All effects returned by the local reducer when reducing a `LocalState` will be canceled
@@ -38,8 +24,8 @@ extension Reducer {
     state toLocalState: WritableKeyPath<State, IdentifiedArrayOf<LocalState>>,
     action toLocalAction: CasePath<Action, (LocalState.ID, LocalAction)>,
     environment toLocalEnvironment: @escaping (Environment) -> LocalEnvironment,
-    onPresent: ReducerPresentingForEachAction<LocalState> = .empty,
-    onDismiss: ReducerPresentingForEachAction<LocalState> = .empty,
+    onPresent: ReducerPresentingForEachAction<LocalState.ID, State, Action, Environment> = .empty,
+    onDismiss: ReducerPresentingForEachAction<LocalState.ID, State, Action, Environment> = .empty,
     breakpointOnNil: Bool = true,
     file: StaticString = #fileID,
     line: UInt = #line
@@ -99,6 +85,20 @@ extension Reducer {
       )
     }
   }
+}
+
+/// Describes for-each presentation action, like `onPresent` or `onDismiss`.
+public struct ReducerPresentingForEachAction<ID, State, Action, Environment> {
+  public typealias Run = (ID, inout State, Environment) -> Effect<Action, Never>
+
+  /// An action that performs no state mutations and returns no effects.
+  public static var empty: Self { .init { _, _, _ in .none } }
+
+  public init(run: @escaping Run) {
+    self.run = run
+  }
+
+  public var run: Run
 }
 
 struct ReducerPresentingForEachEffectId: Hashable {

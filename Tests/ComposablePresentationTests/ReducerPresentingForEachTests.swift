@@ -4,7 +4,7 @@ import XCTest
 @testable import ComposablePresentation
 
 final class ReducerPresentingForEachTests: XCTestCase {
-  func testPresenting() {
+  func testPresentingWithIdentifiedArray() {
     var didPresent = [DetailState.ID]()
     var didRun = [DetailState.ID]()
     var didFireEffect = [DetailState.ID]()
