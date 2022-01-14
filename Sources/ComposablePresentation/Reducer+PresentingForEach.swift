@@ -14,10 +14,6 @@ extension Reducer {
   ///   - toLocalEnvironment: A function that transforms `Environment` into `LocalEnvironment`.
   ///   - onPresent: An action run when `LocalState` is added to the array. Defaults to an empty action.
   ///   - onDismiss: An action run when `LocalState` is removed from the array. Defaults to an empty action.
-  ///   - breakpointOnNil: If `true`, raises `SIGTRAP` signal when an action is sent to the reducer but the
-  ///       identified array does not contain an element with the action's identifier. This is
-  ///       generally considered a logic error, as a child reducer cannot process a child action
-  ///       for unavailable child state. Default value is `true`.
   /// - Returns: A single, combined reducer.
   public func presenting<LocalState, LocalAction, LocalEnvironment>(
     forEach localReducer: Reducer<LocalState, LocalAction, LocalEnvironment>,
@@ -26,7 +22,6 @@ extension Reducer {
     environment toLocalEnvironment: @escaping (Environment) -> LocalEnvironment,
     onPresent: ReducerPresentingForEachAction<LocalState.ID, State, Action, Environment> = .empty,
     onDismiss: ReducerPresentingForEachAction<LocalState.ID, State, Action, Environment> = .empty,
-    breakpointOnNil: Bool = true,
     file: StaticString = #fileID,
     line: UInt = #line
   ) -> Self {
@@ -53,7 +48,6 @@ extension Reducer {
             state: toLocalState,
             action: toLocalAction,
             environment: toLocalEnvironment,
-            breakpointOnNil: breakpointOnNil,
             file: file,
             line: line
           )

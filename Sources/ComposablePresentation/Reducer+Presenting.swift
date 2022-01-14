@@ -13,9 +13,6 @@ extension Reducer {
   ///   - toLocalEnvironment: A function that transforms `Environment` into `LocalEnvironment`.
   ///   - onPresent: An action run when `LocalState` is set to an honest value. Defaults to an empty action.
   ///   - onDismiss: An action run when `LocalState` becomes `nil`. Defaults to an empty action.
-  ///   - breakpointOnNil: If `true`, raises `SIGTRAP` signal when an action is sent to the reducer
-  ///       but state is `nil`. This is generally considered a logic error, as a child reducer cannot
-  ///       process a child action for unavailable child state. Default value is `true`.
   /// - Returns: A single, combined reducer.
   public func presenting<LocalState, LocalAction, LocalEnvironment>(
     _ localReducer: Reducer<LocalState, LocalAction, LocalEnvironment>,
@@ -24,7 +21,6 @@ extension Reducer {
     environment toLocalEnvironment: @escaping (Environment) -> LocalEnvironment,
     onPresent: ReducerPresentingAction<State, Action, Environment> = .empty,
     onDismiss: ReducerPresentingAction<State, Action, Environment> = .empty,
-    breakpointOnNil: Bool = true,
     file: StaticString = #fileID,
     line: UInt = #line
   ) -> Self {
@@ -40,7 +36,6 @@ extension Reducer {
         case let .keyPath(keyPath):
           localEffects = localReducer
             .optional(
-              breakpointOnNil: breakpointOnNil,
               file: file,
               line: line
             )
@@ -58,7 +53,6 @@ extension Reducer {
               state: casePath,
               action: toLocalAction,
               environment: toLocalEnvironment,
-              breakpointOnNil: breakpointOnNil,
               file: file,
               line: line
             )
