@@ -18,7 +18,7 @@ extension Reducer {
   ///       process a child action for unavailable child state. Default value is `true`.
   /// - Returns: A single, combined reducer.
   @available(*, deprecated, message: """
-  Use `Redcuer.presenting` function that takes `ReducerPresentingToLocalState` as `state` parameter.
+  Use `Reducer.presenting` function that takes `ReducerPresentingToLocalState` as `state` parameter.
 
   You can wrap currently passed value with `.keyPath(...)` to fix this warning.
   """)
@@ -63,7 +63,7 @@ extension Reducer {
   ///       process a child action for unavailable child state. Default value is `true`.
   /// - Returns: A single, combined reducer.
   @available(*, deprecated, message: """
-  Use `Redcuer.presenting` function that takes `ReducerPresentingToLocalState` as `state` parameter.
+  Use `Reducer.presenting` function that takes `ReducerPresentingToLocalState` as `state` parameter.
 
   You can wrap currently passed value with `.casePath(...)` to fix this warning.
   """)
