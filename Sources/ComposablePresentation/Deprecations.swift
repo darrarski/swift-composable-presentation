@@ -119,7 +119,7 @@ extension Reducer {
     environment toLocalEnvironment: @escaping (Environment) -> LocalEnvironment,
     onPresent: ReducerPresentingForEachAction<LocalState.ID, State, Action, Environment> = .empty,
     onDismiss: ReducerPresentingForEachAction<LocalState.ID, State, Action, Environment> = .empty,
-    breakpointOnNil: Bool = true,
+    breakpointOnNil: Bool,
     file: StaticString = #fileID,
     line: UInt = #line
   ) -> Self {
@@ -161,7 +161,7 @@ extension Reducer {
     environment toLocalEnvironment: @escaping (Environment) -> LocalEnvironment,
     onPresent: ReducerPresentingAction<State, Action, Environment> = .empty,
     onDismiss: ReducerPresentingAction<State, Action, Environment> = .empty,
-    breakpointOnNil: Bool = true,
+    breakpointOnNil: Bool,
     file: StaticString = #fileID,
     line: UInt = #line
   ) -> Self {
