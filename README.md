@@ -47,6 +47,10 @@ SwiftUI example that shows how to present a full-screen cover with content drive
 
 SwiftUI example with `NavigationLink` driven by a store with an optional state. The link is active when the store's state has an honest value, and inactive when it becomes `nil`. All effects produced by the store's reducer while the content is presented are canceled when the link destination dismisses.
 
+### ➡️ [NavigationLink selection example](Example/Example/NavigationLinkSelectionExample.swift)
+
+SwiftUI example of `NavigationLink` with `tag` and `selection`, driven by a store with an optional state. It shows how to use store-driven `NavigationLink` on a list, and present details screen when the list item is selected. All effects produced by the store's reducer are canceled when selection changes.
+
 ### ➡️ [ForEachStore example](Example/Example/ForEachStoreExample.swift)
 
 SwiftUI example with a list of components. When a component is deleted from the list, all effects produced by its reducer are canceled.
@@ -55,7 +59,7 @@ SwiftUI example with a list of components. When a component is deleted from the 
 
 SwiftUI example that shows how to dismiss multiple navigation links at once (poping back to root view) in state-driven navigation. All effects produced by reducers of presented stores are canceled on dismiss.
 
-### ➡️ [Replay non-nil state](Example/Example/PopToRootExample.swift#L68)
+### ➡️ [Replay non-nil state](Example/Example/PopToRootExample.swift#L69)
 
 In most cases, the presentation has a corresponding present and dismiss animations. When we drive it with an optional state, it becomes a problem. Let's say we want to programmatically dismiss a sheet, so we set its state to `nil`. It triggers the dismiss animation, but due to the fact that our state is already `nil`, we can't present the sheet content during this transition. As a workaround, `ComposablePresentation` provides `replayNonNil` function that can be passed to the optional `mapState` parameter of `NavigationLinkWithStore`, `View.sheet`, `View. popover`, and other SwiftUI helper functions.
 
