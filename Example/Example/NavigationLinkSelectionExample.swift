@@ -45,35 +45,27 @@ struct NavigationLinkSelectionExample: View {
     let store: Store<MasterState, MasterAction>
 
     struct ViewState: Equatable {
-      let items: [Item]
-      let selectedItemID: Item.ID?
+      let itemIds: [Item.ID]
 
       init(_ state: MasterState) {
-        items = state.items
-        selectedItemID = state.detail?.item.id
+        itemIds = state.items.map(\.id)
       }
     }
 
     var body: some View {
       WithViewStore(store.scope(state: ViewState.init)) { viewStore in
         List {
-          ForEach(viewStore.items) { item in
-            NavigationLink(
-              tag: item.id,
-              selection: viewStore.binding(
-                get: \.selectedItemID,
-                send: MasterAction.didSelect
+          ForEach(viewStore.itemIds, id: \.self) { itemId in
+            NavigationLinkSelectWithStore(
+              store.scope(
+                state: \.detail,
+                action: MasterAction.detail
               ),
-              destination: {
-                IfLetStore(
-                  store.scope(
-                    state: \.detail,
-                    action: MasterAction.detail
-                  ),
-                  then: DetailView.init(store:)
-                )
-              },
-              label: { Text("Item \(item.id)") }
+              tag: itemId,
+              stateTag: \.item.id,
+              onSelect: { viewStore.send(.didSelect(itemId: $0)) },
+              destination: DetailView.init(store:),
+              label: { Text("Item \(itemId)") }
             )
           }
         }
