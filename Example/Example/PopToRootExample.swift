@@ -46,6 +46,7 @@ struct PopToRootExample: View {
   ).presenting(
     Self.firstReducer,
     state: .keyPath(\.first),
+    id: .notNil(),
     action: /RootAction.first,
     environment: { () }
   )
@@ -119,6 +120,7 @@ struct PopToRootExample: View {
   ).presenting(
     Self.secondReducer,
     state: .keyPath(\.second),
+    id: .notNil(),
     action: /FirstAction.second,
     environment: { () }
   )

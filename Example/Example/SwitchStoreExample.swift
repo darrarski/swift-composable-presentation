@@ -46,11 +46,13 @@ struct SwitchStoreExample: View {
   }.presenting(
     firstReducer,
     state: .casePath(/MainState.first),
+    id: .notNil(),
     action: /MainAction.first,
     environment: { () }
   ).presenting(
     secondReducer,
     state: .casePath(/MainState.second),
+    id: .notNil(),
     action: /MainAction.second,
     environment: { () }
   )
