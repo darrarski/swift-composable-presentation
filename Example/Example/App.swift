@@ -14,6 +14,7 @@ struct AppView: View {
     case sheetExample
     case fullScreenCoverExample
     case navigationLinkExample
+    case navigationLinkSelectionExample
     case forEachStoreExample
     case popToRootExample
     case switchStoreExample
@@ -39,6 +40,9 @@ struct AppView: View {
 
           case .navigationLinkExample:
             NavigationLinkExample()
+
+          case .navigationLinkSelectionExample:
+            NavigationLinkSelectionExample()
 
           case .forEachStoreExample:
             ForEachStoreExample()
