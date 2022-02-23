@@ -27,8 +27,8 @@ extension Reducer {
     state toLocalState: WritableKeyPath<State, LocalState?>,
     action toLocalAction: CasePath<Action, LocalAction>,
     environment toLocalEnvironment: @escaping (Environment) -> LocalEnvironment,
-    onPresent: ReducerPresentingAction<State, Action, Environment> = .empty,
-    onDismiss: ReducerPresentingAction<State, Action, Environment> = .empty,
+    onPresent: ReducerPresentingAction<State, LocalState, Action, Environment> = .empty,
+    onDismiss: ReducerPresentingAction<State, LocalState, Action, Environment> = .empty,
     breakpointOnNil: Bool = true,
     file: StaticString = #fileID,
     line: UInt = #line
@@ -72,8 +72,8 @@ extension Reducer {
     state toLocalState: CasePath<State, LocalState>,
     action toLocalAction: CasePath<Action, LocalAction>,
     environment toLocalEnvironment: @escaping (Environment) -> LocalEnvironment,
-    onPresent: ReducerPresentingAction<State, Action, Environment> = .empty,
-    onDismiss: ReducerPresentingAction<State, Action, Environment> = .empty,
+    onPresent: ReducerPresentingAction<State, LocalState, Action, Environment> = .empty,
+    onDismiss: ReducerPresentingAction<State, LocalState, Action, Environment> = .empty,
     breakpointOnNil: Bool = true,
     file: StaticString = #fileID,
     line: UInt = #line
@@ -159,8 +159,8 @@ extension Reducer {
     state toLocalState: ReducerPresentingToLocalState<State, LocalState>,
     action toLocalAction: CasePath<Action, LocalAction>,
     environment toLocalEnvironment: @escaping (Environment) -> LocalEnvironment,
-    onPresent: ReducerPresentingAction<State, Action, Environment> = .empty,
-    onDismiss: ReducerPresentingAction<State, Action, Environment> = .empty,
+    onPresent: ReducerPresentingAction<State, LocalState, Action, Environment> = .empty,
+    onDismiss: ReducerPresentingAction<State, LocalState, Action, Environment> = .empty,
     breakpointOnNil: Bool,
     file: StaticString = #fileID,
     line: UInt = #line
@@ -175,5 +175,57 @@ extension Reducer {
       file: file,
       line: line
     )
+  }
+
+  /// Combines the reducer with a local reducer that works on optionally presented `LocalState`.
+  ///
+  /// - All effects returned by the local reducer will be canceled when `LocalState` becomes `nil`.
+  /// - Inspired by [Reducer.presents function](https://github.com/pointfreeco/swift-composable-architecture/blob/9ec4b71e5a84f448dedb063a21673e4696ce135f/Sources/ComposableArchitecture/Reducer.swift#L549-L572) from `iso` branch of `swift-composable-architecture` repository.
+  ///
+  /// - Parameters:
+  ///   - localReducer: A reducer that works on `LocalState`, `LocalAction`, `LocalEnvironment`.
+  ///   - toLocalState: `ReducerPresentingToLocalState` that can get/set `LocalState` inside `State`.
+  ///   - toLocalAction: A case path that can extract/embed `LocalAction` from `Action`.
+  ///   - toLocalEnvironment: A function that transforms `Environment` into `LocalEnvironment`.
+  ///   - onPresent: An action run when `LocalState` is set to an honest value. Defaults to an empty action.
+  ///   - onDismiss: An action run when `LocalState` becomes `nil`. Defaults to an empty action.
+  /// - Returns: A single, combined reducer.
+  @available(*, deprecated, message: """
+  'Reducer.presenting' requires 'id' parameter.
+  Using 'ReducerPresentingToLocalId.notNil()` as a fallback.
+  Explicitly provide `id` to fix this warning.
+  """)
+  public func presenting<LocalState, LocalAction, LocalEnvironment>(
+    _ localReducer: Reducer<LocalState, LocalAction, LocalEnvironment>,
+    state toLocalState: ReducerPresentingToLocalState<State, LocalState>,
+    action toLocalAction: CasePath<Action, LocalAction>,
+    environment toLocalEnvironment: @escaping (Environment) -> LocalEnvironment,
+    onPresent: ReducerPresentingAction<State, LocalState, Action, Environment> = .empty,
+    onDismiss: ReducerPresentingAction<State, LocalState, Action, Environment> = .empty,
+    file: StaticString = #fileID,
+    line: UInt = #line
+  ) -> Self {
+    presenting(
+      localReducer,
+      state: toLocalState,
+      id: .notNil(),
+      action: toLocalAction,
+      environment: toLocalEnvironment,
+      onPresent: onPresent,
+      onDismiss: onDismiss,
+      file: file,
+      line: line
+    )
+  }
+}
+
+extension ReducerPresentingAction {
+  @available(*, deprecated, message: """
+  'ReducerPresentingAction.Run' expects three parameters: 'inout State', 'LocalState', and 'Environment'.
+  """)
+  public init(run: @escaping (inout State, Environment) -> Effect<Action, Never>) {
+    self.init { state, _, environment in
+      run(&state, environment)
+    }
   }
 }

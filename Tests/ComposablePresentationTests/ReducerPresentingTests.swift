@@ -73,13 +73,14 @@ final class ReducerPresentingTests: XCTestCase {
         .presenting(
           detailReducer,
           state: .keyPath(\.detail),
+          id: .notNil(),
           action: /MasterAction.detail,
           environment: \.detail,
-          onPresent: .init { _, _ in
+          onPresent: .init { _, _, _ in
             didPresentDetail += 1
             return .none
           },
-          onDismiss: .init { _, _ in
+          onDismiss: .init { _, _, _ in
             didDismissDetail += 1
             return .none
           }
@@ -227,13 +228,14 @@ final class ReducerPresentingTests: XCTestCase {
         .presenting(
           firstReducer,
           state: .casePath(/MasterState.first),
+          id: .notNil(),
           action: /MasterAction.first,
           environment: \.first,
-          onPresent: .init { _, _ in
+          onPresent: .init { _, _, _ in
             didPresentFirst += 1
             return .none
           },
-          onDismiss: .init { _, _ in
+          onDismiss: .init { _, _, _ in
             didDismissFirst += 1
             return .none
           }
@@ -241,13 +243,14 @@ final class ReducerPresentingTests: XCTestCase {
         .presenting(
           secondReducer,
           state: .casePath(/MasterState.second),
+          id: .notNil(),
           action: /MasterAction.second,
           environment: \.second,
-          onPresent: .init { _, _ in
+          onPresent: .init { _, _, _ in
             didPresentSecond += 1
             return .none
           },
-          onDismiss: .init { _, _ in
+          onDismiss: .init { _, _, _ in
             didDismissSecond += 1
             return .none
           }
@@ -331,5 +334,137 @@ final class ReducerPresentingTests: XCTestCase {
     XCTAssertEqual(didFireSecondEffect, 1)
     XCTAssertEqual(didDismissSecond, 1)
     XCTAssertEqual(didCancelSecondEffect, 1)
+  }
+
+  func testPresentingWithId() {
+    var didPresentDetail = [DetailState.ID]()
+    var didRunDetailReducer = [DetailState.ID]()
+    var didFireDetailEffect = [DetailState.ID]()
+    var didDismissDetail = [DetailState.ID]()
+    var didCancelDetailEffect = [DetailState.ID]()
+
+    struct MasterState: Equatable {
+      var detail: DetailState?
+    }
+
+    enum MasterAction: Equatable {
+      case presentDetail(id: DetailState.ID?)
+      case detail(DetailAction)
+    }
+
+    struct MasterEnvironment {
+      var detail: DetailEnvironment
+    }
+
+    let masterReducer = Reducer<MasterState, MasterAction, MasterEnvironment>
+    { state, action, env in
+      switch action {
+      case .presentDetail(let id):
+        state.detail = id.map(DetailState.init(id:))
+        return .none
+
+      case .detail:
+        return .none
+      }
+    }
+
+    struct DetailState: Equatable {
+      typealias ID = Int
+      var id: ID
+    }
+
+    enum DetailAction: Equatable {
+      case performEffect
+    }
+
+    struct DetailEnvironment {
+      var effect: (DetailState.ID) -> Effect<Never, Never>
+    }
+
+    let detailReducer = Reducer<DetailState, DetailAction, DetailEnvironment>
+    { state, action, env in
+      didRunDetailReducer.append(state.id)
+      switch action {
+      case .performEffect:
+        return env.effect(state.id)
+          .fireAndForget()
+      }
+    }
+
+    let store = TestStore(
+      initialState: MasterState(),
+      reducer: masterReducer
+        .presenting(
+          detailReducer,
+          state: .keyPath(\.detail),
+          id: .keyPath(\.?.id),
+          action: /MasterAction.detail,
+          environment: \.detail,
+          onPresent: .init { _, localState, _ in
+            didPresentDetail.append(localState.id)
+            return .none
+          },
+          onDismiss: .init { _, localState, _ in
+            didDismissDetail.append(localState.id)
+            return .none
+          }
+        ),
+      environment: MasterEnvironment(
+        detail: DetailEnvironment(effect: { id in
+          Empty(completeImmediately: false)
+            .handleEvents(
+              receiveSubscription: { _ in didFireDetailEffect.append(id) },
+              receiveCancel: { didCancelDetailEffect.append(id) }
+            )
+            .eraseToEffect()
+        })
+      )
+    )
+
+    store.send(.presentDetail(id: 1)) {
+      $0.detail = DetailState(id: 1)
+    }
+
+    XCTAssertEqual(didPresentDetail, [1])
+    XCTAssertEqual(didRunDetailReducer, [])
+    XCTAssertEqual(didFireDetailEffect, [])
+    XCTAssertEqual(didDismissDetail, [])
+    XCTAssertEqual(didCancelDetailEffect, [])
+
+    store.send(.detail(.performEffect))
+
+    XCTAssertEqual(didPresentDetail, [1])
+    XCTAssertEqual(didRunDetailReducer, [1])
+    XCTAssertEqual(didFireDetailEffect, [1])
+    XCTAssertEqual(didDismissDetail, [])
+    XCTAssertEqual(didCancelDetailEffect, [])
+
+    store.send(.presentDetail(id: 2)) {
+      $0.detail = DetailState(id: 2)
+    }
+
+    XCTAssertEqual(didPresentDetail, [1, 2])
+    XCTAssertEqual(didRunDetailReducer, [1])
+    XCTAssertEqual(didFireDetailEffect, [1])
+    XCTAssertEqual(didDismissDetail, [1])
+    XCTAssertEqual(didCancelDetailEffect, [1])
+
+    store.send(.detail(.performEffect))
+
+    XCTAssertEqual(didPresentDetail, [1, 2])
+    XCTAssertEqual(didRunDetailReducer, [1, 2])
+    XCTAssertEqual(didFireDetailEffect, [1, 2])
+    XCTAssertEqual(didDismissDetail, [1])
+    XCTAssertEqual(didCancelDetailEffect, [1])
+
+    store.send(.presentDetail(id: nil)) {
+      $0.detail = nil
+    }
+
+    XCTAssertEqual(didPresentDetail, [1, 2])
+    XCTAssertEqual(didRunDetailReducer, [1, 2])
+    XCTAssertEqual(didFireDetailEffect, [1, 2])
+    XCTAssertEqual(didDismissDetail, [1, 2])
+    XCTAssertEqual(didCancelDetailEffect, [1, 2])
   }
 }
