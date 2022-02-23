@@ -19,7 +19,7 @@ struct NavigationLinkExample: View {
       state.detail = DetailState()
       return .none
 
-    case .didDismissDetail:
+    case .didDismissDetail, .detail(.didTapDismissButton):
       state.detail = nil
       return .none
 
@@ -61,6 +61,7 @@ struct NavigationLinkExample: View {
   }
 
   enum DetailAction {
+    case didTapDismissButton
     case timer(TimerAction)
   }
 
@@ -76,13 +77,19 @@ struct NavigationLinkExample: View {
     let store: Store<DetailState, DetailAction>
 
     var body: some View {
-      TimerView(store: store.scope(
-        state: \.timer,
-        action: DetailAction.timer
-      ))
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.secondarySystemBackground).ignoresSafeArea())
-        .navigationTitle("Detail")
+      VStack {
+        TimerView(store: store.scope(
+          state: \.timer,
+          action: DetailAction.timer
+        ))
+
+        Button(action: { ViewStore(store.stateless).send(.didTapDismissButton) }) {
+          Text("Dismiss").padding()
+        }
+      }
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .background(Color(.secondarySystemBackground).ignoresSafeArea())
+      .navigationTitle("Detail")
     }
   }
 
