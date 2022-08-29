@@ -1,4 +1,4 @@
-// swift-tools-version:5.4
+// swift-tools-version:5.6
 import PackageDescription
 
 let package = Package(
@@ -17,7 +17,6 @@ let package = Package(
   ],
   dependencies: [
     .package(
-      name: "swift-composable-architecture",
       url: "https://github.com/pointfreeco/swift-composable-architecture.git",
       .upToNextMajor(from: "0.39.1")
     ),
