@@ -1,4 +1,5 @@
 import ComposableArchitecture
+import Foundation
 
 extension Reducer {
   /// Combines the reducer with a local reducer that works on optionally presented `LocalState`.
