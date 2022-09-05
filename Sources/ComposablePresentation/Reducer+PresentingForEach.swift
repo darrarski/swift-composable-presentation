@@ -16,6 +16,16 @@ extension Reducer {
   ///   - onPresent: An action run when `LocalState` is added to the array. Defaults to an empty action.
   ///   - onDismiss: An action run when `LocalState` is removed from the array. Defaults to an empty action.
   /// - Returns: A single, combined reducer.
+  @available(
+    iOS,
+    deprecated: 9999.0,
+    message: "This API has been soft-deprecated in favor of `ReducerProtocol.presentingForEach`."
+  )
+  @available(
+    macOS,
+    deprecated: 9999.0,
+    message: "This API has been soft-deprecated in favor of `ReducerProtocol.presentingForEach`."
+  )
   public func presenting<LocalState, LocalAction, LocalEnvironment>(
     forEach localReducer: Reducer<LocalState, LocalAction, LocalEnvironment>,
     state toLocalState: WritableKeyPath<State, IdentifiedArrayOf<LocalState>>,

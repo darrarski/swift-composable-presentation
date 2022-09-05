@@ -15,6 +15,16 @@ extension Reducer {
   ///   - onPresent: An action run when `LocalState` is set to an honest value. It takes current `State`, new `LocalState`, and `Environment` as parameters and returns `Effect<Action, Never>`. Defaults to an empty action.
   ///   - onDismiss: An action run when `LocalState` becomes `nil`. It takes current `State`, old `LocalState`, and `Environment` as parameters and returns `Effect<Action, Never>`. Defaults to an empty action.
   /// - Returns: A single, combined reducer.
+  @available(
+    iOS,
+    deprecated: 9999.0,
+    message: "This API has been soft-deprecated in favor of `ReducerProtocol.presenting`."
+  )
+  @available(
+    macOS,
+    deprecated: 9999.0,
+    message: "This API has been soft-deprecated in favor of `ReducerProtocol.presenting`."
+  )
   public func presenting<LocalState, LocalID: Hashable, LocalAction, LocalEnvironment>(
     _ localReducer: Reducer<LocalState, LocalAction, LocalEnvironment>,
     state toLocalState: ReducerPresentingToLocalState<State, LocalState>,
