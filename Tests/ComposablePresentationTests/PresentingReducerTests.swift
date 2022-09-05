@@ -203,7 +203,7 @@ final class PresentingReducerTests: XCTestCase {
       var onReduce: () -> Void
 
       func reduce(into state: inout State, action: Action) -> Effect<Action, Never> {
-        onReduce() // didRunSecondReducer += 1
+        onReduce()
         switch action {
         case .performEffect:
           return effect()

@@ -3,9 +3,9 @@ import Foundation
 
 extension ReducerProtocol {
   @inlinable
-  public func presenting<Presented, PresentedID>(
+  public func presenting<ID: Hashable, Presented: ReducerProtocol>(
     state toPresentedState: PresentingReducerToPresentedState<State, Presented.State>,
-    id toPresentedId: PresentingReducerToPresentedId<Presented.State, PresentedID>,
+    id toPresentedID: PresentingReducerToPresentedID<Presented.State, ID>,
     action toPresentedAction: CasePath<Action, Presented.Action>,
     onPresent: PresentingReducerAction<State, Presented.State, Action> = .empty,
     onDismiss: PresentingReducerAction<State, Presented.State, Action> = .empty,
@@ -13,16 +13,13 @@ extension ReducerProtocol {
     file: StaticString = #file,
     fileID: StaticString = #fileID,
     line: UInt = #line
-  ) -> _PresentingReducer<Self, Presented, PresentedID>
-  where Presented: ReducerProtocol,
-        PresentedID: Hashable
-  {
+  ) -> _PresentingReducer<Self, ID, Presented> {
     .init(
-      reducerId: UUID(),
+      reducerID: UUID(),
       parent: self,
       presented: presented(),
       toPresentedState: toPresentedState,
-      toPresentedId: toPresentedId,
+      toPresentedID: toPresentedID,
       toPresentedAction: toPresentedAction,
       onPresent: onPresent,
       onDismiss: onDismiss,
@@ -33,13 +30,13 @@ extension ReducerProtocol {
   }
 }
 
-public struct _PresentingReducer<Parent, Presented, PresentedID>: ReducerProtocol
-where Parent: ReducerProtocol,
-      Presented: ReducerProtocol,
-      PresentedID: Hashable
-{
+public struct _PresentingReducer<
+  Parent: ReducerProtocol,
+  ID: Hashable,
+  Presented: ReducerProtocol
+>: ReducerProtocol {
   @usableFromInline
-  let reducerId: UUID
+  let reducerID: UUID
 
   @usableFromInline
   let parent: Parent
@@ -51,7 +48,7 @@ where Parent: ReducerProtocol,
   let toPresentedState: PresentingReducerToPresentedState<Parent.State, Presented.State>
 
   @usableFromInline
-  let toPresentedId: PresentingReducerToPresentedId<Presented.State, PresentedID>
+  let toPresentedID: PresentingReducerToPresentedID<Presented.State, ID>
 
   @usableFromInline
   let toPresentedAction: CasePath<Parent.Action, Presented.Action>
@@ -73,11 +70,11 @@ where Parent: ReducerProtocol,
 
   @inlinable
   init(
-    reducerId: UUID,
+    reducerID: UUID,
     parent: Parent,
     presented: Presented,
     toPresentedState: PresentingReducerToPresentedState<Parent.State, Presented.State>,
-    toPresentedId: PresentingReducerToPresentedId<Presented.State, PresentedID>,
+    toPresentedID: PresentingReducerToPresentedID<Presented.State, ID>,
     toPresentedAction: CasePath<Parent.Action, Presented.Action>,
     onPresent: PresentingReducerAction<Parent.State, Presented.State, Parent.Action>,
     onDismiss: PresentingReducerAction<Parent.State, Presented.State, Parent.Action>,
@@ -85,11 +82,11 @@ where Parent: ReducerProtocol,
     fileID: StaticString,
     line: UInt
   ) {
-    self.reducerId = reducerId
+    self.reducerID = reducerID
     self.parent = parent
     self.presented = presented
     self.toPresentedState = toPresentedState
-    self.toPresentedId = toPresentedId
+    self.toPresentedID = toPresentedID
     self.toPresentedAction = toPresentedAction
     self.onPresent = onPresent
     self.onDismiss = onDismiss
@@ -105,11 +102,11 @@ where Parent: ReducerProtocol,
   ) -> Effect<Parent.Action, Never> {
     let oldState = state
     let oldPresentedState = toPresentedState(oldState)
-    let oldPresentedId = toPresentedId(oldPresentedState)
+    let oldPresentedID = toPresentedID(oldPresentedState)
 
-    let presentedEffectsId = PresentingReducerEffectId(
-      reducerID: reducerId,
-      presentedID: oldPresentedId
+    let presentedEffectsID = PresentingReducerEffectId(
+      reducerID: reducerID,
+      presentedID: oldPresentedID
     )
     let shouldRunPresented = toPresentedAction.extract(from: action) != nil
     let presentedEffects: Effect<Action, Never>
@@ -126,7 +123,7 @@ where Parent: ReducerProtocol,
             line: line
           )
           .reduce(into: &state, action: action)
-          .cancellable(id: presentedEffectsId)
+          .cancellable(id: presentedEffectsID)
 
       case let .casePath(casePath):
         presentedEffects = EmptyReducer()
@@ -139,7 +136,7 @@ where Parent: ReducerProtocol,
             line: line
           )
           .reduce(into: &state, action: action)
-          .cancellable(id: presentedEffectsId)
+          .cancellable(id: presentedEffectsID)
       }
     } else {
       presentedEffects = .none
@@ -148,13 +145,13 @@ where Parent: ReducerProtocol,
     let effects = parent.reduce(into: &state, action: action)
     let newState = state
     let newPresentedState = toPresentedState(newState)
-    let newPresentedId = toPresentedId(newPresentedState)
+    let newPresentedID = toPresentedID(newPresentedState)
 
     var presentationEffects: [Effect<Action, Never>] = []
-    if oldPresentedId != newPresentedId {
+    if oldPresentedID != newPresentedID {
       if let oldPresentedState = oldPresentedState {
         presentationEffects.append(onDismiss.run(&state, oldPresentedState))
-        presentationEffects.append(.cancel(id: presentedEffectsId))
+        presentationEffects.append(.cancel(id: presentedEffectsID))
       }
       if let newPresentedState = newPresentedState {
         presentationEffects.append(onPresent.run(&state, newPresentedState))
@@ -184,14 +181,16 @@ public enum PresentingReducerToPresentedState<State, PresentedState> {
   }
 }
 
-public struct PresentingReducerToPresentedId<State, ID: Hashable> {
+public struct PresentingReducerToPresentedID<State, ID: Hashable> {
   public typealias Run = (State?) -> ID
 
-  public static func notNil<State>() -> PresentingReducerToPresentedId<State, Bool> {
+  public static func notNil<State>() -> PresentingReducerToPresentedID<State, Bool> {
     .init { $0 != nil }
   }
 
-  public static func keyPath(_ keyPath: KeyPath<State?, ID>) -> PresentingReducerToPresentedId<State, ID> {
+  public static func keyPath(
+    _ keyPath: KeyPath<State?, ID>
+  ) -> PresentingReducerToPresentedID<State, ID> {
     .init { $0[keyPath: keyPath] }
   }
 
@@ -206,8 +205,8 @@ public struct PresentingReducerToPresentedId<State, ID: Hashable> {
   }
 }
 
-public struct PresentingReducerAction<State, ChildState, Action> {
-  public typealias Run = (inout State, ChildState) -> Effect<Action, Never>
+public struct PresentingReducerAction<State, PresentedState, Action> {
+  public typealias Run = (inout State, PresentedState) -> Effect<Action, Never>
 
   public static var empty: Self { .init { _, _ in .none } }
 
