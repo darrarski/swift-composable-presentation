@@ -3,6 +3,18 @@ import Foundation
 import CoreMedia
 
 extension ReducerProtocol {
+  /// Combines the reducer with another reducer that operates on elements of `IdentifiedArray`.
+  ///
+  /// - All effects returned by the element reducer will be canceled when the element's state is removed from `IdentifiedArray`.
+  /// - Inspired by [Reducer.presents function](https://github.com/pointfreeco/swift-composable-architecture/blob/9ec4b71e5a84f448dedb063a21673e4696ce135f/Sources/ComposableArchitecture/Reducer.swift#L549-L572) from `iso` branch of `swift-composable-architecture` repository.
+  ///
+  /// - Parameters:
+  ///   - state: A key path form parent state to identified array that hold element states.
+  ///   - action: A case path that can extract/embed element action from parent.
+  ///   - onPresent: An action run when element is added to identified array. Defaults to empty action.
+  ///   - onDismiss: An action run when element is removed from identified array. Defaults to empty action.
+  ///   - element: Element reducer.
+  /// - Returns: Combined reducer.
   @inlinable
   public func presentingForEach<ID: Hashable, Element: ReducerProtocol>(
     state toElementState: WritableKeyPath<State, IdentifiedArray<ID, Element.State>>,
@@ -146,9 +158,11 @@ public struct _PresentingForEachReducer<
   }
 }
 
+/// Describes for-each presentation action, like `onPresent` or `onDismiss`.
 public struct PresentingForEachReducerAction<ID, State, Action> {
   public typealias Run = (ID, inout State) -> Effect<Action, Never>
 
+  /// An action that performs no state mutations and returns no effects.
   public static var empty: Self { .init { _, _ in .none } }
 
   public init(run: @escaping Run) {
@@ -158,6 +172,7 @@ public struct PresentingForEachReducerAction<ID, State, Action> {
   public var run: Run
 }
 
+/// Effect produced by element reducer within `.presentingForEach` higher order reducer.
 public struct PresentingForEachReducerEffectID: Hashable {
   @usableFromInline
   let reducerID: UUID

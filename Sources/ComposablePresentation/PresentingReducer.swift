@@ -2,6 +2,18 @@ import ComposableArchitecture
 import Foundation
 
 extension ReducerProtocol {
+  /// Combines the reducer with another reducer that operates on optionally presented state.
+  ///
+  /// - All effects returned by the presented reducer are cancelled when presented `ID` changes.
+  ///
+  /// - Parameters:
+  ///   - state: `PresentingReducerToPresentedState` that can get/set presented state in parent.
+  ///   - id: `PresentingReducerToPresentedID` that returns `ID` for given presented state.
+  ///   - action: A case path that can extract/embed presented action from parent.
+  ///   - onPresent: An action run when presented reducer is presented. It takes current parent state and new presented state, and returns parent's action effect. Defaults to empty action.
+  ///   - onDismiss: An action run when presented reducer is dismissed. It takes current parent state and old presented state, and returns parent's action effect. Defaults to empty action.
+  ///   - presented: Presented reducer.
+  /// - Returns: Combined reducer.
   @inlinable
   public func presenting<ID: Hashable, Presented: ReducerProtocol>(
     state toPresentedState: PresentingReducerToPresentedState<State, Presented.State>,
@@ -166,11 +178,17 @@ public struct _PresentingReducer<
   }
 }
 
+/// `State` ↔ `PresentedState` transformation for `.presenting` higher order reducer.
 public enum PresentingReducerToPresentedState<State, PresentedState> {
+  /// A key path that can get/set `PresentedState` inside `State`.
   case keyPath(WritableKeyPath<State, PresentedState?>)
 
+  /// A case path that can extract/embed `PresentedState` from `State`.
   case casePath(CasePath<State, PresentedState>)
 
+  /// Returns optional `PresentedState` from provided `State`.
+  /// - Parameter state: Parent state.
+  /// - Returns: Presented state.
   public func callAsFunction(_ state: State) -> PresentedState? {
     switch self {
     case let .keyPath(keyPath):
@@ -181,13 +199,25 @@ public enum PresentingReducerToPresentedState<State, PresentedState> {
   }
 }
 
+/// `State` → `ID` transformation for `.presenting` higher order reducer.
 public struct PresentingReducerToPresentedID<State, ID: Hashable> {
   public typealias Run = (State?) -> ID
 
+  /// Identifies `State?` by just checking if it's not `nil`.
+  ///
+  /// - Use this with caution, as it only checks if the `State` is `nil`.
+  /// - The effects returned by local reducer will only be cancelled when `State` becomes `nil.`
+  ///
+  /// - Returns: `PresentingReducerToPresentedID`
   public static func notNil<State>() -> PresentingReducerToPresentedID<State, Bool> {
     .init { $0 != nil }
   }
 
+  /// Identifies `State?` based on `ID` retrieved by key path from `State?` to `ID`.
+  ///
+  /// - The effects returned by local reducer will be cancelled whenever `ID` changes.
+  ///
+  /// - Parameter `keyPath`: Key path from `State?` to `ID`.
   public static func keyPath(
     _ keyPath: KeyPath<State?, ID>
   ) -> PresentingReducerToPresentedID<State, ID> {
@@ -200,14 +230,19 @@ public struct PresentingReducerToPresentedID<State, ID: Hashable> {
 
   public var run: Run
 
+  /// Returns `ID` for provided `State?`
+  /// - Parameter state: Optional `State`
+  /// - Returns: `ID`
   public func callAsFunction(_ state: State?) -> ID {
     run(state)
   }
 }
 
+/// Describes presentation action, like `onPresent` or `onDismiss`.
 public struct PresentingReducerAction<State, PresentedState, Action> {
   public typealias Run = (inout State, PresentedState) -> Effect<Action, Never>
 
+  /// An action that performs no state mutations and returns no effects.
   public static var empty: Self { .init { _, _ in .none } }
 
   public init(run: @escaping Run) {
@@ -217,6 +252,7 @@ public struct PresentingReducerAction<State, PresentedState, Action> {
   public var run: Run
 }
 
+/// Effect produced by presented reducer within `.presenting` higher order reducer.
 public struct PresentingReducerEffectId<PresentedID: Hashable>: Hashable {
   @usableFromInline
   let reducerID: UUID
