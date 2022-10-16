@@ -15,6 +15,16 @@ extension Reducer {
   ///   - onPresent: An action run when `LocalState` is set to an honest value. It takes current `State`, new `LocalState`, and `Environment` as parameters and returns `Effect<Action, Never>`. Defaults to an empty action.
   ///   - onDismiss: An action run when `LocalState` becomes `nil`. It takes current `State`, old `LocalState`, and `Environment` as parameters and returns `Effect<Action, Never>`. Defaults to an empty action.
   /// - Returns: A single, combined reducer.
+  @available(
+    iOS,
+    deprecated: 9999.0,
+    message: "This API has been soft-deprecated in favor of `ReducerProtocol.presenting`."
+  )
+  @available(
+    macOS,
+    deprecated: 9999.0,
+    message: "This API has been soft-deprecated in favor of `ReducerProtocol.presenting`."
+  )
   public func presenting<LocalState, LocalID: Hashable, LocalAction, LocalEnvironment>(
     _ localReducer: Reducer<LocalState, LocalAction, LocalEnvironment>,
     state toLocalState: ReducerPresentingToLocalState<State, LocalState>,
@@ -24,76 +34,36 @@ extension Reducer {
     onPresent: ReducerPresentingAction<State, LocalState, Action, Environment> = .empty,
     onDismiss: ReducerPresentingAction<State, LocalState, Action, Environment> = .empty,
     file: StaticString = #fileID,
+    fileID: StaticString = #fileID,
     line: UInt = #line
   ) -> Self {
     let reducerId = UUID()
-    return Reducer { state, action, environment in
-      let oldState = state
-      let oldLocalState = toLocalState(oldState)
-      let oldLocalId = toLocalId(oldLocalState)
-
-      let shouldRunLocal = toLocalAction.extract(from: action) != nil
-      let localEffects: Effect<Action, Never>
-      if shouldRunLocal {
-        let localEffectsId = ReducerPresentingEffectId(
-          reducerID: reducerId,
-          localID: toLocalId.run(toLocalState(oldState))
-        )
-        switch toLocalState {
-        case let .keyPath(keyPath):
-          localEffects = localReducer
-            .optional(
-              file: file,
-              line: line
-            )
-            .pullback(
-              state: keyPath,
-              action: toLocalAction,
-              environment: toLocalEnvironment
-            )
-            .run(&state, action, environment)
-            .cancellable(id: localEffectsId)
-
-        case let .casePath(casePath):
-          localEffects = localReducer
-            .pullback(
-              state: casePath,
-              action: toLocalAction,
-              environment: toLocalEnvironment,
-              file: file,
-              line: line
-            )
-            .run(&state, action, environment)
-            .cancellable(id: localEffectsId)
-        }
-      } else {
-        localEffects = .none
-      }
-
-      let effects = self.run(&state, action, environment)
-      let newState = state
-      let newLocalState = toLocalState(newState)
-      let newLocalId = toLocalId(newLocalState)
-      
-      var presentationEffects: [Effect<Action, Never>] = []
-      if oldLocalId != newLocalId {
-        if let oldLocalState = oldLocalState {
-          presentationEffects.append(onDismiss.run(&state, oldLocalState, environment))
-          presentationEffects.append(.cancel(id: ReducerPresentingEffectId(
-            reducerID: reducerId,
-            localID: oldLocalId
-          )))
-        }
-        if let newLocalState = newLocalState {
-          presentationEffects.append(onPresent.run(&state, newLocalState, environment))
-        }
-      }
-
-      return .merge(
-        localEffects,
-        effects,
-        .merge(presentationEffects)
+    return Reducer { state, action, env in
+      _PresentingReducer(
+        reducerID: reducerId,
+        parent: Reduce(AnyReducer(self.run), environment: env),
+        presented: Reduce { state, action in
+          localReducer.run(&state, action, toLocalEnvironment(env))
+        },
+        toPresentedState: {
+          switch toLocalState {
+          case .keyPath(let keyPath): return .keyPath(keyPath)
+          case .casePath(let casePath): return .casePath(casePath)
+          }
+        }(),
+        toPresentedID: .init(run: toLocalId.run),
+        toPresentedAction: toLocalAction,
+        onPresent: .init { state, presentedState in
+          onPresent.run(&state, presentedState, env)
+        },
+        onDismiss: .init { state, presentedState in
+          onDismiss.run(&state, presentedState, env)
+        },
+        file: file,
+        fileID: fileID,
+        line: line
       )
+      .reduce(into: &state, action: action)
     }
   }
 }
@@ -168,9 +138,4 @@ public struct ReducerPresentingAction<State, LocalState, Action, Environment> {
   }
 
   public var run: Run
-}
-
-struct ReducerPresentingEffectId<LocalID: Hashable>: Hashable {
-  let reducerID: UUID
-  let localID: LocalID
 }

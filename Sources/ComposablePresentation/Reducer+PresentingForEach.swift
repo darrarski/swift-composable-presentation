@@ -16,6 +16,16 @@ extension Reducer {
   ///   - onPresent: An action run when `LocalState` is added to the array. Defaults to an empty action.
   ///   - onDismiss: An action run when `LocalState` is removed from the array. Defaults to an empty action.
   /// - Returns: A single, combined reducer.
+  @available(
+    iOS,
+    deprecated: 9999.0,
+    message: "This API has been soft-deprecated in favor of `ReducerProtocol.presentingForEach`."
+  )
+  @available(
+    macOS,
+    deprecated: 9999.0,
+    message: "This API has been soft-deprecated in favor of `ReducerProtocol.presentingForEach`."
+  )
   public func presenting<LocalState, LocalAction, LocalEnvironment>(
     forEach localReducer: Reducer<LocalState, LocalAction, LocalEnvironment>,
     state toLocalState: WritableKeyPath<State, IdentifiedArrayOf<LocalState>>,
@@ -24,60 +34,27 @@ extension Reducer {
     onPresent: ReducerPresentingForEachAction<LocalState.ID, State, Action, Environment> = .empty,
     onDismiss: ReducerPresentingForEachAction<LocalState.ID, State, Action, Environment> = .empty,
     file: StaticString = #fileID,
+    fileID: StaticString = #fileID,
     line: UInt = #line
   ) -> Self {
-    let presentationId = UUID()
-
-    func elementId(for action: Action) -> LocalState.ID? {
-      guard let (id, _) = toLocalAction.extract(from: action) else {
-        return nil
-      }
-      return id
-    }
-
-    func effectId(for id: LocalState.ID) -> ReducerPresentingForEachEffectId {
-      .init(presentationId: presentationId, elementId: id)
-    }
-
-    return Reducer { state, action, environment in
-      let oldIds = state[keyPath: toLocalState].ids
-      let localEffects: Effect<Action, Never>
-
-      if let id = elementId(for: action) {
-        localEffects = localReducer
-          .forEach(
-            state: toLocalState,
-            action: toLocalAction,
-            environment: toLocalEnvironment,
-            file: file,
-            line: line
-          )
-          .run(&state, action, environment)
-          .cancellable(id: effectId(for: id))
-      } else {
-        localEffects = .none
-      }
-
-      let effects = run(&state, action, environment)
-      let newIds = state[keyPath: toLocalState].ids
-      let presentedIds = newIds.subtracting(oldIds)
-      let dismissedIds = oldIds.subtracting(newIds)
-      var presentationEffects: [Effect<Action, Never>] = []
-
-      dismissedIds.forEach { id in
-        presentationEffects.append(onDismiss.run(id, &state, environment))
-        presentationEffects.append(.cancel(id: effectId(for: id)))
-      }
-
-      presentedIds.forEach { id in
-        presentationEffects.append(onPresent.run(id, &state, environment))
-      }
-
-      return .merge(
-        localEffects,
-        effects,
-        .merge(presentationEffects)
+    let reducerId = UUID()
+    return Reducer { state, action, env in
+      _PresentingForEachReducer(
+        reducerID: reducerId,
+        parent: Reduce(AnyReducer(self.run), environment: env),
+        toElementState: toLocalState,
+        toElementAction: toLocalAction,
+        onPresent: .init { elementId, state in
+          onPresent.run(elementId, &state, env)
+        },
+        onDismiss: .init { elementId, state in
+          onDismiss.run(elementId, &state, env)
+        },
+        element: Reduce { state, action in
+          localReducer.run(&state, action, toLocalEnvironment(env))
+        }
       )
+      .reduce(into: &state, action: action)
     }
   }
 }
@@ -94,9 +71,4 @@ public struct ReducerPresentingForEachAction<ID, State, Action, Environment> {
   }
 
   public var run: Run
-}
-
-struct ReducerPresentingForEachEffectId: Hashable {
-  var presentationId: UUID
-  var elementId: AnyHashable
 }
