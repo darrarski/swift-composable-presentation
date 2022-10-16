@@ -1,6 +1,6 @@
 # Swift Composable Presentation
 
-![Swift v5.6](https://img.shields.io/badge/swift-v5.6-orange.svg)
+![Swift v5.7](https://img.shields.io/badge/swift-v5.7-orange.svg)
 ![platforms iOS, macOS](https://img.shields.io/badge/platforms-iOS,_macOS-blue.svg)
 
 Presentation and navigation helpers for SwiftUI applications build with [ComposableArchitecture](https://github.com/pointfreeco/swift-composable-architecture/).
@@ -69,7 +69,7 @@ SwiftUI example of a component that conditionally presents one of two child comp
 
 ## 🛠 Develop
 
-- Use Xcode (version ≥ 13.4.1).
+- Use Xcode (version ≥ 14).
 - Clone the repository or create a fork & clone it.
 - Open `ComposablePresentation.xcworkspace` in Xcode
 - Use `ComposablePresentation` scheme for building the library and running unit tests.
