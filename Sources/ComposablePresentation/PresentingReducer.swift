@@ -7,7 +7,7 @@ extension ReducerProtocol {
   /// - All effects returned by the presented reducer are cancelled when presented `ID` changes.
   ///
   /// - Parameters:
-  ///   - reducerID: Unique identifier for the presentation. Defaults to new UUID.
+  ///   - presentationID: Unique identifier for the presentation. Defaults to new UUID.
   ///   - state: `PresentingReducerToPresentedState` that can get/set presented state in parent.
   ///   - id: `PresentingReducerToPresentedID` that returns `ID` for given presented state.
   ///   - action: A case path that can extract/embed presented action from parent.
@@ -17,7 +17,7 @@ extension ReducerProtocol {
   /// - Returns: Combined reducer.
   @inlinable
   public func presenting<ID: Hashable, Presented: ReducerProtocol>(
-    reducerID: UUID = UUID(),
+    presentationID: UUID = UUID(),
     state toPresentedState: PresentingReducerToPresentedState<State, Presented.State>,
     id toPresentedID: PresentingReducerToPresentedID<Presented.State, ID>,
     action toPresentedAction: CasePath<Action, Presented.Action>,
@@ -29,7 +29,7 @@ extension ReducerProtocol {
     line: UInt = #line
   ) -> _PresentingReducer<Self, ID, Presented> {
     .init(
-      reducerID: reducerID,
+      presentationID: presentationID,
       parent: self,
       presented: presented(),
       toPresentedState: toPresentedState,
@@ -50,7 +50,7 @@ public struct _PresentingReducer<
   Presented: ReducerProtocol
 >: ReducerProtocol {
   @usableFromInline
-  let reducerID: UUID
+  let presentationID: UUID
 
   @usableFromInline
   let parent: Parent
@@ -84,7 +84,7 @@ public struct _PresentingReducer<
 
   @inlinable
   init(
-    reducerID: UUID,
+    presentationID: UUID,
     parent: Parent,
     presented: Presented,
     toPresentedState: PresentingReducerToPresentedState<Parent.State, Presented.State>,
@@ -96,7 +96,7 @@ public struct _PresentingReducer<
     fileID: StaticString,
     line: UInt
   ) {
-    self.reducerID = reducerID
+    self.presentationID = presentationID
     self.parent = parent
     self.presented = presented
     self.toPresentedState = toPresentedState
@@ -119,7 +119,7 @@ public struct _PresentingReducer<
     let oldPresentedID = toPresentedID(oldPresentedState)
 
     let presentedEffectsID = PresentingReducerEffectId(
-      reducerID: reducerID,
+      presentationID: presentationID,
       presentedID: oldPresentedID
     )
     let shouldRunPresented = toPresentedAction.extract(from: action) != nil
@@ -257,14 +257,14 @@ public struct PresentingReducerAction<State, PresentedState, Action> {
 /// Effect produced by presented reducer within `.presenting` higher order reducer.
 public struct PresentingReducerEffectId<PresentedID: Hashable>: Hashable {
   @usableFromInline
-  let reducerID: UUID
+  let presentationID: UUID
 
   @usableFromInline
   let presentedID: PresentedID
 
   @inlinable
-  init(reducerID: UUID, presentedID: PresentedID) {
-    self.reducerID = reducerID
+  init(presentationID: UUID, presentedID: PresentedID) {
+    self.presentationID = presentationID
     self.presentedID = presentedID
   }
 }
