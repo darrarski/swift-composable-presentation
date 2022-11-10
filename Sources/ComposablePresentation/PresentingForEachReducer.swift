@@ -9,6 +9,7 @@ extension ReducerProtocol {
   /// - Inspired by [Reducer.presents function](https://github.com/pointfreeco/swift-composable-architecture/blob/9ec4b71e5a84f448dedb063a21673e4696ce135f/Sources/ComposableArchitecture/Reducer.swift#L549-L572) from `iso` branch of `swift-composable-architecture` repository.
   ///
   /// - Parameters:
+  ///   - presentationID: Unique identifier for the presentation. Defaults to new UUID.
   ///   - state: A key path form parent state to identified array that hold element states.
   ///   - action: A case path that can extract/embed element action from parent.
   ///   - onPresent: An action run when element is added to identified array. Defaults to empty action.
@@ -17,6 +18,7 @@ extension ReducerProtocol {
   /// - Returns: Combined reducer.
   @inlinable
   public func presentingForEach<ID: Hashable, Element: ReducerProtocol>(
+    presentationID: AnyHashable = UUID(),
     state toElementState: WritableKeyPath<State, IdentifiedArray<ID, Element.State>>,
     action toElementAction: CasePath<Action, (ID, Element.Action)>,
     onPresent: PresentingForEachReducerAction<ID, State, Action> = .empty,
@@ -27,7 +29,7 @@ extension ReducerProtocol {
     line: UInt = #line
   ) -> _PresentingForEachReducer<Self, ID, Element> {
     .init(
-      reducerID: UUID(),
+      presentationID: presentationID,
       parent: self,
       toElementState: toElementState,
       toElementAction: toElementAction,
@@ -47,7 +49,7 @@ public struct _PresentingForEachReducer<
   Element: ReducerProtocol
 >: ReducerProtocol {
   @usableFromInline
-  let reducerID: UUID
+  let presentationID: AnyHashable
 
   @usableFromInline
   let parent: Parent
@@ -78,7 +80,7 @@ public struct _PresentingForEachReducer<
 
   @inlinable
   init(
-    reducerID: UUID,
+    presentationID: AnyHashable,
     parent: Parent,
     toElementState: WritableKeyPath<Parent.State, IdentifiedArray<ID, Element.State>>,
     toElementAction: CasePath<Parent.Action, (ID, Element.Action)>,
@@ -89,7 +91,7 @@ public struct _PresentingForEachReducer<
     fileID: StaticString = #fileID,
     line: UInt = #line
   ) {
-    self.reducerID = reducerID
+    self.presentationID = presentationID
     self.parent = parent
     self.toElementState = toElementState
     self.toElementAction = toElementAction
@@ -113,7 +115,7 @@ public struct _PresentingForEachReducer<
     }
 
     func effectID(for id: ID) -> PresentingForEachReducerEffectID {
-      .init(reducerID: reducerID, elementID: id)
+      .init(presentationID: presentationID, elementID: id)
     }
 
     let oldIds = state[keyPath: toElementState].ids
@@ -175,14 +177,14 @@ public struct PresentingForEachReducerAction<ID, State, Action> {
 /// Effect produced by element reducer within `.presentingForEach` higher order reducer.
 public struct PresentingForEachReducerEffectID: Hashable {
   @usableFromInline
-  let reducerID: UUID
+  let presentationID: AnyHashable
 
   @usableFromInline
   let elementID: AnyHashable
 
   @inlinable
-  init(reducerID: UUID, elementID: AnyHashable) {
-    self.reducerID = reducerID
+  init(presentationID: AnyHashable, elementID: AnyHashable) {
+    self.presentationID = presentationID
     self.elementID = elementID
   }
 }
