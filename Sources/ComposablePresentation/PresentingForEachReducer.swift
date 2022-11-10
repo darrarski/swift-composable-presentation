@@ -9,6 +9,7 @@ extension ReducerProtocol {
   /// - Inspired by [Reducer.presents function](https://github.com/pointfreeco/swift-composable-architecture/blob/9ec4b71e5a84f448dedb063a21673e4696ce135f/Sources/ComposableArchitecture/Reducer.swift#L549-L572) from `iso` branch of `swift-composable-architecture` repository.
   ///
   /// - Parameters:
+  ///   - reducerID: Unique identifier for the presentation. Defaults to new UUID.
   ///   - state: A key path form parent state to identified array that hold element states.
   ///   - action: A case path that can extract/embed element action from parent.
   ///   - onPresent: An action run when element is added to identified array. Defaults to empty action.
@@ -17,6 +18,7 @@ extension ReducerProtocol {
   /// - Returns: Combined reducer.
   @inlinable
   public func presentingForEach<ID: Hashable, Element: ReducerProtocol>(
+    reducerID: UUID = UUID(),
     state toElementState: WritableKeyPath<State, IdentifiedArray<ID, Element.State>>,
     action toElementAction: CasePath<Action, (ID, Element.Action)>,
     onPresent: PresentingForEachReducerAction<ID, State, Action> = .empty,
@@ -27,7 +29,7 @@ extension ReducerProtocol {
     line: UInt = #line
   ) -> _PresentingForEachReducer<Self, ID, Element> {
     .init(
-      reducerID: UUID(),
+      reducerID: reducerID,
       parent: self,
       toElementState: toElementState,
       toElementAction: toElementAction,

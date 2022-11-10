@@ -7,6 +7,7 @@ extension ReducerProtocol {
   /// - All effects returned by the presented reducer are cancelled when presented `ID` changes.
   ///
   /// - Parameters:
+  ///   - reducerID: Unique identifier for the presentation. Defaults to new UUID.
   ///   - state: `PresentingReducerToPresentedState` that can get/set presented state in parent.
   ///   - id: `PresentingReducerToPresentedID` that returns `ID` for given presented state.
   ///   - action: A case path that can extract/embed presented action from parent.
@@ -16,6 +17,7 @@ extension ReducerProtocol {
   /// - Returns: Combined reducer.
   @inlinable
   public func presenting<ID: Hashable, Presented: ReducerProtocol>(
+    reducerID: UUID = UUID(),
     state toPresentedState: PresentingReducerToPresentedState<State, Presented.State>,
     id toPresentedID: PresentingReducerToPresentedID<Presented.State, ID>,
     action toPresentedAction: CasePath<Action, Presented.Action>,
@@ -27,7 +29,7 @@ extension ReducerProtocol {
     line: UInt = #line
   ) -> _PresentingReducer<Self, ID, Presented> {
     .init(
-      reducerID: UUID(),
+      reducerID: reducerID,
       parent: self,
       presented: presented(),
       toPresentedState: toPresentedState,
