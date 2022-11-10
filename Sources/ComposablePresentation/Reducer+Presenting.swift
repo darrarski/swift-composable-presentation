@@ -7,6 +7,7 @@ extension Reducer {
   /// - All effects returned by the local reducer are cancelled when `LocalID` changes.
   ///
   /// - Parameters:
+  ///   - presentationID: Unique identifier for the presentation. Defaults to new UUID.
   ///   - localReducer: A reducer that works on `LocalState`, `LocalAction`, `LocalEnvironment`.
   ///   - toLocalState: `ReducerPresentingToLocalState` that can get/set `LocalState` inside `State`.
   ///   - toLocalID: `ReducerPresentingToLocalId` that returns `LocalID` for given `LocalState?`.
@@ -26,6 +27,7 @@ extension Reducer {
     message: "This API has been soft-deprecated in favor of `ReducerProtocol.presenting`."
   )
   public func presenting<LocalState, LocalID: Hashable, LocalAction, LocalEnvironment>(
+    presentationID: AnyHashable = UUID(),
     _ localReducer: Reducer<LocalState, LocalAction, LocalEnvironment>,
     state toLocalState: ReducerPresentingToLocalState<State, LocalState>,
     id toLocalId: ReducerPresentingToLocalId<LocalState, LocalID>,
@@ -37,8 +39,7 @@ extension Reducer {
     fileID: StaticString = #fileID,
     line: UInt = #line
   ) -> Self {
-    let presentationID = UUID()
-    return Reducer { state, action, env in
+    Reducer { state, action, env in
       _PresentingReducer(
         presentationID: presentationID,
         parent: Reduce(AnyReducer(self.run), environment: env),

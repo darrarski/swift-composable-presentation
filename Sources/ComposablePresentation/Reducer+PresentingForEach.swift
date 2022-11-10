@@ -9,6 +9,7 @@ extension Reducer {
   /// - Inspired by [Reducer.presents function](https://github.com/pointfreeco/swift-composable-architecture/blob/9ec4b71e5a84f448dedb063a21673e4696ce135f/Sources/ComposableArchitecture/Reducer.swift#L549-L572) from `iso` branch of `swift-composable-architecture` repository.
   ///
   /// - Parameters:
+  ///   - presentationID: Unique identifier for the presentation. Defaults to new UUID.
   ///   - localReducer: A reducer that works on `LocalState`, `LocalAction`, `LocalEnvironment`.
   ///   - toLocalState: A key path from `State` to `IdentifiedArrayOf<LocalState>`.
   ///   - toLocalAction: A case path that can extract/embed `LocalAction` from `Action`.
@@ -27,6 +28,7 @@ extension Reducer {
     message: "This API has been soft-deprecated in favor of `ReducerProtocol.presentingForEach`."
   )
   public func presenting<LocalState, LocalAction, LocalEnvironment>(
+    presentationID: AnyHashable = UUID(),
     forEach localReducer: Reducer<LocalState, LocalAction, LocalEnvironment>,
     state toLocalState: WritableKeyPath<State, IdentifiedArrayOf<LocalState>>,
     action toLocalAction: CasePath<Action, (LocalState.ID, LocalAction)>,
@@ -37,8 +39,7 @@ extension Reducer {
     fileID: StaticString = #fileID,
     line: UInt = #line
   ) -> Self {
-    let presentationID = UUID()
-    return Reducer { state, action, env in
+    Reducer { state, action, env in
       _PresentingForEachReducer(
         presentationID: presentationID,
         parent: Reduce(AnyReducer(self.run), environment: env),
