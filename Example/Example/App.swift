@@ -18,6 +18,7 @@ struct AppView: View {
     case forEachStoreExample
     case popToRootExample
     case switchStoreExample
+    case destinationExample
 
     var title: String {
       rawValue[rawValue.startIndex].uppercased() +
@@ -52,6 +53,9 @@ struct AppView: View {
 
           case .switchStoreExample:
             SwitchStoreExample()
+
+          case .destinationExample:
+            DestinationExample()
           }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
