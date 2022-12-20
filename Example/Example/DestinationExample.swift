@@ -150,7 +150,7 @@ struct DestinationExample: View {
 
     var body: some View {
       WithViewStore(store.stateless) { viewStore in
-        NavigationView {
+        NavigationViewWrapper {
           VStack(alignment: .leading, spacing: 0) {
             Button {
               viewStore.send(.firstButtonTapped)
@@ -182,16 +182,14 @@ struct DestinationExample: View {
             onDismiss: { viewStore.send(.didDismissFirst) },
             content: FirstView.init(store:)
           )
-          .background(
-            NavigationLinkWithStore(
-              store.scope(
-                state: { (/Main.State.Destination.second).extract(from: $0.destination) },
-                action: Main.Action.second
-              ),
-              onDeactivate: { viewStore.send(.didDismissSecond) },
-              destination: SecondView.init(store:)
-            )
-          )
+          .modifier(NavigationLinkWrapper(
+            store: store.scope(
+              state: { (/Main.State.Destination.second).extract(from: $0.destination) },
+              action: Main.Action.second
+            ),
+            onDeactivate: { viewStore.send(.didDismissSecond) },
+            destination: SecondView.init(store:)
+          ))
           .alert(
             store.scope(
               state: { (/Main.State.Destination.alert).extract(from: $0.destination) },
@@ -233,6 +231,42 @@ struct DestinationExample: View {
         ))
       }
       .padding()
+    }
+  }
+
+  struct NavigationViewWrapper<Content: View>: View {
+    let content: () -> Content
+
+    var body: some View {
+      if #available(iOS 16.0, *) {
+        NavigationStack(root: content)
+      } else {
+        NavigationView(content: content)
+      }
+    }
+  }
+
+  struct NavigationLinkWrapper<State, Action, Destination: View>: ViewModifier {
+    let store: Store<State?, Action>
+    let onDeactivate: () -> Void
+    let destination: (Store<State, Action>) -> Destination
+
+    func body(content: Content) -> some View {
+      if #available(iOS 16.0, *) {
+        content.navigationDestination(
+          store,
+          onDismiss: onDeactivate,
+          content: destination
+        )
+      } else {
+        content.background(
+          NavigationLinkWithStore(
+            store,
+            onDeactivate: onDeactivate,
+            destination: destination
+          )
+        )
+      }
     }
   }
 
