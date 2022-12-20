@@ -11,6 +11,7 @@
 		3154EC1526DFD1F500D69F22 /* ComposablePresentation in Frameworks */ = {isa = PBXBuildFile; productRef = 3154EC1426DFD1F500D69F22 /* ComposablePresentation */; };
 		3154EC1726DFD41700D69F22 /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3154EC1626DFD41700D69F22 /* App.swift */; };
 		3156F63F274253D700CA965F /* SwitchStoreExample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3156F63E274253D700CA965F /* SwitchStoreExample.swift */; };
+		31817E682950A982000BC1C3 /* DestinationExample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31817E672950A982000BC1C3 /* DestinationExample.swift */; };
 		3195775C27415EF100FFA9EB /* PopToRootExample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3195775B27415EF100FFA9EB /* PopToRootExample.swift */; };
 		31D7D9B42740907F001699F4 /* NavigationLinkExample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31D7D9B32740907F001699F4 /* NavigationLinkExample.swift */; };
 		31D7D9B62740909C001699F4 /* TimerFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31D7D9B52740909C001699F4 /* TimerFeature.swift */; };
@@ -26,6 +27,7 @@
 		3154EC0D26DFD01800D69F22 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3154EC1626DFD41700D69F22 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
 		3156F63E274253D700CA965F /* SwitchStoreExample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitchStoreExample.swift; sourceTree = "<group>"; };
+		31817E672950A982000BC1C3 /* DestinationExample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DestinationExample.swift; sourceTree = "<group>"; };
 		3195775B27415EF100FFA9EB /* PopToRootExample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopToRootExample.swift; sourceTree = "<group>"; };
 		31D7D9B32740907F001699F4 /* NavigationLinkExample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationLinkExample.swift; sourceTree = "<group>"; };
 		31D7D9B52740909C001699F4 /* TimerFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerFeature.swift; sourceTree = "<group>"; };
@@ -74,6 +76,7 @@
 				31D7D9B9274096B6001699F4 /* ForEachStoreExample.swift */,
 				3195775B27415EF100FFA9EB /* PopToRootExample.swift */,
 				3156F63E274253D700CA965F /* SwitchStoreExample.swift */,
+				31817E672950A982000BC1C3 /* DestinationExample.swift */,
 				31D7D9B52740909C001699F4 /* TimerFeature.swift */,
 				3154EC0826DFD01800D69F22 /* Assets.xcassets */,
 				3154EC0D26DFD01800D69F22 /* Info.plist */,
@@ -159,6 +162,7 @@
 				31D7D9BC274099F2001699F4 /* SheetExample.swift in Sources */,
 				3156F63F274253D700CA965F /* SwitchStoreExample.swift in Sources */,
 				31D7D9BA274096B6001699F4 /* ForEachStoreExample.swift in Sources */,
+				31817E682950A982000BC1C3 /* DestinationExample.swift in Sources */,
 				31F8124327C5A2F400AFC10A /* NavigationLinkSelectionExample.swift in Sources */,
 				3154EC1726DFD41700D69F22 /* App.swift in Sources */,
 			);
