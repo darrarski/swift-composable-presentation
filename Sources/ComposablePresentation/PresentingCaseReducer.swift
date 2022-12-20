@@ -2,8 +2,21 @@ import ComposableArchitecture
 import Foundation
 
 extension ReducerProtocol {
+  /// Combines the reducer with another reducer that operates on optionally presented case of an enum.
+  ///
+  /// - All effects returned by the presented reducer are cancelled when presented `ID` changes.
+  ///
+  /// - Parameters:
+  ///   - presentationID: Unique identifier for the presentation. Defaults to a new UUID.
+  ///   - toEnum: Writable key-path from `State` to optional `Enum`.
+  ///   - toCase: Case path from `Enum` to `Presented.State`.
+  ///   - toPresentedID: Transformation from `Presented.State` to `ID`.
+  ///   - toPresentedAction: A case path that can extract/embed presented action from parent.
+  ///   - onPresent: An action run when presented reducer is presented. It takes current parent state and new presented state, and returns parent's action effect. Defaults to empty action.
+  ///   - onDismiss: An action run when presented reducer is dismissed. It takes current parent state and old presented state, and returns parent's action effect. Defaults to empty action.
+  ///   - presented: Presented reducer.
+  /// - Returns: Combined reducer
   @inlinable
-  // TODO: documentation
   public func presenting<ID: Hashable, Enum, Presented: ReducerProtocol>(
     presentationID: AnyHashable = UUID(),
     unwrapping toEnum: WritableKeyPath<State, Enum?>,
@@ -117,7 +130,7 @@ public struct _PresentingCaseReducer<
 
     let oldState = state
     let oldPresentedState = toPresentedState(oldState)
-    let oldPresentedID = toPresentedID(oldPresentedState)
+    let oldPresentedID = toPresentedID.run(oldPresentedState)
 
     let presentedEffectsID = PresentingReducerEffectId(
       presentationID: presentationID,
@@ -154,16 +167,16 @@ public struct _PresentingCaseReducer<
     let effects = parent.reduce(into: &state, action: action)
     let newState = state
     let newPresentedState = toPresentedState(newState)
-    let newPresentedID = toPresentedID(newPresentedState)
+    let newPresentedID = toPresentedID.run(newPresentedState)
 
     var presentationEffects: [Effect<Action, Never>] = []
     if oldPresentedID != newPresentedID {
       if let oldPresentedState = oldPresentedState {
-        presentationEffects.append(onDismiss(&state, oldPresentedState))
+        presentationEffects.append(onDismiss.run(&state, oldPresentedState))
         presentationEffects.append(.cancel(id: presentedEffectsID))
       }
       if let newPresentedState = newPresentedState {
-        presentationEffects.append(onPresent(&state, newPresentedState))
+        presentationEffects.append(onPresent.run(&state, newPresentedState))
       }
     }
 
@@ -182,8 +195,8 @@ extension _PresentingCaseReducer {
 
     /// Identifies `Presented.State?` by just checking if it's not `nil`.
     ///
-    /// - Use this with caution, as it only checks if the `State` is `nil`.
-    /// - The effects returned by local reducer will only be cancelled when `Presented.State` becomes `nil.`
+    /// - Use this with caution, as it only checks if the `Presented.State?` is `nil`.
+    /// - The effects returned by local reducer will only be cancelled when `Presented.State?` becomes `nil.`
     ///
     /// - Returns: `ToPresentedID` transformation.
     public static func notNil() -> ToPresentedID where ID == Bool {
@@ -201,14 +214,7 @@ extension _PresentingCaseReducer {
       .init { $0[keyPath: keyPath] }
     }
 
-    var run: Run
-
-    /// Returns `ID` for provided `Presented.State?`
-    /// - Parameter state: Optional `Presented.State`
-    /// - Returns: `ID`
-    public func callAsFunction(_ state: Presented.State?) -> ID {
-      run(state)
-    }
+    public var run: Run
   }
 }
 
@@ -220,17 +226,14 @@ extension _PresentingCaseReducer {
     /// An action that performs no state mutations and returns no effects.
     public static var empty: Self { .init { _, _ in .none } }
 
+    /// Create action handler
+    ///
+    /// - Parameter run: Closure that handles the action. It takes inout `Parent.State`
+    ///   and `Presented.State` and returns `Effect<Parent.Action, Never>`.
     public init(run: @escaping Run) {
       self.run = run
     }
 
-    var run: Run
-
-    public func callAsFunction(
-      _ parentState: inout Parent.State,
-      _ presentedState: Presented.State
-    ) -> Effect<Parent.Action, Never> {
-      run(&parentState, presentedState)
-    }
+    public var run: Run
   }
 }
