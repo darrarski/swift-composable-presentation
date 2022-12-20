@@ -67,6 +67,10 @@ In most cases, the presentation has a corresponding present and dismiss animatio
 
 SwiftUI example of a component that conditionally presents one of two child components. The state is modeled as an enum with two cases. All effects produced by the child component are canceled when the child component is removed from the parent component.
 
+### ➡️ [Destination example](Example/Example/DestinationExample.swift)
+
+SwiftUI example of a component that presents a mutually-exclusive destination. The destination is represented by an optional enum case. Each case is presented using a different navigation pattern (navigation link, sheet, alert, etc.). All effects produced by the presented component are canceled when the destination is dismissed or changed. This design of modeling navigation is inspired by ["Modern SwiftUI" video series](https://www.pointfree.co/collections/swiftui/modern-swiftui) by [Point-Free](https://www.pointfree.co/).
+
 ## 🛠 Develop
 
 - Use Xcode (version ≥ 14).
