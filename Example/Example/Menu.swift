@@ -8,7 +8,6 @@ struct Menu: ReducerProtocol {
       case sheet(SheetExample.State)
       case fullScreenCover(FullScreenCoverExample.State)
       case navigationLink(NavigationLinkExample.State)
-      case navigationLinkSelection(NavigationLinkSelectionExample.State)
       case forEachStore(ForEachStoreExample.State)
       case popToRoot(PopToRootExample.State)
       case switchStore(SwitchStoreExample.State)
@@ -23,7 +22,6 @@ struct Menu: ReducerProtocol {
       case sheet(SheetExample.Action)
       case fullScreenCover(FullScreenCoverExample.Action)
       case navigationLink(NavigationLinkExample.Action)
-      case navigationLinkSelection(NavigationLinkSelectionExample.Action)
       case forEachStore(ForEachStoreExample.Action)
       case popToRoot(PopToRootExample.Action)
       case switchStore(SwitchStoreExample.Action)
@@ -38,7 +36,6 @@ struct Menu: ReducerProtocol {
     case sheet
     case fullScreenCover
     case navigationLink
-    case navigationLinkSelection
     case forEachStore
     case popToRoot
     case switchStore
@@ -66,7 +63,6 @@ extension ReducerProtocolOf<Menu> {
       .presentingSheetExample()
       .presentingFullScreenCoverExample()
       .presentingNavigationLinkExample()
-      .presentingNavigationLinkSelectionExample()
       .presentingForEachStoreExample()
       .presentingPopToRootExample()
       .presentingSwitchStoreExample()
@@ -103,17 +99,6 @@ extension ReducerProtocolOf<Menu> {
       id: .notNil(),
       action: (/Action.destination).appending(path: /Action.Destination.navigationLink),
       presented: NavigationLinkExample.init
-    )
-  }
-
-  func presentingNavigationLinkSelectionExample() -> some ReducerProtocol<State, Action> {
-    presenting(
-      presentationID: Menu.Presentation.navigationLinkSelection,
-      unwrapping: \.destination,
-      case: /State.Destination.navigationLinkSelection,
-      id: .notNil(),
-      action: (/Action.destination).appending(path: /Action.Destination.navigationLinkSelection),
-      presented: NavigationLinkSelectionExample.init
     )
   }
 
@@ -188,11 +173,6 @@ struct MenuView: View {
                 then: NavigationLinkExampleView.init(store:)
               )
               CaseLet(
-                state: (/Menu.State.Destination.navigationLinkSelection).extract(from:),
-                action: { Menu.Action.destination(.navigationLinkSelection($0)) },
-                then: NavigationLinkSelectionExampleView.init(store:)
-              )
-              CaseLet(
                 state: (/Menu.State.Destination.forEachStore).extract(from:),
                 action: { Menu.Action.destination(.forEachStore($0)) },
                 then: ForEachStoreExampleView.init(store:)
@@ -243,12 +223,6 @@ struct MenuView: View {
                 viewStore.send(.present(.navigationLink(.init())))
               } label: {
                 Text("NavigationLinkExample")
-              }
-
-              Button {
-                viewStore.send(.present(.navigationLinkSelection(.init())))
-              } label: {
-                Text("NavigationLinkSelectionExample")
               }
 
               Button {

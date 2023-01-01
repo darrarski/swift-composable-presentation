@@ -20,7 +20,6 @@
 		31D7D9BA274096B6001699F4 /* ForEachStoreExample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31D7D9B9274096B6001699F4 /* ForEachStoreExample.swift */; };
 		31D7D9BC274099F2001699F4 /* SheetExample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31D7D9BB274099F2001699F4 /* SheetExample.swift */; };
 		31D7D9BE27409B99001699F4 /* FullScreenCoverExample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31D7D9BD27409B99001699F4 /* FullScreenCoverExample.swift */; };
-		31F8124327C5A2F400AFC10A /* NavigationLinkSelectionExample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31F8124227C5A2F400AFC10A /* NavigationLinkSelectionExample.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -38,7 +37,6 @@
 		31D7D9B9274096B6001699F4 /* ForEachStoreExample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForEachStoreExample.swift; sourceTree = "<group>"; };
 		31D7D9BB274099F2001699F4 /* SheetExample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SheetExample.swift; sourceTree = "<group>"; };
 		31D7D9BD27409B99001699F4 /* FullScreenCoverExample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullScreenCoverExample.swift; sourceTree = "<group>"; };
-		31F8124227C5A2F400AFC10A /* NavigationLinkSelectionExample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationLinkSelectionExample.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -77,7 +75,6 @@
 				31D7D9BB274099F2001699F4 /* SheetExample.swift */,
 				31D7D9BD27409B99001699F4 /* FullScreenCoverExample.swift */,
 				31D7D9B32740907F001699F4 /* NavigationLinkExample.swift */,
-				31F8124227C5A2F400AFC10A /* NavigationLinkSelectionExample.swift */,
 				31D7D9B9274096B6001699F4 /* ForEachStoreExample.swift */,
 				3195775B27415EF100FFA9EB /* PopToRootExample.swift */,
 				3156F63E274253D700CA965F /* SwitchStoreExample.swift */,
@@ -171,7 +168,6 @@
 				3103A61A29621FA500B15453 /* Helpers.swift in Sources */,
 				31B556892961CE500022203B /* Menu.swift in Sources */,
 				31817E682950A982000BC1C3 /* DestinationExample.swift in Sources */,
-				31F8124327C5A2F400AFC10A /* NavigationLinkSelectionExample.swift in Sources */,
 				3154EC1726DFD41700D69F22 /* App.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
