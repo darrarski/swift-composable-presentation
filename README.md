@@ -11,7 +11,7 @@ If you are familiar with [ComposableArchitecture](https://github.com/pointfreeco
 
 The `ComposablePresentation` is a library that helps to compose reducers in apps built with [ComposableArchitecture](https://github.com/pointfreeco/swift-composable-architecture/). You can use it whenever you need to conditionally present a component, like when presenting a sheet, navigating between screens, or displaying a list of components. It also comes with SwiftUI helpers for sheets, navigation links, for-each-store, and other presentations.
 
-`Reducer.presenting` functions allows combining the reducer with a reducer of an optionally presented component. Once the component is dismissed (its optional state changes from honest value to `nil`), the effects returned by its reducer are automatically canceled.
+`.presenting` higher order reducer allows combining the reducer with a reducer of an optionally presented component. Once the component is dismissed (its optional state changes from honest value to `nil`), the effects returned by its reducer are automatically canceled.
 
 More info about the concept can be found in the article: [Thoughts on SwiftUI navigation](https://github.com/darrarski/darrarski/blob/main/2021/04/Thoughts-on-SwiftUI-navigation/README.md).
 
