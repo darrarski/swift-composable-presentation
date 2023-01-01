@@ -63,16 +63,20 @@ struct NavigationLinkExampleView: View {
   var body: some View {
     WithViewStore(store.stateless) { viewStore in
       _NavigationStack {
-        NavigationLinkWithStore(
+        Button {
+          viewStore.send(.didTapDetailButton)
+        } label: {
+          Text("Detail").padding()
+        }
+        ._navigationDestination(
           store.scope(
             state: \.detail,
             action: NavigationLinkExample.Action.detail
           ),
-          setActive: { active in
-            viewStore.send(active ? .didTapDetailButton : .didDismissDetail)
+          onDismiss: {
+            viewStore.send(.didDismissDetail)
           },
-          destination: DetailView.init(store:),
-          label: { Text("Detail").padding() }
+          destination: DetailView.init(store:)
         )
       }
       .navigationTitle("NavigationLinkExample")
