@@ -41,11 +41,11 @@ extension AnyReducer {
   ) -> Self {
     AnyReducer { state, action, env in
       _PresentingReducer(
-        presentationID: presentationID,
         parent: Reduce(AnyReducer(self.run), environment: env),
         presented: Reduce { state, action in
           localReducer.run(&state, action, toLocalEnvironment(env))
         },
+        toPresentationID: .value(presentationID),
         toPresentedState: {
           switch toLocalState {
           case .keyPath(let keyPath): return .keyPath(keyPath)

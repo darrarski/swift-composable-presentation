@@ -9,7 +9,7 @@ extension ReducerProtocol {
   /// - Inspired by [Reducer.presents function](https://github.com/pointfreeco/swift-composable-architecture/blob/9ec4b71e5a84f448dedb063a21673e4696ce135f/Sources/ComposableArchitecture/Reducer.swift#L549-L572) from `iso` branch of `swift-composable-architecture` repository.
   ///
   /// - Parameters:
-  ///   - presentationID: Unique identifier for the presentation. Defaults to new UUID.
+  ///   - toPresentationID: Transformation from `State` to unique identifier. Defaults to transformation that identifies object by type of `(State, Element)`.
   ///   - state: A key path form parent state to identified array that hold element states.
   ///   - action: A case path that can extract/embed element action from parent.
   ///   - onPresent: An action run when element is added to identified array. Defaults to empty action.
@@ -18,7 +18,7 @@ extension ReducerProtocol {
   /// - Returns: Combined reducer.
   @inlinable
   public func presentingForEach<ID: Hashable, Element: ReducerProtocol>(
-    presentationID: AnyHashable = UUID(),
+    presentationID toPresentationID: ToPresentationID<State> = .typed(Element.self),
     state toElementState: WritableKeyPath<State, IdentifiedArray<ID, Element.State>>,
     action toElementAction: CasePath<Action, (ID, Element.Action)>,
     onPresent: PresentingForEachReducerAction<ID, State, Action> = .empty,
@@ -29,8 +29,8 @@ extension ReducerProtocol {
     line: UInt = #line
   ) -> _PresentingForEachReducer<Self, ID, Element> {
     .init(
-      presentationID: presentationID,
       parent: self,
+      toPresentationID: toPresentationID,
       toElementState: toElementState,
       toElementAction: toElementAction,
       onPresent: onPresent,
@@ -49,10 +49,10 @@ public struct _PresentingForEachReducer<
   Element: ReducerProtocol
 >: ReducerProtocol {
   @usableFromInline
-  let presentationID: AnyHashable
+  let parent: Parent
 
   @usableFromInline
-  let parent: Parent
+  let toPresentationID: ToPresentationID<State>
 
   @usableFromInline
   let toElementState: WritableKeyPath<Parent.State, IdentifiedArray<ID, Element.State>>
@@ -80,8 +80,8 @@ public struct _PresentingForEachReducer<
 
   @inlinable
   init(
-    presentationID: AnyHashable,
     parent: Parent,
+    toPresentationID: ToPresentationID<State>,
     toElementState: WritableKeyPath<Parent.State, IdentifiedArray<ID, Element.State>>,
     toElementAction: CasePath<Parent.Action, (ID, Element.Action)>,
     onPresent: PresentingForEachReducerAction<ID, State, Action> = .empty,
@@ -91,8 +91,8 @@ public struct _PresentingForEachReducer<
     fileID: StaticString = #fileID,
     line: UInt = #line
   ) {
-    self.presentationID = presentationID
     self.parent = parent
+    self.toPresentationID = toPresentationID
     self.toElementState = toElementState
     self.toElementAction = toElementAction
     self.onPresent = onPresent
@@ -115,7 +115,10 @@ public struct _PresentingForEachReducer<
     }
 
     func effectID(for id: ID) -> PresentingForEachReducerEffectID {
-      .init(presentationID: presentationID, elementID: id)
+      .init(
+        presentationID: toPresentationID(state),
+        elementID: id
+      )
     }
 
     let oldIds = state[keyPath: toElementState].ids

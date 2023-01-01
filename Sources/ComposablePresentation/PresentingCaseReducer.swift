@@ -7,7 +7,7 @@ extension ReducerProtocol {
   /// - All effects returned by the presented reducer are cancelled when presented `ID` changes.
   ///
   /// - Parameters:
-  ///   - presentationID: Unique identifier for the presentation. Defaults to a new UUID.
+  ///   - toPresentationID: Transformation from `State` to unique identifier. Defaults to transformation that identifies object by type of `(State, Presented)`.
   ///   - toEnum: Writable key-path from `State` to optional `Enum`.
   ///   - toCase: Case path from `Enum` to `Presented.State`.
   ///   - toPresentedID: Transformation from `Presented.State` to `ID`.
@@ -18,7 +18,7 @@ extension ReducerProtocol {
   /// - Returns: Combined reducer
   @inlinable
   public func presenting<ID: Hashable, Enum, Presented: ReducerProtocol>(
-    presentationID: AnyHashable = UUID(),
+    presentationID toPresentationID: ToPresentationID<State> = .typed(Presented.self),
     unwrapping toEnum: WritableKeyPath<State, Enum?>,
     case toCase: CasePath<Enum, Presented.State>,
     id toPresentedID: _PresentingCaseReducer<Self, Enum, ID, Presented>.ToPresentedID,
@@ -31,9 +31,9 @@ extension ReducerProtocol {
     line: UInt = #line
   ) -> _PresentingCaseReducer<Self, Enum, ID, Presented> {
     .init(
-      presentationID: presentationID,
       parent: self,
       presented: presented(),
+      toPresentationID: toPresentationID,
       toEnum: toEnum,
       toCase: toCase,
       toPresentedID: toPresentedID,
@@ -54,13 +54,13 @@ public struct _PresentingCaseReducer<
   Presented: ReducerProtocol
 >: ReducerProtocol {
   @usableFromInline
-  let presentationID: AnyHashable
-
-  @usableFromInline
   let parent: Parent
 
   @usableFromInline
   let presented: Presented
+
+  @usableFromInline
+  let toPresentationID: ToPresentationID<State>
 
   @usableFromInline
   let toEnum: WritableKeyPath<Parent.State, Enum?>
@@ -91,9 +91,9 @@ public struct _PresentingCaseReducer<
 
   @inlinable
   init(
-    presentationID: AnyHashable,
     parent: Parent,
     presented: Presented,
+    toPresentationID: ToPresentationID<State>,
     toEnum: WritableKeyPath<State, Enum?>,
     toCase: CasePath<Enum, Presented.State>,
     toPresentedID: ToPresentedID,
@@ -104,9 +104,9 @@ public struct _PresentingCaseReducer<
     fileID: StaticString,
     line: UInt
   ) {
-    self.presentationID = presentationID
     self.parent = parent
     self.presented = presented
+    self.toPresentationID = toPresentationID
     self.toEnum = toEnum
     self.toCase = toCase
     self.toPresentedID = toPresentedID
@@ -133,7 +133,7 @@ public struct _PresentingCaseReducer<
     let oldPresentedID = toPresentedID.run(oldPresentedState)
 
     let presentedEffectsID = PresentingReducerEffectId(
-      presentationID: presentationID,
+      presentationID: toPresentationID(oldState),
       presentedID: oldPresentedID
     )
     let shouldRunPresented = toPresentedAction.extract(from: action) != nil

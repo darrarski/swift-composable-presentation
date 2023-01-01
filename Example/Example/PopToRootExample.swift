@@ -42,7 +42,6 @@ struct PopToRootExample: ReducerProtocol {
       }
     }
     .presenting(
-      presentationID: ObjectIdentifier(PopToRootExample.self),
       state: .keyPath(\.first),
       id: .notNil(),
       action: /Action.first,
@@ -85,7 +84,6 @@ struct PopToRootExample: ReducerProtocol {
         }
       }
       .presenting(
-        presentationID: ObjectIdentifier(First.self),
         state: .keyPath(\.second),
         id: .notNil(),
         action: /First.Action.second,

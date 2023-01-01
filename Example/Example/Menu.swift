@@ -32,16 +32,6 @@ struct Menu: ReducerProtocol {
     case destination(Menu.Action.Destination)
   }
 
-  enum Presentation: Hashable {
-    case sheet
-    case fullScreenCover
-    case navigationDestination
-    case forEachStore
-    case popToRoot
-    case switchStore
-    case destination
-  }
-
   var body: some ReducerProtocol<State, Action> {
     Reduce { state, action in
       switch action {
@@ -71,7 +61,6 @@ extension ReducerProtocolOf<Menu> {
 
   func presentingSheetExample() -> some ReducerProtocol<State, Action> {
     presenting(
-      presentationID: Menu.Presentation.sheet,
       unwrapping: \.destination,
       case: /State.Destination.sheet,
       id: .notNil(),
@@ -82,7 +71,6 @@ extension ReducerProtocolOf<Menu> {
 
   func presentingFullScreenCoverExample() -> some ReducerProtocol<State, Action> {
     presenting(
-      presentationID: Menu.Presentation.fullScreenCover,
       unwrapping: \.destination,
       case: /State.Destination.fullScreenCover,
       id: .notNil(),
@@ -93,7 +81,6 @@ extension ReducerProtocolOf<Menu> {
 
   func presentingNavigationDestinationExample() -> some ReducerProtocol<State, Action> {
     presenting(
-      presentationID: Menu.Presentation.navigationDestination,
       unwrapping: \.destination,
       case: /State.Destination.navigationDestination,
       id: .notNil(),
@@ -104,7 +91,6 @@ extension ReducerProtocolOf<Menu> {
 
   func presentingForEachStoreExample() -> some ReducerProtocol<State, Action> {
     presenting(
-      presentationID: Menu.Presentation.forEachStore,
       unwrapping: \.destination,
       case: /State.Destination.forEachStore,
       id: .notNil(),
@@ -115,7 +101,6 @@ extension ReducerProtocolOf<Menu> {
 
   func presentingPopToRootExample() -> some ReducerProtocol<State, Action> {
     presenting(
-      presentationID: Menu.Presentation.popToRoot,
       unwrapping: \.destination,
       case: /State.Destination.popToRoot,
       id: .notNil(),
@@ -126,7 +111,6 @@ extension ReducerProtocolOf<Menu> {
 
   func presentingSwitchStoreExample() -> some ReducerProtocol<State, Action> {
     presenting(
-      presentationID: Menu.Presentation.switchStore,
       unwrapping: \.destination,
       case: /State.Destination.switchStore,
       id: .notNil(),
@@ -137,7 +121,6 @@ extension ReducerProtocolOf<Menu> {
 
   func presentingDestinationExample() -> some ReducerProtocol<State, Action> {
     presenting(
-      presentationID: Menu.Presentation.destination,
       unwrapping: \.destination,
       case: /State.Destination.destination,
       id: .notNil(),

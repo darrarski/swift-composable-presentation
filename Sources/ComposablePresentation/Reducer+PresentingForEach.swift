@@ -41,8 +41,8 @@ extension AnyReducer {
   ) -> Self {
     AnyReducer { state, action, env in
       _PresentingForEachReducer(
-        presentationID: presentationID,
         parent: Reduce(AnyReducer(self.run), environment: env),
+        toPresentationID: .value(presentationID),
         toElementState: toLocalState,
         toElementAction: toLocalAction,
         onPresent: .init { elementId, state in

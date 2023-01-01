@@ -30,11 +30,6 @@ struct SwitchStoreExample: ReducerProtocol {
     case second(Second.Action)
   }
 
-  enum Presentation: Hashable {
-    case first
-    case second
-  }
-
   var body: some ReducerProtocol<State, Action> {
     Reduce { state, action in
       switch action {
@@ -52,14 +47,12 @@ struct SwitchStoreExample: ReducerProtocol {
       }
     }
     .presenting(
-      presentationID: Presentation.first,
       state: .casePath(/State.first),
       id: .notNil(),
       action: /Action.first,
       presented: First.init
     )
     .presenting(
-      presentationID: Presentation.second,
       state: .casePath(/State.second),
       id: .notNil(),
       action: /Action.second,
