@@ -33,11 +33,6 @@ final class PresentingCaseReducerTests: XCTestCase {
         case second(Second.Action)
       }
 
-      enum Presentation: Hashable {
-        case first
-        case second
-      }
-
       func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
         switch action {
         case .goto(let destination):
@@ -90,7 +85,6 @@ final class PresentingCaseReducerTests: XCTestCase {
       initialState: Main.State(),
       reducer: Main()
         .presenting(
-          presentationID: .value(Main.Presentation.first),
           unwrapping: \.destination,
           case: /Main.State.Destination.first,
           id: .notNil(),
@@ -111,7 +105,6 @@ final class PresentingCaseReducerTests: XCTestCase {
           }
         )
         .presenting(
-          presentationID: .value(Main.Presentation.second),
           unwrapping: \.destination,
           case: /Main.State.Destination.second,
           id: .notNil(),
