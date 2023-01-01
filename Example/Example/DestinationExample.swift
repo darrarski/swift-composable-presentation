@@ -164,11 +164,20 @@ struct DestinationExampleView: View {
               .padding()
           }
 
-          Button {
-            viewStore.send(.alertButtonTapped)
-          } label: {
-            Text("→ Alert")
-              .padding()
+          if #available(iOS 15.0, *) {
+            Button {
+              viewStore.send(.alertButtonTapped)
+            } label: {
+              Text("→ Alert")
+                .padding()
+            }
+            .alert(
+              store.scope(
+                state: { (/DestinationExample.State.Destination.alert).extract(from: $0.destination) },
+                action: DestinationExample.Action.alert
+              ),
+              dismiss: .dismissed
+            )
           }
         }
         .padding()
@@ -187,13 +196,6 @@ struct DestinationExampleView: View {
           ),
           onDismiss: { viewStore.send(.didDismissSecond) },
           destination: SecondView.init(store:)
-        )
-        .alert(
-          store.scope(
-            state: { (/DestinationExample.State.Destination.alert).extract(from: $0.destination) },
-            action: DestinationExample.Action.alert
-          ),
-          dismiss: .dismissed
         )
       }
     }
