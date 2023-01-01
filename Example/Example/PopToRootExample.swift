@@ -126,7 +126,7 @@ struct PopToRootExampleView: View {
   let store: StoreOf<PopToRootExample>
 
   var body: some View {
-    NavigationView {
+    _NavigationStack {
       VStack {
         TimerExampleView(store: store.scope(
           state: \.timer,

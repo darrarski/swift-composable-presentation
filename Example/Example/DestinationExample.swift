@@ -148,7 +148,7 @@ struct DestinationExampleView: View {
 
   var body: some View {
     WithViewStore(store.stateless) { viewStore in
-      NavigationViewWrapper {
+      _NavigationStack {
         VStack(alignment: .leading, spacing: 0) {
           Button {
             viewStore.send(.firstButtonTapped)
@@ -180,14 +180,14 @@ struct DestinationExampleView: View {
           onDismiss: { viewStore.send(.didDismissFirst) },
           content: FirstView.init(store:)
         )
-        .modifier(NavigationLinkWrapper(
-          store: store.scope(
+        ._navigationDestination(
+          store.scope(
             state: { (/DestinationExample.State.Destination.second).extract(from: $0.destination) },
             action: DestinationExample.Action.second
           ),
-          onDeactivate: { viewStore.send(.didDismissSecond) },
+          onDismiss: { viewStore.send(.didDismissSecond) },
           destination: SecondView.init(store:)
-        ))
+        )
         .alert(
           store.scope(
             state: { (/DestinationExample.State.Destination.alert).extract(from: $0.destination) },
@@ -230,42 +230,6 @@ struct DestinationExampleView: View {
         ))
       }
       .padding()
-    }
-  }
-
-  struct NavigationViewWrapper<Content: View>: View {
-    let content: () -> Content
-
-    var body: some View {
-      if #available(iOS 16.0, *) {
-        NavigationStack(root: content)
-      } else {
-        NavigationView(content: content)
-      }
-    }
-  }
-
-  struct NavigationLinkWrapper<State, Action, Destination: View>: ViewModifier {
-    let store: Store<State?, Action>
-    let onDeactivate: () -> Void
-    let destination: (Store<State, Action>) -> Destination
-
-    func body(content: Content) -> some View {
-      if #available(iOS 16.0, *) {
-        content.navigationDestination(
-          store,
-          onDismiss: onDeactivate,
-          content: destination
-        )
-      } else {
-        content.background(
-          NavigationLinkWithStore(
-            store,
-            onDeactivate: onDeactivate,
-            destination: destination
-          )
-        )
-      }
     }
   }
 }

@@ -62,7 +62,7 @@ struct NavigationLinkExampleView: View {
 
   var body: some View {
     WithViewStore(store.stateless) { viewStore in
-      NavigationView {
+      _NavigationStack {
         NavigationLinkWithStore(
           store.scope(
             state: \.detail,

@@ -87,7 +87,7 @@ struct NavigationLinkSelectionExampleView: View {
 
   var body: some View {
     WithViewStore(store.scope(state: ViewState.init)) { viewStore in
-      NavigationView {
+      _NavigationStack {
         List {
           ForEach(viewStore.items) { item in
             NavigationLink(
