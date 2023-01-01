@@ -71,6 +71,10 @@ SwiftUI example of a component that conditionally presents one of two child comp
 
 SwiftUI example of a component that presents a mutually-exclusive destination. The destination is represented by an optional enum case. Each case is presented using a different navigation pattern (navigation link, sheet, alert, etc.). All effects produced by the presented component are canceled when the destination is dismissed or changed. This design of modeling navigation is inspired by ["Modern SwiftUI" video series](https://www.pointfree.co/collections/swiftui/modern-swiftui) by [Point-Free](https://www.pointfree.co/).
 
+### ▶️ [Deeplink example](Example/Example/App.swift)
+
+Navigation composed with this library is driven by a declarative state. This makes it easy to handle deep links and navigate to any screen of the app. Several workarounds were applied to fix SwiftUI navigation issues (this was only possible thanks to [swiftui-navigation](https://github.com/pointfreeco/swiftui-navigation) library by [Point-Free](https://www.pointfree.co/)). Change the initial state in [Example/App.swift](Example/Example/App.swift) to navigate to any screen when the app starts.
+
 ## 🛠 Develop
 
 - Use Xcode (version ≥ 14).

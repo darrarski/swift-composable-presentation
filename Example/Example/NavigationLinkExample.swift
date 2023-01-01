@@ -2,48 +2,71 @@ import ComposableArchitecture
 import ComposablePresentation
 import SwiftUI
 
-struct NavigationLinkExample: View {
-  struct MasterState {
-    var detail: DetailState?
+struct NavigationLinkExample: ReducerProtocol {
+  struct State {
+    var detail: Detail.State?
   }
 
-  enum MasterAction {
+  enum Action {
     case didTapDetailButton
     case didDismissDetail
-    case detail(DetailAction)
+    case detail(Detail.Action)
   }
 
-  static let masterReducer = Reducer<MasterState, MasterAction, Void> { state, action, _ in
-    switch action {
-    case .didTapDetailButton:
-      state.detail = DetailState()
-      return .none
+  var body: some ReducerProtocol<State, Action> {
+    Reduce { state, action in
+      switch action {
+      case .didTapDetailButton:
+        state.detail = Detail.State()
+        return .none
 
-    case .didDismissDetail, .detail(.didTapDismissButton):
-      state.detail = nil
-      return .none
+      case .didDismissDetail, .detail(.didTapDismissButton):
+        state.detail = nil
+        return .none
 
-    case .detail(_):
-      return .none
+      case .detail(_):
+        return .none
+      }
     }
-  }
     .presenting(
-      detailReducer,
+      presentationID: ObjectIdentifier(NavigationLinkExample.self),
       state: .keyPath(\.detail),
       id: .notNil(),
-      action: /MasterAction.detail,
-      environment: { () }
+      action: /Action.detail,
+      presented: Detail.init
     )
+  }
 
-  struct MasterView: View {
-    let store: Store<MasterState, MasterAction>
+  // MARK: - Child Reducers
 
-    var body: some View {
-      WithViewStore(store.stateless) { viewStore in
+  struct Detail: ReducerProtocol {
+    struct State {
+      var timer = TimerExample.State()
+    }
+
+    enum Action {
+      case didTapDismissButton
+      case timer(TimerExample.Action)
+    }
+
+    var body: some ReducerProtocol<State, Action> {
+      Scope(state: \.timer, action: /Action.timer) {
+        TimerExample()
+      }
+    }
+  }
+}
+
+struct NavigationLinkExampleView: View {
+  let store: StoreOf<NavigationLinkExample>
+
+  var body: some View {
+    WithViewStore(store.stateless) { viewStore in
+      NavigationView {
         NavigationLinkWithStore(
           store.scope(
             state: \.detail,
-            action: MasterAction.detail
+            action: NavigationLinkExample.Action.detail
           ),
           setActive: { active in
             viewStore.send(active ? .didTapDetailButton : .didDismissDetail)
@@ -52,35 +75,20 @@ struct NavigationLinkExample: View {
           label: { Text("Detail").padding() }
         )
       }
-      .navigationTitle("Master")
+      .navigationTitle("NavigationLinkExample")
     }
   }
 
-  struct DetailState {
-    var timer = TimerState()
-  }
-
-  enum DetailAction {
-    case didTapDismissButton
-    case timer(TimerAction)
-  }
-
-  static let detailReducer = Reducer<DetailState, DetailAction, Void>.combine(
-    timerReducer.pullback(
-      state: \.timer,
-      action: /DetailAction.timer,
-      environment: { () }
-    )
-  )
+  // MARK: - Child Views
 
   struct DetailView: View {
-    let store: Store<DetailState, DetailAction>
+    let store: StoreOf<NavigationLinkExample.Detail>
 
     var body: some View {
       VStack {
-        TimerView(store: store.scope(
+        TimerExampleView(store: store.scope(
           state: \.timer,
-          action: DetailAction.timer
+          action: NavigationLinkExample.Detail.Action.timer
         ))
 
         Button(action: { ViewStore(store.stateless).send(.didTapDismissButton) }) {
@@ -92,20 +100,13 @@ struct NavigationLinkExample: View {
       .navigationTitle("Detail")
     }
   }
-
-  var body: some View {
-    NavigationView {
-      MasterView(store: Store(
-        initialState: MasterState(),
-        reducer: Self.masterReducer.debug(),
-        environment: ()
-      ))
-    }
-  }
 }
 
 struct NavigationLinkExample_Previews: PreviewProvider {
   static var previews: some View {
-    NavigationLinkExample()
+    NavigationLinkExampleView(store: Store(
+      initialState: NavigationLinkExample.State(),
+      reducer: NavigationLinkExample()
+    ))
   }
 }
