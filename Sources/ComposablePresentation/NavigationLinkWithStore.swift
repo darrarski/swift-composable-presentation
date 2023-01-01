@@ -3,6 +3,8 @@ import SwiftUI
 import SwiftUINavigation
 
 /// `NavigationLink` wrapped with `WithViewStore`.
+@available(iOS, deprecated: 16.0, message: "use .navigationDestination(_:mapState:onDismiss:content:) view modifier (aka NavigationDestinationWithStore) inside a NavigationStack or NavigationSplitView")
+@available(macOS, deprecated: 13.0, message: "use .navigationDestination(_:mapState:onDismiss:content:) view modifier (aka NavigationDestinationWithStore) inside a NavigationStack or NavigationSplitView")
 public struct NavigationLinkWithStore<State, Action, Destination, Label>: View
 where Destination: View,
       Label: View
