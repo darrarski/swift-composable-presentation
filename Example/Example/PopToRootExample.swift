@@ -2,30 +2,28 @@ import ComposableArchitecture
 import ComposablePresentation
 import SwiftUI
 
-struct PopToRootExample: View {
-  struct RootState {
-    var timer = TimerState()
-    var first: FirstState?
+struct PopToRootExample: ReducerProtocol {
+  struct State {
+    var timer = TimerExample.State()
+    var first: First.State?
   }
 
-  enum RootAction {
+  enum Action {
     case didTapPushFirst
     case didDismissFirst
-    case timer(TimerAction)
-    case first(FirstAction)
+    case timer(TimerExample.Action)
+    case first(First.Action)
   }
 
-  static let rootReducer = Reducer<RootState, RootAction, Void>.combine(
-    timerReducer.pullback(
-      state: \.timer,
-      action: /RootAction.timer,
-      environment: { () }
-    ),
+  var body: some ReducerProtocol<State, Action> {
+    Scope(state: \.timer, action: /Action.timer) {
+      TimerExample()
+    }
 
-    Reducer { state, action, _ in
+    Reduce { state, action in
       switch action {
       case .didTapPushFirst:
-        state.first = FirstState()
+        state.first = First.State()
         return .none
 
       case .didDismissFirst:
@@ -43,28 +41,102 @@ struct PopToRootExample: View {
         return .none
       }
     }
-  ).presenting(
-    Self.firstReducer,
-    state: .keyPath(\.first),
-    id: .notNil(),
-    action: /RootAction.first,
-    environment: { () }
-  )
+    .presenting(
+      presentationID: ObjectIdentifier(PopToRootExample.self),
+      state: .keyPath(\.first),
+      id: .notNil(),
+      action: /Action.first,
+      presented: First.init
+    )
+  }
 
-  struct RootView: View {
-    let store: Store<RootState, RootAction>
+  // MARK: - Child Reducers
 
-    var body: some View {
+  struct First: ReducerProtocol {
+    struct State {
+      var timer = TimerExample.State()
+      var second: Second.State?
+    }
+
+    enum Action {
+      case didTapPushSecond
+      case didDismissSecond
+      case timer(TimerExample.Action)
+      case second(Second.Action)
+    }
+
+    var body: some ReducerProtocol<State, Action> {
+      Scope(state: \.timer, action: /Action.timer) {
+        TimerExample()
+      }
+
+      Reduce { state, action in
+        switch action {
+        case .didTapPushSecond:
+          state.second = Second.State()
+          return .none
+
+        case .didDismissSecond:
+          state.second = nil
+          return .none
+
+        case .timer(_), .second(_):
+          return .none
+        }
+      }
+      .presenting(
+        presentationID: ObjectIdentifier(First.self),
+        state: .keyPath(\.second),
+        id: .notNil(),
+        action: /First.Action.second,
+        presented: Second.init
+      )
+    }
+  }
+
+  struct Second: ReducerProtocol {
+    struct State {
+      var timer = TimerExample.State()
+    }
+
+    enum Action {
+      case didTapPopToRoot
+      case timer(TimerExample.Action)
+    }
+
+    var body: some ReducerProtocol<State, Action> {
+      Scope(state: \.timer, action: /Action.timer) {
+        TimerExample()
+      }
+
+      Reduce { state, action in
+        switch action {
+        case .didTapPopToRoot:
+          return .none
+
+        case .timer(_):
+          return .none
+        }
+      }
+    }
+  }
+}
+
+struct PopToRootExampleView: View {
+  let store: StoreOf<PopToRootExample>
+
+  var body: some View {
+    NavigationView {
       VStack {
-        TimerView(store: store.scope(
+        TimerExampleView(store: store.scope(
           state: \.timer,
-          action: RootAction.timer
+          action: PopToRootExample.Action.timer
         ))
 
         NavigationLinkWithStore(
           store.scope(
             state: \.first,
-            action: RootAction.first
+            action: PopToRootExample.Action.first
           ),
           mapState: replayNonNil(),
           setActive: { active in
@@ -77,68 +149,26 @@ struct PopToRootExample: View {
           }
         )
       }
-      .navigationTitle("Root")
+      .navigationTitle("PopToRootExample")
     }
   }
 
-  struct FirstState {
-    var timer = TimerState()
-    var second: SecondState?
-  }
-
-  enum FirstAction {
-    case didTapPushSecond
-    case didDismissSecond
-    case timer(TimerAction)
-    case second(SecondAction)
-  }
-
-  static let firstReducer = Reducer<FirstState, FirstAction, Void>.combine(
-    timerReducer.pullback(
-      state: \.timer,
-      action: /FirstAction.timer,
-      environment: { () }
-    ),
-
-    Reducer { state, action, _ in
-      switch action {
-      case .didTapPushSecond:
-        state.second = SecondState()
-        return .none
-
-      case .didDismissSecond:
-        state.second = nil
-        return .none
-
-      case .timer(_):
-        return .none
-
-      case .second(_):
-        return .none
-      }
-    }
-  ).presenting(
-    Self.secondReducer,
-    state: .keyPath(\.second),
-    id: .notNil(),
-    action: /FirstAction.second,
-    environment: { () }
-  )
+  // MARK: - Child Views
 
   struct FirstView: View {
-    let store: Store<FirstState, FirstAction>
+    let store: StoreOf<PopToRootExample.First>
 
     var body: some View {
       VStack {
-        TimerView(store: store.scope(
+        TimerExampleView(store: store.scope(
           state: \.timer,
-          action: FirstAction.timer
+          action: PopToRootExample.First.Action.timer
         ))
 
         NavigationLinkWithStore(
           store.scope(
             state: \.second,
-            action: FirstAction.second
+            action: PopToRootExample.First.Action.second
           ),
           mapState: replayNonNil(),
           setActive: { active in
@@ -157,41 +187,14 @@ struct PopToRootExample: View {
     }
   }
 
-  struct SecondState {
-    var timer = TimerState()
-  }
-
-  enum SecondAction {
-    case didTapPopToRoot
-    case timer(TimerAction)
-  }
-
-  static let secondReducer = Reducer<SecondState, SecondAction, Void>.combine(
-    timerReducer.pullback(
-      state: \.timer,
-      action: /SecondAction.timer,
-      environment: { () }
-    ),
-
-    Reducer { state, action, _ in
-      switch action {
-      case .didTapPopToRoot:
-        return .none
-
-      case .timer(_):
-        return .none
-      }
-    }
-  )
-
   struct SecondView: View {
-    let store: Store<SecondState, SecondAction>
+    let store: StoreOf<PopToRootExample.Second>
 
     var body: some View {
       VStack {
-        TimerView(store: store.scope(
+        TimerExampleView(store: store.scope(
           state: \.timer,
-          action: SecondAction.timer
+          action: PopToRootExample.Second.Action.timer
         ))
 
         Button(action: { ViewStore(store.stateless).send(.didTapPopToRoot) }) {
@@ -203,21 +206,13 @@ struct PopToRootExample: View {
       .navigationTitle("Second")
     }
   }
-
-  var body: some View {
-    NavigationView {
-      RootView(store: Store(
-        initialState: RootState(),
-        reducer: Self.rootReducer.debug(),
-        environment: ()
-      ))
-    }
-    .navigationViewStyle(StackNavigationViewStyle())
-  }
 }
 
 struct PopToRootExample_Previews: PreviewProvider {
   static var previews: some View {
-    PopToRootExample()
+    PopToRootExampleView(store: Store(
+      initialState: PopToRootExample.State(),
+      reducer: PopToRootExample()
+    ))
   }
 }

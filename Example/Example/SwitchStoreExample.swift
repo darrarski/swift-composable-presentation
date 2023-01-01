@@ -2,10 +2,14 @@ import ComposableArchitecture
 import ComposablePresentation
 import SwiftUI
 
-struct SwitchStoreExample: View {
-  enum MainState: Identifiable {
-    case first(FirstState)
-    case second(SecondState)
+struct SwitchStoreExample: ReducerProtocol {
+  enum State: Identifiable {
+    init() {
+      self = .first(.init())
+    }
+
+    case first(First.State)
+    case second(Second.State)
 
     enum ID: Hashable {
       case first
@@ -20,150 +24,155 @@ struct SwitchStoreExample: View {
     }
   }
 
-  enum MainAction {
-    case set(id: MainState.ID)
-    case first(FirstAction)
-    case second(SecondAction)
+  enum Action {
+    case set(id: State.ID)
+    case first(First.Action)
+    case second(Second.Action)
   }
 
-  static let mainReducer = Reducer<MainState, MainAction, Void> { state, action, _ in
-    switch action {
-    case let .set(id):
-      switch id {
-      case .first:
-        state = .first(FirstState())
-      case .second:
-        state = .second(SecondState())
-      }
-      return .none
+  enum Presentation: Hashable {
+    case first
+    case second
+  }
 
-    case .first(_):
-      return .none
-
-    case .second(_):
-      return .none
-    }
-  }.presenting(
-    firstReducer,
-    state: .casePath(/MainState.first),
-    id: .notNil(),
-    action: /MainAction.first,
-    environment: { () }
-  ).presenting(
-    secondReducer,
-    state: .casePath(/MainState.second),
-    id: .notNil(),
-    action: /MainAction.second,
-    environment: { () }
-  )
-
-  struct MainView: View {
-    let store: Store<MainState, MainAction>
-
-    var body: some View {
-      VStack {
-        WithViewStore(store.scope(state: \.id)) { viewStore in
-          Picker("", selection: viewStore.binding(send: MainAction.set(id:))) {
-            Text("First").tag(MainState.ID.first)
-            Text("Second").tag(MainState.ID.second)
-          }
-          .pickerStyle(SegmentedPickerStyle())
+  var body: some ReducerProtocol<State, Action> {
+    Reduce { state, action in
+      switch action {
+      case let .set(id):
+        switch id {
+        case .first:
+          state = .first(First.State())
+        case .second:
+          state = .second(Second.State())
         }
+        return .none
 
-        SwitchStore(store) {
-          CaseLet(
-            state: /MainState.first,
-            action: MainAction.first,
-            then: FirstView.init(store:)
-          )
-          CaseLet(
-            state: /MainState.second,
-            action: MainAction.second,
-            then: SecondView.init(store:)
-          )
-        }
-        .frame(maxWidth: .infinity)
-        .border(Color.primary, width: 1)
+      case .first(_), .second(_):
+        return .none
       }
-      .padding()
     }
-  }
-
-  struct FirstState {
-    var timer = TimerState()
-  }
-
-  enum FirstAction {
-    case timer(TimerAction)
-  }
-
-  static let firstReducer = Reducer<FirstState, FirstAction, Void>.combine(
-    timerReducer.pullback(
-      state: \.timer,
-      action: /FirstAction.timer,
-      environment: { () }
+    .presenting(
+      presentationID: Presentation.first,
+      state: .casePath(/State.first),
+      id: .notNil(),
+      action: /Action.first,
+      presented: First.init
     )
-  )
+    .presenting(
+      presentationID: Presentation.second,
+      state: .casePath(/State.second),
+      id: .notNil(),
+      action: /Action.second,
+      presented: Second.init
+    )
+  }
+
+  // MARK: - Child Reducers
+
+  struct First: ReducerProtocol {
+    struct State {
+      var timer = TimerExample.State()
+    }
+
+    enum Action {
+      case timer(TimerExample.Action)
+    }
+
+    var body: some ReducerProtocol<State, Action> {
+      Scope(state: \.timer, action: /Action.timer) {
+        TimerExample()
+      }
+    }
+  }
+
+  struct Second: ReducerProtocol {
+    struct State {
+      var timer = TimerExample.State()
+    }
+
+    enum Action {
+      case timer(TimerExample.Action)
+    }
+
+    var body: some ReducerProtocol<State, Action> {
+      Scope(state: \.timer, action: /Action.timer) {
+        TimerExample()
+      }
+    }
+  }
+}
+
+struct SwitchStoreExampleView: View {
+  let store: StoreOf<SwitchStoreExample>
+
+  var body: some View {
+    VStack {
+      WithViewStore(store.scope(state: \.id)) { viewStore in
+        Picker("", selection: viewStore.binding(send: SwitchStoreExample.Action.set(id:))) {
+          Text("First").tag(SwitchStoreExample.State.ID.first)
+          Text("Second").tag(SwitchStoreExample.State.ID.second)
+        }
+        .pickerStyle(SegmentedPickerStyle())
+      }
+
+      SwitchStore(store) {
+        CaseLet(
+          state: /SwitchStoreExample.State.first,
+          action: SwitchStoreExample.Action.first,
+          then: FirstView.init(store:)
+        )
+        CaseLet(
+          state: /SwitchStoreExample.State.second,
+          action: SwitchStoreExample.Action.second,
+          then: SecondView.init(store:)
+        )
+      }
+      .frame(maxWidth: .infinity)
+      .border(Color.primary, width: 1)
+    }
+    .padding()
+  }
+
+  // MARK: - Child Views
 
   struct FirstView: View {
-    let store: Store<FirstState, FirstAction>
+    let store: StoreOf<SwitchStoreExample.First>
 
     var body: some View {
       VStack {
         Text("First").font(.title)
 
-        TimerView(store: store.scope(
+        TimerExampleView(store: store.scope(
           state: \.timer,
-          action: FirstAction.timer
+          action: SwitchStoreExample.First.Action.timer
         ))
       }
       .padding()
     }
   }
 
-  struct SecondState {
-    var timer = TimerState()
-  }
-
-  enum SecondAction {
-    case timer(TimerAction)
-  }
-
-  static let secondReducer = Reducer<SecondState, SecondAction, Void>.combine(
-    timerReducer.pullback(
-      state: \.timer,
-      action: /SecondAction.timer,
-      environment: { () }
-    )
-  )
-
   struct SecondView: View {
-    let store: Store<SecondState, SecondAction>
+    let store: StoreOf<SwitchStoreExample.Second>
 
     var body: some View {
       VStack {
         Text("Second").font(.title)
 
-        TimerView(store: store.scope(
+        TimerExampleView(store: store.scope(
           state: \.timer,
-          action: SecondAction.timer
+          action: SwitchStoreExample.Second.Action.timer
         ))
       }
       .padding()
     }
   }
-
-  var body: some View {
-    MainView(store: Store(
-      initialState: MainState.first(FirstState()),
-      reducer: Self.mainReducer.debug(),
-      environment: ()
-    ))
-  }
 }
 
 struct SwitchStoreExample_Previews: PreviewProvider {
   static var previews: some View {
-    SwitchStoreExample()
+    SwitchStoreExampleView(store: Store(
+      initialState: SwitchStoreExample.State.first(.init()),
+      reducer: SwitchStoreExample()
+    ))
   }
 }

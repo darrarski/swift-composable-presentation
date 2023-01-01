@@ -2,73 +2,105 @@ import ComposableArchitecture
 import ComposablePresentation
 import SwiftUI
 
-struct NavigationLinkSelectionExample: View {
+struct NavigationLinkSelectionExample: ReducerProtocol {
   struct Item: Identifiable, Equatable {
     var id: String
   }
 
-  struct MasterState {
-    var items: [Item]
-    var detail: DetailState? = nil
+  struct State {
+    var items: [Item] = [
+      Item(id: "A"),
+      Item(id: "B"),
+      Item(id: "C"),
+    ]
+    var detail: Detail.State? = nil
   }
 
-  enum MasterAction {
+  enum Action {
     case didSelect(itemId: Item.ID?)
-    case detail(DetailAction)
+    case detail(Detail.Action)
   }
 
-  static let masterReducer = Reducer<MasterState, MasterAction, Void> { state, action, _ in
-    switch action {
-    case .didSelect(.some(let itemId)):
-      state.detail = state.items
-        .first { $0.id == itemId }
-        .map(DetailState.init(item:))
-      return .none
+  var body: some ReducerProtocol<State, Action> {
+    Reduce { state, action in
+      switch action {
+      case .didSelect(.some(let itemId)):
+        state.detail = state.items
+          .first { $0.id == itemId }
+          .map(Detail.State.init(item:))
+        return .none
 
-    case .didSelect(.none), .detail(.didTapDismissButton):
-      state.detail = nil
-      return .none
+      case .didSelect(.none), .detail(.didTapDismissButton):
+        state.detail = nil
+        return .none
 
-    case .detail(_):
-      return .none
-    }
-  }
-    .presenting(
-      detailReducer,
-      state: .keyPath(\.detail),
-      id: .keyPath(\.?.item.id),
-      action: /MasterAction.detail,
-      environment: { () }
-    )
-
-  struct MasterView: View {
-    let store: Store<MasterState, MasterAction>
-
-    struct ViewState: Equatable {
-      let items: [Item]
-      let selectedItemID: Item.ID?
-
-      init(_ state: MasterState) {
-        items = state.items
-        selectedItemID = state.detail?.item.id
+      case .detail(_):
+        return .none
       }
     }
+    .presenting(
+      presentationID: ObjectIdentifier(NavigationLinkSelectionExample.self),
+      state: .keyPath(\.detail),
+      id: .keyPath(\.?.item.id),
+      action: /Action.detail,
+      presented: Detail.init
+    )
+  }
 
-    var body: some View {
-      WithViewStore(store.scope(state: ViewState.init)) { viewStore in
+  // MARK: - Child Reducers
+
+  struct Detail: ReducerProtocol {
+    struct State {
+      init(item: Item) {
+        self.item = item
+      }
+
+      var item: Item
+      var timer = TimerExample.State()
+    }
+
+    enum Action {
+      case didTapDismissButton
+      case timer(TimerExample.Action)
+    }
+
+    var body: some ReducerProtocol<State, Action> {
+      Scope(state: \.timer, action: /Action.timer) {
+        TimerExample()
+      }
+    }
+  }
+}
+
+struct NavigationLinkSelectionExampleView: View {
+  let store: StoreOf<NavigationLinkSelectionExample>
+
+  struct ViewState: Equatable {
+    let items: [NavigationLinkSelectionExample.Item]
+    let selectedItemID: NavigationLinkSelectionExample.Item.ID?
+
+    init(state: NavigationLinkSelectionExample.State) {
+      items = state.items
+      selectedItemID = state.detail?.item.id
+    }
+  }
+
+  var body: some View {
+    WithViewStore(store.scope(state: ViewState.init)) { viewStore in
+      NavigationView {
         List {
           ForEach(viewStore.items) { item in
             NavigationLink(
               tag: item.id,
               selection: viewStore.binding(
                 get: \.selectedItemID,
-                send: MasterAction.didSelect
+                send: NavigationLinkSelectionExample.Action.didSelect
               ),
               destination: {
                 IfLetStore(
                   store.scope(
                     state: \.detail,
-                    action: MasterAction.detail
+                    action: NavigationLinkSelectionExample.Action.detail
                   ),
                   then: DetailView.init(store:)
                 )
@@ -77,35 +109,15 @@ struct NavigationLinkSelectionExample: View {
             )
           }
         }
-        .navigationTitle("Master")
+        .navigationTitle("NavigationLinkSelectionExample")
       }
     }
   }
 
-  struct DetailState {
-    init(item: Item) {
-      self.item = item
-    }
-
-    var item: Item
-    var timer = TimerState()
-  }
-
-  enum DetailAction {
-    case didTapDismissButton
-    case timer(TimerAction)
-  }
-
-  static let detailReducer = Reducer<DetailState, DetailAction, Void>.combine(
-    timerReducer.pullback(
-      state: \.timer,
-      action: /DetailAction.timer,
-      environment: { () }
-    )
-  )
+  // MARK: - Child Views
 
   struct DetailView: View {
-    let store: Store<DetailState, DetailAction>
+    let store: StoreOf<NavigationLinkSelectionExample.Detail>
 
     var body: some View {
       VStack {
@@ -113,9 +125,9 @@ struct NavigationLinkSelectionExample: View {
           Text("Item \(viewStore.id)").padding()
         }
 
-        TimerView(store: store.scope(
+        TimerExampleView(store: store.scope(
           state: \.timer,
-          action: DetailAction.timer
+          action: NavigationLinkSelectionExample.Detail.Action.timer
         ))
 
         Button(action: { ViewStore(store.stateless).send(.didTapDismissButton) }) {
@@ -125,24 +137,13 @@ struct NavigationLinkSelectionExample: View {
       .navigationTitle("Detail")
     }
   }
-
-  var body: some View {
-    NavigationView {
-      MasterView(store: Store(
-        initialState: MasterState(items: [
-          Item(id: "A"),
-          Item(id: "B"),
-          Item(id: "C"),
-        ]),
-        reducer: Self.masterReducer.debug(),
-        environment: ()
-      ))
-    }
-  }
 }
 
 struct NavigationLinkSelectionExample_Previews: PreviewProvider {
   static var previews: some View {
-    NavigationLinkSelectionExample()
+    NavigationLinkSelectionExampleView(store: Store(
+      initialState: NavigationLinkSelectionExample.State(),
+      reducer: NavigationLinkSelectionExample()
+    ))
   }
 }

@@ -2,89 +2,96 @@ import ComposableArchitecture
 import ComposablePresentation
 import SwiftUI
 
-struct FullScreenCoverExample: View {
-  struct MasterState {
-    var detail: DetailState?
+struct FullScreenCoverExample: ReducerProtocol {
+  struct State {
+    var detail: Detail.State?
   }
 
-  enum MasterAction {
+  enum Action {
     case didTapDetailButton
     case didDismissDetail
-    case detail(DetailAction)
+    case detail(Detail.Action)
   }
 
-  static let masterReducer = Reducer<MasterState, MasterAction, Void> { state, action, _ in
-    switch action {
-    case .didTapDetailButton:
-      state.detail = DetailState()
-      return .none
+  var body: some ReducerProtocol<State, Action> {
+    Reduce { state, action in
+      switch action {
+      case .didTapDetailButton:
+        state.detail = Detail.State()
+        return .none
 
-    case .didDismissDetail:
-      state.detail = nil
-      return .none
+      case .didDismissDetail:
+        state.detail = nil
+        return .none
 
-    case .detail(_):
-      return .none
+      case .detail(_):
+        return .none
+      }
     }
-  }
     .presenting(
-      detailReducer,
+      presentationID: ObjectIdentifier(FullScreenCoverExample.self),
       state: .keyPath(\.detail),
       id: .notNil(),
-      action: /MasterAction.detail,
-      environment: { () }
+      action: /Action.detail,
+      presented: Detail.init
     )
+  }
 
-  struct MasterView: View {
-    let store: Store<MasterState, MasterAction>
+  // MARK: - Child Reducers
 
-    var body: some View {
-      WithViewStore(store.stateless) { viewStore in
-        Button(action: { viewStore.send(.didTapDetailButton) }) {
-          Text("Detail")
-        }
-        .fullScreenCover(
-          store.scope(
-            state: \.detail,
-            action: MasterAction.detail
-          ),
-          mapState: replayNonNil(),
-          onDismiss: { viewStore.send(.didDismissDetail) },
-          content: DetailView.init(store:)
-        )
+  struct Detail: ReducerProtocol {
+    struct State {
+      var timer = TimerExample.State()
+    }
+
+    enum Action {
+      case didTapDismiss
+      case timer(TimerExample.Action)
+    }
+
+    var body: some ReducerProtocol<State, Action> {
+      Scope(state: \.timer, action: /Action.timer) {
+        TimerExample()
       }
     }
   }
+}
 
-  struct DetailState {
-    var timer = TimerState()
+struct FullScreenCoverExampleView: View {
+  let store: StoreOf<FullScreenCoverExample>
+
+  var body: some View {
+    WithViewStore(store.stateless) { viewStore in
+      Button(action: { viewStore.send(.didTapDetailButton) }) {
+        Text("Detail")
+      }
+      .fullScreenCover(
+        store.scope(
+          state: \.detail,
+          action: FullScreenCoverExample.Action.detail
+        ),
+        mapState: replayNonNil(),
+        onDismiss: { viewStore.send(.didDismissDetail) },
+        content: DetailView.init(store:)
+      )
+    }
   }
 
-  enum DetailAction {
-    case timer(TimerAction)
-  }
-
-  static let detailReducer = Reducer<DetailState, DetailAction, Void>.combine(
-    timerReducer.pullback(
-      state: \.timer,
-      action: /DetailAction.timer,
-      environment: { () }
-    )
-  )
+  // MARK: - Child Views
 
   struct DetailView: View {
-    let store: Store<DetailState, DetailAction>
+    let store: StoreOf<FullScreenCoverExample.Detail>
     @Environment(\.presentationMode) var presentationMode
 
-    init(store: Store<DetailState, DetailAction>) {
+    init(store: StoreOf<FullScreenCoverExample.Detail>) {
       self.store = store
     }
 
     var body: some View {
       VStack {
-        TimerView(store: store.scope(
+        TimerExampleView(store: store.scope(
           state: \.timer,
-          action: DetailAction.timer
+          action: FullScreenCoverExample.Detail.Action.timer
         ))
 
         Button(action: { presentationMode.wrappedValue.dismiss() }) {
@@ -95,18 +102,13 @@ struct FullScreenCoverExample: View {
       .background(Color(.secondarySystemBackground).ignoresSafeArea())
     }
   }
-
-  var body: some View {
-    MasterView(store: Store(
-      initialState: MasterState(),
-      reducer: Self.masterReducer.debug(),
-      environment: ()
-    ))
-  }
 }
 
 struct FullScreenCoverExample_Previews: PreviewProvider {
   static var previews: some View {
-    FullScreenCoverExample()
+    FullScreenCoverExampleView(store: Store(
+      initialState: FullScreenCoverExample.State(),
+      reducer: FullScreenCoverExample()
+    ))
   }
 }
