@@ -62,6 +62,18 @@ struct Menu: ReducerProtocol {
 
 extension ReducerProtocolOf<Menu> {
   func presentingDestinations() -> some ReducerProtocol<State, Action> {
+    self
+      .presentingSheetExample()
+      .presentingFullScreenCoverExample()
+      .presentingNavigationLinkExample()
+      .presentingNavigationLinkSelectionExample()
+      .presentingForEachStoreExample()
+      .presentingPopToRootExample()
+      .presentingSwitchStoreExample()
+      .presentingDestinationExample()
+  }
+
+  func presentingSheetExample() -> some ReducerProtocol<State, Action> {
     presenting(
       presentationID: Menu.Presentation.sheet,
       unwrapping: \.destination,
@@ -70,7 +82,10 @@ extension ReducerProtocolOf<Menu> {
       action: (/Action.destination).appending(path: /Action.Destination.sheet),
       presented: SheetExample.init
     )
-    .presenting(
+  }
+
+  func presentingFullScreenCoverExample() -> some ReducerProtocol<State, Action> {
+    presenting(
       presentationID: Menu.Presentation.fullScreenCover,
       unwrapping: \.destination,
       case: /State.Destination.fullScreenCover,
@@ -78,7 +93,10 @@ extension ReducerProtocolOf<Menu> {
       action: (/Action.destination).appending(path: /Action.Destination.fullScreenCover),
       presented: FullScreenCoverExample.init
     )
-    .presenting(
+  }
+
+  func presentingNavigationLinkExample() -> some ReducerProtocol<State, Action> {
+    presenting(
       presentationID: Menu.Presentation.navigationLink,
       unwrapping: \.destination,
       case: /State.Destination.navigationLink,
@@ -86,7 +104,10 @@ extension ReducerProtocolOf<Menu> {
       action: (/Action.destination).appending(path: /Action.Destination.navigationLink),
       presented: NavigationLinkExample.init
     )
-    .presenting(
+  }
+
+  func presentingNavigationLinkSelectionExample() -> some ReducerProtocol<State, Action> {
+    presenting(
       presentationID: Menu.Presentation.navigationLinkSelection,
       unwrapping: \.destination,
       case: /State.Destination.navigationLinkSelection,
@@ -94,7 +115,10 @@ extension ReducerProtocolOf<Menu> {
       action: (/Action.destination).appending(path: /Action.Destination.navigationLinkSelection),
       presented: NavigationLinkSelectionExample.init
     )
-    .presenting(
+  }
+
+  func presentingForEachStoreExample() -> some ReducerProtocol<State, Action> {
+    presenting(
       presentationID: Menu.Presentation.forEachStore,
       unwrapping: \.destination,
       case: /State.Destination.forEachStore,
@@ -102,7 +126,10 @@ extension ReducerProtocolOf<Menu> {
       action: (/Action.destination).appending(path: /Action.Destination.forEachStore),
       presented: ForEachStoreExample.init
     )
-    .presenting(
+  }
+
+  func presentingPopToRootExample() -> some ReducerProtocol<State, Action> {
+    presenting(
       presentationID: Menu.Presentation.popToRoot,
       unwrapping: \.destination,
       case: /State.Destination.popToRoot,
@@ -110,7 +137,10 @@ extension ReducerProtocolOf<Menu> {
       action: (/Action.destination).appending(path: /Action.Destination.popToRoot),
       presented: PopToRootExample.init
     )
-    .presenting(
+  }
+
+  func presentingSwitchStoreExample() -> some ReducerProtocol<State, Action> {
+    presenting(
       presentationID: Menu.Presentation.switchStore,
       unwrapping: \.destination,
       case: /State.Destination.switchStore,
@@ -118,7 +148,10 @@ extension ReducerProtocolOf<Menu> {
       action: (/Action.destination).appending(path: /Action.Destination.switchStore),
       presented: SwitchStoreExample.init
     )
-    .presenting(
+  }
+
+  func presentingDestinationExample() -> some ReducerProtocol<State, Action> {
+    presenting(
       presentationID: Menu.Presentation.destination,
       unwrapping: \.destination,
       case: /State.Destination.destination,
