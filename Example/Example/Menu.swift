@@ -7,7 +7,7 @@ struct Menu: ReducerProtocol {
     enum Destination {
       case sheet(SheetExample.State)
       case fullScreenCover(FullScreenCoverExample.State)
-      case navigationLink(NavigationLinkExample.State)
+      case navigationDestination(NavigationDestinationExample.State)
       case forEachStore(ForEachStoreExample.State)
       case popToRoot(PopToRootExample.State)
       case switchStore(SwitchStoreExample.State)
@@ -21,7 +21,7 @@ struct Menu: ReducerProtocol {
     enum Destination {
       case sheet(SheetExample.Action)
       case fullScreenCover(FullScreenCoverExample.Action)
-      case navigationLink(NavigationLinkExample.Action)
+      case navigationDestination(NavigationDestinationExample.Action)
       case forEachStore(ForEachStoreExample.Action)
       case popToRoot(PopToRootExample.Action)
       case switchStore(SwitchStoreExample.Action)
@@ -35,7 +35,7 @@ struct Menu: ReducerProtocol {
   enum Presentation: Hashable {
     case sheet
     case fullScreenCover
-    case navigationLink
+    case navigationDestination
     case forEachStore
     case popToRoot
     case switchStore
@@ -62,7 +62,7 @@ extension ReducerProtocolOf<Menu> {
     self
       .presentingSheetExample()
       .presentingFullScreenCoverExample()
-      .presentingNavigationLinkExample()
+      .presentingNavigationDestinationExample()
       .presentingForEachStoreExample()
       .presentingPopToRootExample()
       .presentingSwitchStoreExample()
@@ -91,14 +91,14 @@ extension ReducerProtocolOf<Menu> {
     )
   }
 
-  func presentingNavigationLinkExample() -> some ReducerProtocol<State, Action> {
+  func presentingNavigationDestinationExample() -> some ReducerProtocol<State, Action> {
     presenting(
-      presentationID: Menu.Presentation.navigationLink,
+      presentationID: Menu.Presentation.navigationDestination,
       unwrapping: \.destination,
-      case: /State.Destination.navigationLink,
+      case: /State.Destination.navigationDestination,
       id: .notNil(),
-      action: (/Action.destination).appending(path: /Action.Destination.navigationLink),
-      presented: NavigationLinkExample.init
+      action: (/Action.destination).appending(path: /Action.Destination.navigationDestination),
+      presented: NavigationDestinationExample.init
     )
   }
 
@@ -168,9 +168,9 @@ struct MenuView: View {
                 then: FullScreenCoverExampleView.init(store:)
               )
               CaseLet(
-                state: (/Menu.State.Destination.navigationLink).extract(from:),
-                action: { Menu.Action.destination(.navigationLink($0)) },
-                then: NavigationLinkExampleView.init(store:)
+                state: (/Menu.State.Destination.navigationDestination).extract(from:),
+                action: { Menu.Action.destination(.navigationDestination($0)) },
+                then: NavigationDestinationExampleView.init(store:)
               )
               CaseLet(
                 state: (/Menu.State.Destination.forEachStore).extract(from:),
@@ -220,9 +220,9 @@ struct MenuView: View {
               }
 
               Button {
-                viewStore.send(.present(.navigationLink(.init())))
+                viewStore.send(.present(.navigationDestination(.init())))
               } label: {
-                Text("NavigationLinkExample")
+                Text("NavigationDestinationExample")
               }
 
               Button {
