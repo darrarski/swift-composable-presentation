@@ -1,6 +1,6 @@
 import ComposableArchitecture
 
-extension Reducer {
+extension AnyReducer {
   /// Combines the reducer with a local reducer that works on optionally presented `LocalState`.
   ///
   /// - All effects returned by the local reducer will be canceled when `LocalState` becomes `nil`.

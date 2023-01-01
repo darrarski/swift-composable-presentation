@@ -43,13 +43,9 @@ SwiftUI example that shows how to present a sheet with content driven by a store
 
 SwiftUI example that shows how to present a full-screen cover with content driven by a store with an optional state. The cover is presented when the store's state has an honest value and dismisses when it becomes `nil`. All effects produced by the store's reducer while the content is presented are canceled when the cover dismisses.
 
-### ➡️ [NavigationLink example](Example/Example/NavigationLinkExample.swift)
+### ➡️ [Navigation destination example](Example/Example/NavigationDestinationExample.swift)
 
-SwiftUI example with `NavigationLink` driven by a store with an optional state. The link is active when the store's state has an honest value, and inactive when it becomes `nil`. All effects produced by the store's reducer while the content is presented are canceled when the link destination dismisses.
-
-### ➡️ [NavigationLink selection example](Example/Example/NavigationLinkSelectionExample.swift)
-
-SwiftUI example of `NavigationLink` with `tag` and `selection`, driven by a store with an optional state. It shows how to use store-driven `NavigationLink` on a list, and present details screen when the list item is selected. All effects produced by the store's reducer are canceled when selection changes.
+SwiftUI example with `.navigationDestination` driven by a store with an optional state. The link is active when the store's state has an honest value, and inactive when it becomes `nil`. All effects produced by the store's reducer while the content is presented are canceled when the destination dismisses.
 
 ### ➡️ [ForEachStore example](Example/Example/ForEachStoreExample.swift)
 

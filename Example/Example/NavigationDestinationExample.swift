@@ -2,7 +2,7 @@ import ComposableArchitecture
 import ComposablePresentation
 import SwiftUI
 
-struct NavigationLinkExample: ReducerProtocol {
+struct NavigationDestinationExample: ReducerProtocol {
   struct State {
     var detail: Detail.State?
   }
@@ -29,7 +29,7 @@ struct NavigationLinkExample: ReducerProtocol {
       }
     }
     .presenting(
-      presentationID: ObjectIdentifier(NavigationLinkExample.self),
+      presentationID: ObjectIdentifier(NavigationDestinationExample.self),
       state: .keyPath(\.detail),
       id: .notNil(),
       action: /Action.detail,
@@ -57,38 +57,42 @@ struct NavigationLinkExample: ReducerProtocol {
   }
 }
 
-struct NavigationLinkExampleView: View {
-  let store: StoreOf<NavigationLinkExample>
+struct NavigationDestinationExampleView: View {
+  let store: StoreOf<NavigationDestinationExample>
 
   var body: some View {
     WithViewStore(store.stateless) { viewStore in
-      NavigationView {
-        NavigationLinkWithStore(
+      _NavigationStack {
+        Button {
+          viewStore.send(.didTapDetailButton)
+        } label: {
+          Text("Detail").padding()
+        }
+        ._navigationDestination(
           store.scope(
             state: \.detail,
-            action: NavigationLinkExample.Action.detail
+            action: NavigationDestinationExample.Action.detail
           ),
-          setActive: { active in
-            viewStore.send(active ? .didTapDetailButton : .didDismissDetail)
+          onDismiss: {
+            viewStore.send(.didDismissDetail)
           },
-          destination: DetailView.init(store:),
-          label: { Text("Detail").padding() }
+          destination: DetailView.init(store:)
         )
       }
-      .navigationTitle("NavigationLinkExample")
+      .navigationTitle("NavigationDestinationExample")
     }
   }
 
   // MARK: - Child Views
 
   struct DetailView: View {
-    let store: StoreOf<NavigationLinkExample.Detail>
+    let store: StoreOf<NavigationDestinationExample.Detail>
 
     var body: some View {
       VStack {
         TimerExampleView(store: store.scope(
           state: \.timer,
-          action: NavigationLinkExample.Detail.Action.timer
+          action: NavigationDestinationExample.Detail.Action.timer
         ))
 
         Button(action: { ViewStore(store.stateless).send(.didTapDismissButton) }) {
@@ -102,11 +106,11 @@ struct NavigationLinkExampleView: View {
   }
 }
 
-struct NavigationLinkExample_Previews: PreviewProvider {
+struct NavigationDestinationExample_Previews: PreviewProvider {
   static var previews: some View {
-    NavigationLinkExampleView(store: Store(
-      initialState: NavigationLinkExample.State(),
-      reducer: NavigationLinkExample()
+    NavigationDestinationExampleView(store: Store(
+      initialState: NavigationDestinationExample.State(),
+      reducer: NavigationDestinationExample()
     ))
   }
 }

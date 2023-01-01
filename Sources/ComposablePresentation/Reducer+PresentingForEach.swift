@@ -1,7 +1,7 @@
 import ComposableArchitecture
 import Foundation
 
-extension Reducer {
+extension AnyReducer {
   /// Combines the reducer with a local reducer that works on elements of `IdentifiedArray`.
   ///
   /// - All effects returned by the local reducer when reducing a `LocalState` will be canceled
@@ -29,7 +29,7 @@ extension Reducer {
   )
   public func presenting<LocalState, LocalAction, LocalEnvironment>(
     presentationID: AnyHashable = UUID(),
-    forEach localReducer: Reducer<LocalState, LocalAction, LocalEnvironment>,
+    forEach localReducer: AnyReducer<LocalState, LocalAction, LocalEnvironment>,
     state toLocalState: WritableKeyPath<State, IdentifiedArrayOf<LocalState>>,
     action toLocalAction: CasePath<Action, (LocalState.ID, LocalAction)>,
     environment toLocalEnvironment: @escaping (Environment) -> LocalEnvironment,
@@ -39,7 +39,7 @@ extension Reducer {
     fileID: StaticString = #fileID,
     line: UInt = #line
   ) -> Self {
-    Reducer { state, action, env in
+    AnyReducer { state, action, env in
       _PresentingForEachReducer(
         presentationID: presentationID,
         parent: Reduce(AnyReducer(self.run), environment: env),
