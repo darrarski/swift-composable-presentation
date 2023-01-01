@@ -171,68 +171,45 @@ struct MenuView: View {
         store.scope(state: \.destination),
         then: { store in
           VStack(spacing: 0) {
-            ZStack {
-              IfLetStore(
-                store.scope(
-                  state: (/Menu.State.Destination.sheet).extract(from:),
-                  action: { Menu.Action.destination(.sheet($0)) }
-                ),
+            SwitchStore(store) {
+              CaseLet(
+                state: (/Menu.State.Destination.sheet).extract(from:),
+                action: { Menu.Action.destination(.sheet($0)) },
                 then: SheetExampleView.init(store:)
               )
-
-              IfLetStore(
-                store.scope(
-                  state: (/Menu.State.Destination.fullScreenCover).extract(from:),
-                  action: { Menu.Action.destination(.fullScreenCover($0)) }
-                ),
+              CaseLet(
+                state: (/Menu.State.Destination.fullScreenCover).extract(from:),
+                action: { Menu.Action.destination(.fullScreenCover($0)) },
                 then: FullScreenCoverExampleView.init(store:)
               )
-
-              IfLetStore(
-                store.scope(
-                  state: (/Menu.State.Destination.navigationLink).extract(from:),
-                  action: { Menu.Action.destination(.navigationLink($0)) }
-                ),
+              CaseLet(
+                state: (/Menu.State.Destination.navigationLink).extract(from:),
+                action: { Menu.Action.destination(.navigationLink($0)) },
                 then: NavigationLinkExampleView.init(store:)
               )
-
-              IfLetStore(
-                store.scope(
-                  state: (/Menu.State.Destination.navigationLinkSelection).extract(from:),
-                  action: { Menu.Action.destination(.navigationLinkSelection($0)) }
-                ),
+              CaseLet(
+                state: (/Menu.State.Destination.navigationLinkSelection).extract(from:),
+                action: { Menu.Action.destination(.navigationLinkSelection($0)) },
                 then: NavigationLinkSelectionExampleView.init(store:)
               )
-
-              IfLetStore(
-                store.scope(
-                  state: (/Menu.State.Destination.forEachStore).extract(from:),
-                  action: { Menu.Action.destination(.forEachStore($0)) }
-                ),
+              CaseLet(
+                state: (/Menu.State.Destination.forEachStore).extract(from:),
+                action: { Menu.Action.destination(.forEachStore($0)) },
                 then: ForEachStoreExampleView.init(store:)
               )
-
-              IfLetStore(
-                store.scope(
-                  state: (/Menu.State.Destination.popToRoot).extract(from:),
-                  action: { Menu.Action.destination(.popToRoot($0)) }
-                ),
+              CaseLet(
+                state: (/Menu.State.Destination.popToRoot).extract(from:),
+                action: { Menu.Action.destination(.popToRoot($0)) },
                 then: PopToRootExampleView.init(store:)
               )
-
-              IfLetStore(
-                store.scope(
-                  state: (/Menu.State.Destination.switchStore).extract(from:),
-                  action: { Menu.Action.destination(.switchStore($0)) }
-                ),
+              CaseLet(
+                state: (/Menu.State.Destination.switchStore).extract(from:),
+                action: { Menu.Action.destination(.switchStore($0)) },
                 then: SwitchStoreExampleView.init(store:)
               )
-
-              IfLetStore(
-                store.scope(
-                  state: (/Menu.State.Destination.destination).extract(from:),
-                  action: { Menu.Action.destination(.destination($0)) }
-                ),
+              CaseLet(
+                state: (/Menu.State.Destination.destination).extract(from:),
+                action: { Menu.Action.destination(.destination($0)) },
                 then: DestinationExampleView.init(store:)
               )
             }
