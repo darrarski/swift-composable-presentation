@@ -90,7 +90,7 @@ final class PresentingCaseReducerTests: XCTestCase {
       initialState: Main.State(),
       reducer: Main()
         .presenting(
-          presentationID: Main.Presentation.first,
+          presentationID: .static(Main.Presentation.first),
           unwrapping: \.destination,
           case: /Main.State.Destination.first,
           id: .notNil(),
@@ -111,7 +111,7 @@ final class PresentingCaseReducerTests: XCTestCase {
           }
         )
         .presenting(
-          presentationID: Main.Presentation.second,
+          presentationID: .static(Main.Presentation.second),
           unwrapping: \.destination,
           case: /Main.State.Destination.second,
           id: .notNil(),
