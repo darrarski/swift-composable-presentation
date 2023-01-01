@@ -20,10 +20,6 @@ let package = Package(
       url: "https://github.com/pointfreeco/swift-composable-architecture.git",
       .upToNextMajor(from: "0.47.2")
     ),
-    .package(
-      url: "https://github.com/pointfreeco/swiftui-navigation.git",
-      .upToNextMajor(from: "0.4.5")
-    ),
   ],
   targets: [
     .target(
@@ -32,10 +28,6 @@ let package = Package(
         .product(
           name: "ComposableArchitecture",
           package: "swift-composable-architecture"
-        ),
-        .product(
-          name: "SwiftUINavigation",
-          package: "swiftui-navigation"
         ),
       ]
     ),

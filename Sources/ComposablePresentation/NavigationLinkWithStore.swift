@@ -1,6 +1,5 @@
 import ComposableArchitecture
 import SwiftUI
-import SwiftUINavigation
 
 /// `NavigationLink` wrapped with `WithViewStore`.
 @available(iOS, deprecated: 16.0, message: "use .navigationDestination(_:mapState:onDismiss:content:) view modifier (aka NavigationDestinationWithStore) inside a NavigationStack or NavigationSplitView")
@@ -86,23 +85,5 @@ extension NavigationLinkWithStore where Label == EmptyView {
       destination: destination,
       label: EmptyView.init
     )
-  }
-}
-
-// NB: This view works around a bug in SwiftUI's built-in view
-private struct _NavigationLink<Destination: View, Label: View>: View {
-  @Binding var isActive: Bool
-  let destination: () -> Destination
-  let label: () -> Label
-
-  @State private var isActiveState = false
-
-  var body: some View {
-    NavigationLink(
-      isActive: $isActiveState,
-      destination: destination,
-      label: label
-    )
-    .bind($isActive, to: $isActiveState)
   }
 }
