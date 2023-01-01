@@ -90,7 +90,7 @@ struct DestinationExample: ReducerProtocol {
       }
     }
     .presenting(
-      presentationID: .static(Presentation.first),
+      presentationID: .value(Presentation.first),
       unwrapping: \.destination,
       case: /State.Destination.first,
       id: .notNil(),
@@ -98,7 +98,7 @@ struct DestinationExample: ReducerProtocol {
       presented: { First() }
     )
     .presenting(
-      presentationID: .static(Presentation.second),
+      presentationID: .value(Presentation.second),
       unwrapping: \.destination,
       case: /State.Destination.second,
       id: .notNil(),

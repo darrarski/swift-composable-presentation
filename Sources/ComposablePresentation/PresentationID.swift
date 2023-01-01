@@ -6,15 +6,15 @@ public struct ToPresentationID<State> {
   ///
   /// - Parameter id: Unique identifier
   /// - Returns: Transformation.
-  public static func `static`(_ id: AnyHashable) -> ToPresentationID<State> {
+  public static func value(_ id: AnyHashable) -> ToPresentationID<State> {
     .init { _ in id }
   }
 
-  /// Identifies presentation by type of `State`
+  /// Identifies presentation by type of `(State, Presented)`
   ///
   /// - Returns: Transformation.
-  public static func typeId() -> ToPresentationID<State> {
-    .init { ObjectIdentifier(type(of: $0)) }
+  public static func typed<Presented>(_ presentedType: Presented.Type) -> ToPresentationID<State> {
+    .init { _ in ObjectIdentifier(type(of: (State.self, presentedType))) }
   }
 
   /// Identifies presentation with value of `State` at provided key path.

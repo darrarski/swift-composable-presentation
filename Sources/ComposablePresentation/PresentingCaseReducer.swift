@@ -7,7 +7,7 @@ extension ReducerProtocol {
   /// - All effects returned by the presented reducer are cancelled when presented `ID` changes.
   ///
   /// - Parameters:
-  ///   - toPresentationID: Transformation from `State` to unique identifier. Defaults to transformation that identifies object by type of `State`.
+  ///   - toPresentationID: Transformation from `State` to unique identifier. Defaults to transformation that identifies object by type of `(State, Presented)`.
   ///   - toEnum: Writable key-path from `State` to optional `Enum`.
   ///   - toCase: Case path from `Enum` to `Presented.State`.
   ///   - toPresentedID: Transformation from `Presented.State` to `ID`.
@@ -18,7 +18,7 @@ extension ReducerProtocol {
   /// - Returns: Combined reducer
   @inlinable
   public func presenting<ID: Hashable, Enum, Presented: ReducerProtocol>(
-    presentationID toPresentationID: ToPresentationID<State> = .typeId(),
+    presentationID toPresentationID: ToPresentationID<State> = .typed(Presented.self),
     unwrapping toEnum: WritableKeyPath<State, Enum?>,
     case toCase: CasePath<Enum, Presented.State>,
     id toPresentedID: _PresentingCaseReducer<Self, Enum, ID, Presented>.ToPresentedID,

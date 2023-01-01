@@ -42,7 +42,7 @@ extension AnyReducer {
     AnyReducer { state, action, env in
       _PresentingForEachReducer(
         parent: Reduce(AnyReducer(self.run), environment: env),
-        toPresentationID: .static(presentationID),
+        toPresentationID: .value(presentationID),
         toElementState: toLocalState,
         toElementAction: toLocalAction,
         onPresent: .init { elementId, state in

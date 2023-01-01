@@ -52,14 +52,14 @@ struct SwitchStoreExample: ReducerProtocol {
       }
     }
     .presenting(
-      presentationID: .static(Presentation.first),
+      presentationID: .value(Presentation.first),
       state: .casePath(/State.first),
       id: .notNil(),
       action: /Action.first,
       presented: First.init
     )
     .presenting(
-      presentationID: .static(Presentation.second),
+      presentationID: .value(Presentation.second),
       state: .casePath(/State.second),
       id: .notNil(),
       action: /Action.second,

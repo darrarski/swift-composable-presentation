@@ -45,7 +45,7 @@ extension AnyReducer {
         presented: Reduce { state, action in
           localReducer.run(&state, action, toLocalEnvironment(env))
         },
-        toPresentationID: .static(presentationID),
+        toPresentationID: .value(presentationID),
         toPresentedState: {
           switch toLocalState {
           case .keyPath(let keyPath): return .keyPath(keyPath)
