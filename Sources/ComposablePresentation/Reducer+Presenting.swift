@@ -1,7 +1,7 @@
 import ComposableArchitecture
 import Foundation
 
-extension Reducer {
+extension AnyReducer {
   /// Combines the reducer with a local reducer that works on optionally presented `LocalState`.
   ///
   /// - All effects returned by the local reducer are cancelled when `LocalID` changes.
@@ -28,7 +28,7 @@ extension Reducer {
   )
   public func presenting<LocalState, LocalID: Hashable, LocalAction, LocalEnvironment>(
     presentationID: AnyHashable = UUID(),
-    _ localReducer: Reducer<LocalState, LocalAction, LocalEnvironment>,
+    _ localReducer: AnyReducer<LocalState, LocalAction, LocalEnvironment>,
     state toLocalState: ReducerPresentingToLocalState<State, LocalState>,
     id toLocalId: ReducerPresentingToLocalId<LocalState, LocalID>,
     action toLocalAction: CasePath<Action, LocalAction>,
@@ -39,7 +39,7 @@ extension Reducer {
     fileID: StaticString = #fileID,
     line: UInt = #line
   ) -> Self {
-    Reducer { state, action, env in
+    AnyReducer { state, action, env in
       _PresentingReducer(
         presentationID: presentationID,
         parent: Reduce(AnyReducer(self.run), environment: env),
