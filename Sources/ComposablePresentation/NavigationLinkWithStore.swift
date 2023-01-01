@@ -1,5 +1,6 @@
 import ComposableArchitecture
 import SwiftUI
+import SwiftUINavigation
 
 /// `NavigationLink` wrapped with `WithViewStore`.
 public struct NavigationLinkWithStore<State, Action, Destination, Label>: View
@@ -38,7 +39,7 @@ where Destination: View,
 
   public var body: some View {
     WithViewStore(store.scope(state: { $0 != nil })) { viewStore in
-      NavigationLink(
+      _NavigationLink(
         isActive: Binding(
           get: { viewStore.state },
           set: setActive
@@ -83,5 +84,23 @@ extension NavigationLinkWithStore where Label == EmptyView {
       destination: destination,
       label: EmptyView.init
     )
+  }
+}
+
+// NB: This view works around a bug in SwiftUI's built-in view
+private struct _NavigationLink<Destination: View, Label: View>: View {
+  @Binding var isActive: Bool
+  let destination: () -> Destination
+  let label: () -> Label
+
+  @State private var isActiveState = false
+
+  var body: some View {
+    NavigationLink(
+      isActive: $isActiveState,
+      destination: destination,
+      label: label
+    )
+    .bind($isActive, to: $isActiveState)
   }
 }
