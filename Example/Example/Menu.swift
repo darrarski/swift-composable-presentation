@@ -3,17 +3,6 @@ import ComposablePresentation
 import SwiftUI
 
 struct Menu: ReducerProtocol {
-  enum Destination: Hashable {
-    case sheet
-    case fullScreenCover
-    case navigationLink
-    case navigationLinkSelection
-    case forEachStore
-    case popToRoot
-    case switchStore
-    case destination
-  }
-
   struct State {
     enum Destination {
       case sheet(SheetExample.State)
@@ -24,22 +13,9 @@ struct Menu: ReducerProtocol {
       case popToRoot(PopToRootExample.State)
       case switchStore(SwitchStoreExample.State)
       case destination(DestinationExample.State)
-
-      var destination: Menu.Destination {
-        switch self {
-        case .sheet: return .sheet
-        case .fullScreenCover: return .fullScreenCover
-        case .navigationLink: return .navigationLink
-        case .navigationLinkSelection: return .navigationLinkSelection
-        case .forEachStore: return .forEachStore
-        case .popToRoot: return .popToRoot
-        case .switchStore: return .switchStore
-        case .destination: return .destination
-        }
-      }
     }
 
-    var destination: Destination?
+    var destination: Menu.State.Destination?
   }
 
   enum Action {
@@ -54,67 +30,40 @@ struct Menu: ReducerProtocol {
       case destination(DestinationExample.Action)
     }
 
-    case present(Menu.Destination?)
-    case destination(Destination)
+    case present(Menu.State.Destination?)
+    case destination(Menu.Action.Destination)
+  }
+
+  enum Presentation: Hashable {
+    case sheet
+    case fullScreenCover
+    case navigationLink
+    case navigationLinkSelection
+    case forEachStore
+    case popToRoot
+    case switchStore
+    case destination
   }
 
   var body: some ReducerProtocol<State, Action> {
     Reduce { state, action in
       switch action {
       case .present(let destination):
-        switch destination {
-        case .sheet: state.destination = .sheet(.init())
-        case .fullScreenCover: state.destination = .fullScreenCover(.init())
-        case .navigationLink: state.destination = .navigationLink(.init())
-        case .navigationLinkSelection: state.destination = .navigationLinkSelection(.init())
-        case .forEachStore: state.destination = .forEachStore(.init())
-        case .popToRoot: state.destination = .popToRoot(.init())
-        case .switchStore: state.destination = .switchStore(.init())
-        case .destination: state.destination = .destination(.init())
-        case .none: state.destination = nil
-        }
+        state.destination = destination
         return .none
 
       case .destination(_):
         return .none
       }
     }
-    // TODO: Fix long compile time when using multiple .presenting reducers
-    // Alternative composition (still slow):
-    //    .presenting(
-    //      presentationID: ObjectIdentifier(Menu.self),
-    //      state: .keyPath(\.destination),
-    //      id: .keyPath(\.?.id),
-    //      action: /Action.self,
-    //      presented: {
-    //        Scope(state: /State.Destination.sheet, action: /Action.sheet) {
-    //          SheetExample()
-    //        }
-    //        Scope(state: /State.Destination.fullScreenCover, action: /Action.fullScreenCover) {
-    //          FullScreenCoverExample()
-    //        }
-    //        Scope(state: /State.Destination.navigationLink, action: /Action.navigationLink) {
-    //          NavigationLinkExample()
-    //        }
-    //        Scope(state: /State.Destination.navigationLinkSelection, action: /Action.navigationLinkSelection) {
-    //          NavigationLinkSelectionExample()
-    //        }
-    //        Scope(state: /State.Destination.forEachStore, action: /Action.forEachStore) {
-    //          ForEachStoreExample()
-    //        }
-    //        Scope(state: /State.Destination.popToRoot, action: /Action.popToRoot) {
-    //          PopToRootExample()
-    //        }
-    //        Scope(state: /State.Destination.switchStore, action: /Action.switchStore) {
-    //          SwitchStoreExample()
-    //        }
-    //        Scope(state: /State.Destination.destination, action: /Action.destination) {
-    //          DestinationExample()
-    //        }
-    //      }
-    //    )
-    .presenting(
-      presentationID: Destination.sheet,
+    .presentingDestinations()
+  }
+}
+
+extension ReducerProtocolOf<Menu> {
+  func presentingDestinations() -> some ReducerProtocol<State, Action> {
+    presenting(
+      presentationID: Menu.Presentation.sheet,
       unwrapping: \.destination,
       case: /State.Destination.sheet,
       id: .notNil(),
@@ -122,7 +71,7 @@ struct Menu: ReducerProtocol {
       presented: SheetExample.init
     )
     .presenting(
-      presentationID: Destination.fullScreenCover,
+      presentationID: Menu.Presentation.fullScreenCover,
       unwrapping: \.destination,
       case: /State.Destination.fullScreenCover,
       id: .notNil(),
@@ -130,7 +79,7 @@ struct Menu: ReducerProtocol {
       presented: FullScreenCoverExample.init
     )
     .presenting(
-      presentationID: Destination.navigationLink,
+      presentationID: Menu.Presentation.navigationLink,
       unwrapping: \.destination,
       case: /State.Destination.navigationLink,
       id: .notNil(),
@@ -138,7 +87,7 @@ struct Menu: ReducerProtocol {
       presented: NavigationLinkExample.init
     )
     .presenting(
-      presentationID: Destination.navigationLinkSelection,
+      presentationID: Menu.Presentation.navigationLinkSelection,
       unwrapping: \.destination,
       case: /State.Destination.navigationLinkSelection,
       id: .notNil(),
@@ -146,7 +95,7 @@ struct Menu: ReducerProtocol {
       presented: NavigationLinkSelectionExample.init
     )
     .presenting(
-      presentationID: Destination.forEachStore,
+      presentationID: Menu.Presentation.forEachStore,
       unwrapping: \.destination,
       case: /State.Destination.forEachStore,
       id: .notNil(),
@@ -154,7 +103,7 @@ struct Menu: ReducerProtocol {
       presented: ForEachStoreExample.init
     )
     .presenting(
-      presentationID: Destination.popToRoot,
+      presentationID: Menu.Presentation.popToRoot,
       unwrapping: \.destination,
       case: /State.Destination.popToRoot,
       id: .notNil(),
@@ -162,7 +111,7 @@ struct Menu: ReducerProtocol {
       presented: PopToRootExample.init
     )
     .presenting(
-      presentationID: Destination.switchStore,
+      presentationID: Menu.Presentation.switchStore,
       unwrapping: \.destination,
       case: /State.Destination.switchStore,
       id: .notNil(),
@@ -170,7 +119,7 @@ struct Menu: ReducerProtocol {
       presented: SwitchStoreExample.init
     )
     .presenting(
-      presentationID: Destination.destination,
+      presentationID: Menu.Presentation.destination,
       unwrapping: \.destination,
       case: /State.Destination.destination,
       id: .notNil(),
@@ -269,49 +218,49 @@ struct MenuView: View {
           List {
             Section {
               Button {
-                viewStore.send(.present(.sheet))
+                viewStore.send(.present(.sheet(.init())))
               } label: {
                 Text("SheetExample")
               }
 
               Button {
-                viewStore.send(.present(.fullScreenCover))
+                viewStore.send(.present(.fullScreenCover(.init())))
               } label: {
                 Text("FullScreenCoverExample")
               }
 
               Button {
-                viewStore.send(.present(.navigationLink))
+                viewStore.send(.present(.navigationLink(.init())))
               } label: {
                 Text("NavigationLinkExample")
               }
 
               Button {
-                viewStore.send(.present(.navigationLinkSelection))
+                viewStore.send(.present(.navigationLinkSelection(.init())))
               } label: {
                 Text("NavigationLinkSelectionExample")
               }
 
               Button {
-                viewStore.send(.present(.forEachStore))
+                viewStore.send(.present(.forEachStore(.init())))
               } label: {
                 Text("ForEachStoreExample")
               }
 
               Button {
-                viewStore.send(.present(.popToRoot))
+                viewStore.send(.present(.popToRoot(.init())))
               } label: {
                 Text("PopToRootExample")
               }
 
               Button {
-                viewStore.send(.present(.switchStore))
+                viewStore.send(.present(.switchStore(.init())))
               } label: {
                 Text("SwitchStoreExample")
               }
 
               Button {
-                viewStore.send(.present(.destination))
+                viewStore.send(.present(.destination(.init())))
               } label: {
                 Text("DestinationExample")
               }
