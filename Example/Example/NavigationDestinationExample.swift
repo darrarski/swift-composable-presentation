@@ -29,7 +29,6 @@ struct NavigationDestinationExample: ReducerProtocol {
       }
     }
     .presenting(
-      presentationID: ObjectIdentifier(NavigationDestinationExample.self),
       state: .keyPath(\.detail),
       id: .notNil(),
       action: /Action.detail,

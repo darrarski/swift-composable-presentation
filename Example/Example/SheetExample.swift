@@ -33,7 +33,6 @@ struct SheetExample: ReducerProtocol {
       }
     }
     .presenting(
-      presentationID: ObjectIdentifier(SheetExample.self),
       state: .keyPath(\.detail),
       id: .notNil(),
       action: /Action.detail,

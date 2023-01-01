@@ -29,7 +29,6 @@ struct FullScreenCoverExample: ReducerProtocol {
       }
     }
     .presenting(
-      presentationID: ObjectIdentifier(FullScreenCoverExample.self),
       state: .keyPath(\.detail),
       id: .notNil(),
       action: /Action.detail,

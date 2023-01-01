@@ -29,7 +29,6 @@ struct ForEachStoreExample: ReducerProtocol {
       }
     }
     .presentingForEach(
-      presentationID: ObjectIdentifier(ForEachStoreExample.self),
       state: \.timers,
       action: /Action.timer(id:action:),
       element: TimerExample.init
