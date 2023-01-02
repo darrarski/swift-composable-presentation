@@ -2,8 +2,8 @@ import ComposableArchitecture
 import SwiftUI
 
 /// `NavigationLink` wrapped with `WithViewStore`.
-@available(iOS, deprecated: 16.0, message: "use .navigationDestination(_:mapState:onDismiss:content:) view modifier (aka NavigationDestinationWithStore) inside a NavigationStack or NavigationSplitView")
-@available(macOS, deprecated: 13.0, message: "use .navigationDestination(_:mapState:onDismiss:content:) view modifier (aka NavigationDestinationWithStore) inside a NavigationStack or NavigationSplitView")
+@available(iOS, deprecated: 16, message: "use .navigationDestination(_:mapState:onDismiss:content:) view modifier (aka NavigationDestinationWithStore) inside a NavigationStack or NavigationSplitView")
+@available(macOS, deprecated: 13, message: "use .navigationDestination(_:mapState:onDismiss:content:) view modifier (aka NavigationDestinationWithStore) inside a NavigationStack or NavigationSplitView")
 public struct NavigationLinkWithStore<State, Action, Destination, Label>: View
 where Destination: View,
       Label: View
@@ -57,6 +57,8 @@ where Destination: View,
   }
 }
 
+@available(iOS, deprecated: 16, message: "use .navigationDestination(_:mapState:onDismiss:content:) view modifier (aka NavigationDestinationWithStore) inside a NavigationStack or NavigationSplitView")
+@available(macOS, deprecated: 13, message: "use .navigationDestination(_:mapState:onDismiss:content:) view modifier (aka NavigationDestinationWithStore) inside a NavigationStack or NavigationSplitView")
 extension NavigationLinkWithStore where Label == EmptyView {
   /// Create `NavigationLink` wrapped with `WithViewStore`.
   ///
