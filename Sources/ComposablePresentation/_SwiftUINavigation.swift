@@ -42,7 +42,7 @@ struct _NavigationLink<Destination: View, Label: View>: View {
 
 // NB: This view modifier works around a bug in SwiftUI's built-in modifier:
 // https://gist.github.com/mbrandonw/f8b94957031160336cac6898a919cbb7#file-fb11056434-md
-@available(iOS 16, macOS 13, tvOS 16, watchOS 9, *)
+@available(iOS 16, macOS 13, *)
 struct _NavigationDestination<Destination: View>: ViewModifier {
   @Binding var isPresented: Bool
   let destination: () -> Destination
@@ -60,7 +60,6 @@ struct _NavigationDestination<Destination: View>: ViewModifier {
 }
 
 extension View {
-  @available(iOS 14, macOS 11, tvOS 14, watchOS 7, *)
   func bind<ModelValue: _Bindable, ViewValue: _Bindable>(
     _ modelValue: ModelValue, to viewValue: ViewValue
   ) -> some View
@@ -69,7 +68,6 @@ extension View {
   }
 }
 
-@available(iOS 14, macOS 11, tvOS 14, watchOS 7, *)
 private struct _Bind<ModelValue: _Bindable, ViewValue: _Bindable>: ViewModifier
 where ModelValue.Value == ViewValue.Value, ModelValue.Value: Equatable {
   let modelValue: ModelValue
