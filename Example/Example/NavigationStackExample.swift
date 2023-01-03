@@ -4,48 +4,65 @@ import SwiftUI
 
 struct NavigationStackExample: ReducerProtocol {
   struct State {
-    var detail: Detail.State?
+    typealias Path = [Destination.State.ID]
+    var stack: IdentifiedArrayOf<Destination.State> = []
+    var path: Path { Array(stack.ids) }
   }
 
   enum Action {
-    case push(Detail.State)
-    case pop
-    case detail(Detail.Action)
+    case updatePath(State.Path)
+    case push(State.Path.Element)
+    case destination(_ id: Destination.State.ID, _ action: Destination.Action)
   }
 
   var body: some ReducerProtocol<State, Action> {
     Reduce { state, action in
       switch action {
-      case .push(let detail):
-        state.detail = detail
+      case .updatePath(let path):
+        state.stack = state.stack.filter { destination in
+          path.contains(destination.id)
+        }
         return .none
 
-      case .pop, .detail(.didTapDismiss):
-        state.detail = nil
+      case .push(let id):
+        state.stack.append(.init(id: id))
         return .none
 
-      case .detail(_):
+      case .destination(let id, .push(let newId)):
+        state.stack.append(.init(id: "\(id).\(newId)"))
+        return .none
+
+      case .destination(_, .pop):
+        _ = state.stack.popLast()
+        return .none
+
+      case .destination(_, .popToRoot):
+        state.stack.removeAll()
+        return .none
+
+      case .destination(_, _):
         return .none
       }
     }
-    .presenting(
-      state: .keyPath(\.detail),
-      id: .keyPath(\.?.id),
-      action: /Action.detail,
-      presented: Detail.init
+    .presentingForEach(
+      state: \.stack,
+      action: /Action.destination,
+      element: Destination.init
     )
   }
 
   // MARK: - Child Reducers
 
-  struct Detail: ReducerProtocol {
+  struct Destination: ReducerProtocol {
     struct State: Identifiable {
       var id: String
       var timer = TimerExample.State()
     }
 
     enum Action {
-      case didTapDismiss
+      case push(NavigationStackExample.State.Path.Element)
+      case pop
+      case popToRoot
       case timer(TimerExample.Action)
     }
 
@@ -62,31 +79,34 @@ struct NavigationStackExampleView: View {
 
   var body: some View {
     if #available(iOS 16, *) {
-      WithViewStore(store.stateless) { viewStore in
-        NavigationStack {
+      WithViewStore(store, observe: \.path) { viewStore in
+        NavigationStack(path: viewStore.binding(
+          send: NavigationStackExample.Action.updatePath
+        )) {
           VStack {
-            Button(action: { viewStore.send(.push(.init(id: "A"))) }) {
-              Text("Push A")
+            Button(action: { viewStore.send(.push("1")) }) {
+              Text("Push 1")
             }
 
-            Button(action: { viewStore.send(.push(.init(id: "B"))) }) {
-              Text("Push B")
+            Button(action: { viewStore.send(.push("2")) }) {
+              Text("Push 2")
             }
 
-            Button(action: { viewStore.send(.push(.init(id: "C"))) }) {
-              Text("Push C")
+            Button(action: { viewStore.send(.push("3")) }) {
+              Text("Push 3")
             }
           }
+          .buttonStyle(.borderedProminent)
           .navigationTitle("Root")
-          .navigationDestination(
-            store.scope(
-              state: \.detail,
-              action: NavigationStackExample.Action.detail
-            ),
-            mapState: replayNonNil(),
-            onDismiss: { viewStore.send(.pop) },
-            content: DetailView.init(store:)
-          )
+          .navigationDestination(for: NavigationStackExample.State.Path.Element.self) { id in
+            IfLetStore(
+              store.scope(
+                state: { $0.stack[id: id] },
+                action: { NavigationStackExample.Action.destination(id, $0) }
+              ),
+              then: DestinationView.init(store:)
+            )
+          }
         }
       }
     } else {
@@ -96,15 +116,16 @@ struct NavigationStackExampleView: View {
 
   // MARK: - Child Views
 
-  struct DetailView: View {
-    let store: StoreOf<NavigationStackExample.Detail>
+  @available(iOS 16, *)
+  struct DestinationView: View {
+    let store: StoreOf<NavigationStackExample.Destination>
 
     struct ViewState: Equatable {
-      init(state: NavigationStackExample.Detail.State) {
-        id = state.id
+      init(state: NavigationStackExample.Destination.State) {
+        title = state.id
       }
 
-      var id: String
+      var title: String
     }
 
     var body: some View {
@@ -112,14 +133,31 @@ struct NavigationStackExampleView: View {
         VStack {
           TimerExampleView(store: store.scope(
             state: \.timer,
-            action: NavigationStackExample.Detail.Action.timer
+            action: NavigationStackExample.Destination.Action.timer
           ))
 
-          Button(action: { viewStore.send(.didTapDismiss) }) {
-            Text("Dismiss").padding()
+          Button(action: { viewStore.send(.push("1")) }) {
+            Text("Push 1")
+          }
+
+          Button(action: { viewStore.send(.push("2")) }) {
+            Text("Push 2")
+          }
+
+          Button(action: { viewStore.send(.push("3")) }) {
+            Text("Push 3")
+          }
+
+          Button(action: { viewStore.send(.pop) }) {
+            Text("Pop")
+          }
+
+          Button(action: { viewStore.send(.popToRoot) }) {
+            Text("Pop to root")
           }
         }
-        .navigationTitle(viewStore.id)
+        .buttonStyle(.borderedProminent)
+        .navigationTitle(viewStore.title)
       }
     }
   }
