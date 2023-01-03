@@ -66,7 +66,8 @@ struct NavigationStackExample: ReducerProtocol {
       state: \.stack,
       action: /Action.destination,
       onPresent: .init { id, state in
-        .task { .destination(id, .timer(.didAppear)) }
+        // Start timer when destination is added to the stack. When multiple destinations are pushed onto the stack, only the view of the last one will receive `.onAppear` event (that starts the timer too).
+        .task { .destination(id, .timer(.start)) }
       },
       element: Destination.init
     )
