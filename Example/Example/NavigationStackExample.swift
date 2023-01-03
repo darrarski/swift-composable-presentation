@@ -11,7 +11,9 @@ struct NavigationStackExample: ReducerProtocol {
 
   enum Action {
     case updatePath(State.Path)
-    case push(State.Path.Element)
+    case push
+    case popToRoot
+    case popTo(State.Path.Element)
     case destination(_ id: Destination.State.ID, _ action: Destination.Action)
   }
 
@@ -24,20 +26,36 @@ struct NavigationStackExample: ReducerProtocol {
         }
         return .none
 
-      case .push(let id):
-        state.stack.append(.init(id: id))
+      case .push:
+        state.stack = [.init(id: "1")]
         return .none
 
-      case .destination(let id, .push(let newId)):
-        state.stack.append(.init(id: "\(id).\(newId)"))
+      case .popTo(let id):
+        if let index = state.stack.index(id: id) {
+          state.stack = .init(uniqueElements: state.stack[state.stack.startIndex...index])
+        }
+        return .none
+
+      case .destination(let id, .push(let path)):
+        state.stack.append(contentsOf: path.map { .init(id: "\(id).\($0)") })
+        return .none
+
+      case .destination(_, .set(let path)):
+        state.stack = .init(uniqueElements: path.map { id in
+          state.stack[id: id] ?? .init(id: id)
+        })
         return .none
 
       case .destination(_, .pop):
         _ = state.stack.popLast()
         return .none
 
-      case .destination(_, .popToRoot):
+      case .popToRoot, .destination(_, .popToRoot):
         state.stack.removeAll()
+        return .none
+
+      case .destination(_, .shuffle):
+        state.stack.shuffle()
         return .none
 
       case .destination(_, _):
@@ -47,6 +65,9 @@ struct NavigationStackExample: ReducerProtocol {
     .presentingForEach(
       state: \.stack,
       action: /Action.destination,
+      onPresent: .init { id, state in
+        .task { .destination(id, .timer(.didAppear)) }
+      },
       element: Destination.init
     )
   }
@@ -60,9 +81,11 @@ struct NavigationStackExample: ReducerProtocol {
     }
 
     enum Action {
-      case push(NavigationStackExample.State.Path.Element)
+      case push(NavigationStackExample.State.Path)
+      case set(NavigationStackExample.State.Path)
       case pop
       case popToRoot
+      case shuffle
       case timer(TimerExample.Action)
     }
 
@@ -80,32 +103,49 @@ struct NavigationStackExampleView: View {
   var body: some View {
     if #available(iOS 16, *) {
       WithViewStore(store, observe: \.path) { viewStore in
-        NavigationStack(path: viewStore.binding(
-          send: NavigationStackExample.Action.updatePath
-        )) {
-          VStack {
-            Button(action: { viewStore.send(.push("1")) }) {
+        VStack(spacing: 0) {
+          NavigationStack(path: viewStore.binding(
+            send: NavigationStackExample.Action.updatePath
+          )) {
+            Button {
+              viewStore.send(.push)
+            } label: {
               Text("Push 1")
             }
-
-            Button(action: { viewStore.send(.push("2")) }) {
-              Text("Push 2")
-            }
-
-            Button(action: { viewStore.send(.push("3")) }) {
-              Text("Push 3")
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .navigationTitle("Root")
+            .navigationDestination(for: NavigationStackExample.State.Path.Element.self) { id in
+              IfLetStore(
+                store.scope(
+                  state: { $0.stack[id: id] },
+                  action: { NavigationStackExample.Action.destination(id, $0) }
+                ),
+                then: DestinationView.init(store:)
+              )
             }
           }
-          .buttonStyle(.borderedProminent)
-          .navigationTitle("Root")
-          .navigationDestination(for: NavigationStackExample.State.Path.Element.self) { id in
-            IfLetStore(
-              store.scope(
-                state: { $0.stack[id: id] },
-                action: { NavigationStackExample.Action.destination(id, $0) }
-              ),
-              then: DestinationView.init(store:)
-            )
+
+          Divider()
+
+          ScrollView(.horizontal, showsIndicators: false) {
+            HStack {
+              Button {
+                viewStore.send(.popToRoot)
+              } label: {
+                Text("Root")
+              }
+
+              ForEach(viewStore.state, id: \.self) { id in
+                Text("→")
+                Button {
+                  viewStore.send(.popTo(id))
+                } label: {
+                  Text(id)
+                }
+              }
+            }
+            .padding()
           }
         }
       }
@@ -130,33 +170,60 @@ struct NavigationStackExampleView: View {
 
     var body: some View {
       WithViewStore(store, observe: ViewState.init) { viewStore in
-        VStack {
-          TimerExampleView(store: store.scope(
-            state: \.timer,
-            action: NavigationStackExample.Destination.Action.timer
-          ))
-
-          Button(action: { viewStore.send(.push("1")) }) {
-            Text("Push 1")
+        Form {
+          Section {
+            TimerExampleView(store: store.scope(
+              state: \.timer,
+              action: NavigationStackExample.Destination.Action.timer
+            ))
+          } header: {
+            Text("Timer")
           }
 
-          Button(action: { viewStore.send(.push("2")) }) {
-            Text("Push 2")
-          }
+          Section {
+            Button(action: { viewStore.send(.push(["1"])) }) {
+              Text("Push 1")
+            }
 
-          Button(action: { viewStore.send(.push("3")) }) {
-            Text("Push 3")
-          }
+            Button(action: { viewStore.send(.push(["2"])) }) {
+              Text("Push 2")
+            }
 
-          Button(action: { viewStore.send(.pop) }) {
-            Text("Pop")
-          }
+            Button(action: { viewStore.send(.push(["3"])) }) {
+              Text("Push 3")
+            }
 
-          Button(action: { viewStore.send(.popToRoot) }) {
-            Text("Pop to root")
+            Button(action: { viewStore.send(.push(["1", "2", "3"])) }) {
+              Text("Push 1→2→3")
+            }
+
+            Button(action: { viewStore.send(.push(["3", "2", "1"])) }) {
+              Text("Push 3→2→1")
+            }
+
+            Button(action: { viewStore.send(.set(["1", "2", "3"])) }) {
+              Text("Set 1→2→3")
+            }
+
+            Button(action: { viewStore.send(.set(["3", "2", "1"])) }) {
+              Text("Set 3→2→1")
+            }
+
+            Button(action: { viewStore.send(.pop) }) {
+              Text("Pop")
+            }
+
+            Button(action: { viewStore.send(.popToRoot) }) {
+              Text("Pop to root")
+            }
+
+            Button(action: { viewStore.send(.shuffle) }) {
+              Text("Shuffle")
+            }
+          } header: {
+            Text("Stack navigation")
           }
         }
-        .buttonStyle(.borderedProminent)
         .navigationTitle(viewStore.title)
       }
     }
