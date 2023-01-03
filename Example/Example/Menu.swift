@@ -12,6 +12,7 @@ struct Menu: ReducerProtocol {
       case popToRoot(PopToRootExample.State)
       case switchStore(SwitchStoreExample.State)
       case destination(DestinationExample.State)
+      case navigationStack(NavigationStackExample.State)
     }
 
     var destination: Menu.State.Destination?
@@ -26,6 +27,7 @@ struct Menu: ReducerProtocol {
       case popToRoot(PopToRootExample.Action)
       case switchStore(SwitchStoreExample.Action)
       case destination(DestinationExample.Action)
+      case navigationStack(NavigationStackExample.Action)
     }
 
     case present(Menu.State.Destination?)
@@ -57,6 +59,7 @@ extension ReducerProtocolOf<Menu> {
       .presentingPopToRootExample()
       .presentingSwitchStoreExample()
       .presentingDestinationExample()
+      .presentingNavigationStackExample()
   }
 
   func presentingSheetExample() -> some ReducerProtocol<State, Action> {
@@ -128,6 +131,16 @@ extension ReducerProtocolOf<Menu> {
       presented: DestinationExample.init
     )
   }
+
+  func presentingNavigationStackExample() -> some ReducerProtocol<State, Action> {
+    presenting(
+      unwrapping: \.destination,
+      case: /State.Destination.navigationStack,
+      id: .notNil(),
+      action: (/Action.destination).appending(path: /Action.Destination.navigationStack),
+      presented: NavigationStackExample.init
+    )
+  }
 }
 
 struct MenuView: View {
@@ -174,6 +187,11 @@ struct MenuView: View {
                 state: (/Menu.State.Destination.destination).extract(from:),
                 action: { Menu.Action.destination(.destination($0)) },
                 then: DestinationExampleView.init(store:)
+              )
+              CaseLet(
+                state: (/Menu.State.Destination.navigationStack).extract(from:),
+                action: { Menu.Action.destination(.navigationStack($0)) },
+                then: NavigationStackExampleView.init(store:)
               )
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -230,6 +248,12 @@ struct MenuView: View {
                 viewStore.send(.present(.destination(.init())))
               } label: {
                 Text("DestinationExample")
+              }
+
+              Button {
+                viewStore.send(.present(.navigationStack(.init())))
+              } label: {
+                Text("NavigationStackExample")
               }
             } header: {
               Text("Examples")

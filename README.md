@@ -71,6 +71,10 @@ SwiftUI example of a component that presents a mutually-exclusive destination. T
 
 Navigation composed with this library is driven by a declarative state. This makes it easy to handle deep links and navigate to any screen of the app. Several workarounds were applied to fix SwiftUI navigation issues (this was only possible thanks to [swiftui-navigation](https://github.com/pointfreeco/swiftui-navigation) library by [Point-Free](https://www.pointfree.co/)). Change the initial state in [Example/App.swift](Example/Example/App.swift) to navigate to any screen when the app starts.
 
+### ▶️ [NavigationStack example](Example/Example/NavigationStackExample.swift)
+
+SwiftUI example of driving `NavigationStack` with a `Store`. The state provides an identifiable array of destination states, which indices make a navigation path. Navigation happens when the array is mutated. This example requires iOS ≥ 16.
+
 ## 🛠 Develop
 
 - Use Xcode (version ≥ 14).
