@@ -11,7 +11,7 @@ struct NavigationStackExample: ReducerProtocol {
 
   enum Action {
     case updatePath(State.Path)
-    case push
+    case start
     case popToRoot
     case popTo(State.Path.Element)
     case destination(_ id: Destination.State.ID, _ action: Destination.Action)
@@ -26,7 +26,7 @@ struct NavigationStackExample: ReducerProtocol {
         }
         return .none
 
-      case .push:
+      case .start:
         state.stack = [.init(id: "1")]
         return .none
 
@@ -108,9 +108,9 @@ struct NavigationStackExampleView: View {
             send: NavigationStackExample.Action.updatePath
           )) {
             Button {
-              viewStore.send(.push)
+              viewStore.send(.start)
             } label: {
-              Text("Push 1")
+              Text("Start")
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
@@ -156,7 +156,6 @@ struct NavigationStackExampleView: View {
 
   // MARK: - Child Views
 
-  @available(iOS 16, *)
   struct DestinationView: View {
     let store: StoreOf<NavigationStackExample.Destination>
 
