@@ -12,17 +12,17 @@ struct TimerExample: ReducerProtocol {
   }
 
   enum Action {
-    case didAppear
-    case didTick
+    case start
+    case tick
   }
 
   func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
     switch action {
-    case .didAppear:
+    case .start:
       return Effect.timer(id: state.id, every: .seconds(1), on: DispatchQueue.main)
-        .map { _ in .didTick }
+        .map { _ in .tick }
 
-    case .didTick:
+    case .tick:
       state.count += 1
       return .none
     }
@@ -35,7 +35,7 @@ struct TimerExampleView: View {
   var body: some View {
     WithViewStore(store, observe: \.count) { viewStore in
       Text("\(viewStore.state)")
-        .onAppear { viewStore.send(.didAppear) }
+        .onAppear { viewStore.send(.start) }
     }
   }
 }
