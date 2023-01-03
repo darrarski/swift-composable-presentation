@@ -116,15 +116,11 @@ struct NavigationStackExampleView: View {
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
             .navigationTitle("Root")
-            .navigationDestination(for: NavigationStackExample.State.Path.Element.self) { id in
-              IfLetStore(
-                store.scope(
-                  state: { $0.stack[id: id] },
-                  action: { NavigationStackExample.Action.destination(id, $0) }
-                ),
-                then: DestinationView.init(store:)
-              )
-            }
+            .navigationDestination(
+              forEach: store.scope(state: \.stack),
+              action: NavigationStackExample.Action.destination,
+              destination: DestinationView.init(store:)
+            )
           }
 
           Divider()
