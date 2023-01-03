@@ -4,16 +4,14 @@ import SwiftUI
 
 struct NavigationStackExample: ReducerProtocol {
   struct State {
-    typealias Path = [Destination.State.ID]
     var stack: IdentifiedArrayOf<Destination.State> = []
-    var path: Path { Array(stack.ids) }
   }
 
   enum Action {
-    case updatePath(State.Path)
+    case updatePath([Destination.State.ID])
     case start
     case popToRoot
-    case popTo(State.Path.Element)
+    case popTo(Destination.State.ID)
     case destination(_ id: Destination.State.ID, _ action: Destination.Action)
   }
 
@@ -82,8 +80,8 @@ struct NavigationStackExample: ReducerProtocol {
     }
 
     enum Action {
-      case push(NavigationStackExample.State.Path)
-      case set(NavigationStackExample.State.Path)
+      case push([Destination.State.ID])
+      case set([Destination.State.ID])
       case pop
       case popToRoot
       case shuffle
@@ -103,11 +101,12 @@ struct NavigationStackExampleView: View {
 
   var body: some View {
     if #available(iOS 16, *) {
-      WithViewStore(store, observe: \.path) { viewStore in
-        VStack(spacing: 0) {
-          NavigationStack(path: viewStore.binding(
-            send: NavigationStackExample.Action.updatePath
-          )) {
+      VStack(spacing: 0) {
+        NavigationStackWithStore(store.scope(
+          state: { Array($0.stack.ids) },
+          action: NavigationStackExample.Action.updatePath
+        )) {
+          WithViewStore(store.stateless) { viewStore in
             Button {
               viewStore.send(.start)
             } label: {
@@ -116,19 +115,17 @@ struct NavigationStackExampleView: View {
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
             .navigationTitle("Root")
-            .navigationDestination(for: NavigationStackExample.State.Path.Element.self) { id in
-              IfLetStore(
-                store.scope(
-                  state: { $0.stack[id: id] },
-                  action: { NavigationStackExample.Action.destination(id, $0) }
-                ),
-                then: DestinationView.init(store:)
-              )
-            }
           }
+          .navigationDestination(
+            forEach: store.scope(state: \.stack),
+            action: NavigationStackExample.Action.destination,
+            destination: DestinationView.init(store:)
+          )
+        }
 
-          Divider()
+        Divider()
 
+        WithViewStore(store, observe: \.stack.ids) { viewStore in
           ScrollView(.horizontal, showsIndicators: false) {
             HStack {
               Button {
@@ -146,8 +143,8 @@ struct NavigationStackExampleView: View {
                 }
               }
             }
-            .padding()
           }
+          .padding()
         }
       }
     } else {
