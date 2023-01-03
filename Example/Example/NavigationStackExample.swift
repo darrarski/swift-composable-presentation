@@ -105,8 +105,9 @@ struct NavigationStackExampleView: View {
     if #available(iOS 16, *) {
       WithViewStore(store, observe: \.path) { viewStore in
         VStack(spacing: 0) {
-          NavigationStack(path: viewStore.binding(
-            send: NavigationStackExample.Action.updatePath
+          NavigationStackWithStore(store.scope(
+            state: { Array($0.stack.ids) },
+            action: NavigationStackExample.Action.updatePath
           )) {
             Button {
               viewStore.send(.start)
