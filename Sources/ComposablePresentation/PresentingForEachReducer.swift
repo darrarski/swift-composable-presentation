@@ -129,7 +129,7 @@ public struct _PresentingForEachReducer<
         .forEach(
           toElementState,
           action: toElementAction,
-          { element },
+          element: { element },
           file: file,
           fileID: fileID,
           line: line
