@@ -122,7 +122,7 @@ public struct _PresentingCaseReducer<
   public func reduce(
     into state: inout Parent.State,
     action: Parent.Action
-  ) -> Effect<Parent.Action, Never> {
+  ) -> EffectTask<Parent.Action> {
     func toPresentedState(_ state: Parent.State) -> Presented.State? {
       guard let `enum` = state[keyPath: toEnum] else { return nil }
       return toCase.extract(from: `enum`)
@@ -137,7 +137,7 @@ public struct _PresentingCaseReducer<
       presentedID: oldPresentedID
     )
     let shouldRunPresented = toPresentedAction.extract(from: action) != nil
-    let presentedEffects: Effect<Action, Never>
+    let presentedEffects: EffectTask<Action>
     if shouldRunPresented {
       presentedEffects = EmptyReducer()
         .ifLet(
@@ -169,7 +169,7 @@ public struct _PresentingCaseReducer<
     let newPresentedState = toPresentedState(newState)
     let newPresentedID = toPresentedID.run(newPresentedState)
 
-    var presentationEffects: [Effect<Action, Never>] = []
+    var presentationEffects: [EffectTask<Action>] = []
     if oldPresentedID != newPresentedID {
       if let oldPresentedState = oldPresentedState {
         presentationEffects.append(onDismiss.run(&state, oldPresentedState))
@@ -221,7 +221,7 @@ extension _PresentingCaseReducer {
 extension _PresentingCaseReducer {
   /// Handles presentation action, like `onPresent` or `onDismiss`.
   public struct ActionHandler {
-    public typealias Run = (inout Parent.State, Presented.State) -> Effect<Parent.Action, Never>
+    public typealias Run = (inout Parent.State, Presented.State) -> EffectTask<Parent.Action>
 
     /// An action that performs no state mutations and returns no effects.
     public static var empty: Self { .init { _, _ in .none } }
@@ -229,7 +229,7 @@ extension _PresentingCaseReducer {
     /// Create action handler
     ///
     /// - Parameter run: Closure that handles the action. It takes inout `Parent.State`
-    ///   and `Presented.State` and returns `Effect<Parent.Action, Never>`.
+    ///   and `Presented.State` and returns `EffectTask<Parent.Action>`.
     public init(run: @escaping Run) {
       self.run = run
     }

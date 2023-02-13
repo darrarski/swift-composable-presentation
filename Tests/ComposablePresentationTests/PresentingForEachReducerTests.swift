@@ -22,7 +22,7 @@ final class PresentingForEachReducerTests: XCTestCase {
         case element(id: Int, action: Element.Action)
       }
 
-      func reduce(into state: inout State, action: Action) -> Effect<Action, Never> {
+      func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
         switch action {
         case .addElement(let id):
           state.elements.append(Element.State(id: id))
@@ -48,10 +48,10 @@ final class PresentingForEachReducerTests: XCTestCase {
         case didPerformEffect
       }
 
-      var effect: (State.ID) -> Effect<Void, Never>
+      var effect: (State.ID) -> EffectTask<Void>
       var onReduce: (State.ID) -> Void
 
-      func reduce(into state: inout State, action: Action) -> Effect<Action, Never> {
+      func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
         onReduce(state.id)
         switch action {
         case .performEffect:

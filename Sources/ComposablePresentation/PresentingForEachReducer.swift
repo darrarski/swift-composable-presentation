@@ -106,7 +106,7 @@ public struct _PresentingForEachReducer<
   public func reduce(
     into state: inout Parent.State,
     action: Parent.Action
-  ) -> Effect<Parent.Action, Never> {
+  ) -> EffectTask<Parent.Action> {
     func elementID(for action: Action) -> ID? {
       guard let (id, _) = toElementAction.extract(from: action) else {
         return nil
@@ -122,7 +122,7 @@ public struct _PresentingForEachReducer<
     }
 
     let oldIds = state[keyPath: toElementState].ids
-    let elementEffects: Effect<Action, Never>
+    let elementEffects: EffectTask<Action>
 
     if let id = elementID(for: action) {
       elementEffects = EmptyReducer()
@@ -144,7 +144,7 @@ public struct _PresentingForEachReducer<
     let newIds = state[keyPath: toElementState].ids
     let presentedIds = newIds.subtracting(oldIds)
     let dismissedIds = oldIds.subtracting(newIds)
-    var presentationEffects: [Effect<Action, Never>] = []
+    var presentationEffects: [EffectTask<Action>] = []
 
     dismissedIds.forEach { id in
       presentationEffects.append(onDismiss.run(id, &state))
@@ -165,7 +165,7 @@ public struct _PresentingForEachReducer<
 
 /// Describes for-each presentation action, like `onPresent` or `onDismiss`.
 public struct PresentingForEachReducerAction<ID, State, Action> {
-  public typealias Run = (ID, inout State) -> Effect<Action, Never>
+  public typealias Run = (ID, inout State) -> EffectTask<Action>
 
   /// An action that performs no state mutations and returns no effects.
   public static var empty: Self { .init { _, _ in .none } }
