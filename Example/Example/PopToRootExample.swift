@@ -131,22 +131,20 @@ struct PopToRootExampleView: View {
           action: PopToRootExample.Action.timer
         ))
 
-        WithViewStore(store.stateless) { viewStore in
-          Button {
-            viewStore.send(.didTapPushFirst)
-          } label: {
-            Text("Push First").padding()
-          }
-          ._navigationDestination(
-            store.scope(
-              state: \.first,
-              action: PopToRootExample.Action.first
-            ),
-            mapState: replayNonNil(),
-            onDismiss: { viewStore.send(.didDismissFirst) },
-            destination: FirstView.init(store:)
-          )
+        Button {
+          ViewStore(store.stateless).send(.didTapPushFirst)
+        } label: {
+          Text("Push First").padding()
         }
+        ._navigationDestination(
+          store.scope(
+            state: \.first,
+            action: PopToRootExample.Action.first
+          ),
+          mapState: replayNonNil(),
+          onDismiss: { ViewStore(store.stateless).send(.didDismissFirst) },
+          destination: FirstView.init(store:)
+        )
       }
       .navigationTitle("PopToRootExample")
     }
@@ -164,22 +162,20 @@ struct PopToRootExampleView: View {
           action: PopToRootExample.First.Action.timer
         ))
 
-        WithViewStore(store.stateless) { viewStore in
-          Button {
-            viewStore.send(.didTapPushSecond)
-          } label: {
-            Text("Push Second").padding()
-          }
-          ._navigationDestination(
-            store.scope(
-              state: \.second,
-              action: PopToRootExample.First.Action.second
-            ),
-            mapState: replayNonNil(),
-            onDismiss: { viewStore.send(.didDismissSecond) },
-            destination: SecondView.init(store:)
-          )
+        Button {
+          ViewStore(store.stateless).send(.didTapPushSecond)
+        } label: {
+          Text("Push Second").padding()
         }
+        ._navigationDestination(
+          store.scope(
+            state: \.second,
+            action: PopToRootExample.First.Action.second
+          ),
+          mapState: replayNonNil(),
+          onDismiss: { ViewStore(store.stateless).send(.didDismissSecond) },
+          destination: SecondView.init(store:)
+        )
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity)
       .background(Color(.secondarySystemBackground).ignoresSafeArea())

@@ -60,26 +60,24 @@ struct NavigationDestinationExampleView: View {
   let store: StoreOf<NavigationDestinationExample>
 
   var body: some View {
-    WithViewStore(store.stateless) { viewStore in
-      _NavigationStack {
-        Button {
-          viewStore.send(.didTapDetailButton)
-        } label: {
-          Text("Detail").padding()
-        }
-        ._navigationDestination(
-          store.scope(
-            state: \.detail,
-            action: NavigationDestinationExample.Action.detail
-          ),
-          onDismiss: {
-            viewStore.send(.didDismissDetail)
-          },
-          destination: DetailView.init(store:)
-        )
+    _NavigationStack {
+      Button {
+        ViewStore(store.stateless).send(.didTapDetailButton)
+      } label: {
+        Text("Detail").padding()
       }
-      .navigationTitle("NavigationDestinationExample")
+      ._navigationDestination(
+        store.scope(
+          state: \.detail,
+          action: NavigationDestinationExample.Action.detail
+        ),
+        onDismiss: {
+          ViewStore(store.stateless).send(.didDismissDetail)
+        },
+        destination: DetailView.init(store:)
+      )
     }
+    .navigationTitle("NavigationDestinationExample")
   }
 
   // MARK: - Child Views
