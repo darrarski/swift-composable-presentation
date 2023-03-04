@@ -39,7 +39,7 @@ where Destination: View,
   let label: () -> Label
 
   public var body: some View {
-    WithViewStore(store.scope(state: { $0 != nil })) { viewStore in
+    WithViewStore(store, observe: { $0 != nil }) { viewStore in
       _NavigationLink(
         isActive: Binding(
           get: { viewStore.state },

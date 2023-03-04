@@ -100,7 +100,7 @@ struct SwitchStoreExampleView: View {
 
   var body: some View {
     VStack {
-      WithViewStore(store.scope(state: \.id)) { viewStore in
+      WithViewStore(store, observe: \.id) { viewStore in
         Picker("", selection: viewStore.binding(send: SwitchStoreExample.Action.set(id:))) {
           Text("First").tag(SwitchStoreExample.State.ID.first)
           Text("Second").tag(SwitchStoreExample.State.ID.second)
