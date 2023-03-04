@@ -8,35 +8,22 @@ let package = Package(
     .macOS(.v11),
   ],
   products: [
-    .library(
-      name: "ComposablePresentation",
-      targets: [
-        "ComposablePresentation",
-      ]
-    ),
+    .library(name: "ComposablePresentation", targets: ["ComposablePresentation"]),
   ],
   dependencies: [
-    .package(
-      url: "https://github.com/pointfreeco/swift-composable-architecture.git",
-      .upToNextMajor(from: "0.51.0")
-    ),
+    .package(url: "https://github.com/pointfreeco/swift-composable-architecture.git", branch: "prerelease/1.0"),
   ],
   targets: [
     .target(
       name: "ComposablePresentation",
       dependencies: [
-        .product(
-          name: "ComposableArchitecture",
-          package: "swift-composable-architecture"
-        ),
+        .product(name: "ComposableArchitecture", package: "swift-composable-architecture"),
       ]
     ),
     .testTarget(
       name: "ComposablePresentationTests",
       dependencies: [
-        .target(
-          name: "ComposablePresentation"
-        ),
+        .target(name: "ComposablePresentation"),
       ]
     ),
   ]
