@@ -4,8 +4,9 @@ import ComposableArchitecture
 import XCTest
 @testable import ComposablePresentation
 
+@MainActor
 final class PresentingCaseReducerTests: XCTestCase {
-  func testPresentingCase() {
+  func testPresentingCase() async {
     enum TestAction: Equatable {
       case didPresentFirst
       case didFireFirstEffect
@@ -127,7 +128,7 @@ final class PresentingCaseReducerTests: XCTestCase {
     )
 
     actions = []
-    store.send(.goto(.first(.init()))) {
+    await store.send(.goto(.first(.init()))) {
       $0.destination = .first(First.State())
     }
     XCTAssertNoDifference(actions, [
@@ -135,13 +136,13 @@ final class PresentingCaseReducerTests: XCTestCase {
     ])
 
     actions = []
-    store.send(.first(.init()))
+    await store.send(.first(.init()))
     XCTAssertNoDifference(actions, [
       .didFireFirstEffect,
     ])
 
     actions = []
-    store.send(.goto(.second(.init()))) {
+    await store.send(.goto(.second(.init()))) {
       $0.destination = .second(.init())
     }
     XCTAssertNoDifference(actions, [
@@ -151,13 +152,13 @@ final class PresentingCaseReducerTests: XCTestCase {
     ])
 
     actions = []
-    store.send(.second(.init()))
+    await store.send(.second(.init()))
     XCTAssertNoDifference(actions, [
       .didFireSecondEffect,
     ])
 
     actions = []
-    store.send(.goto(nil)) {
+    await store.send(.goto(nil)) {
       $0.destination = nil
     }
     XCTAssertNoDifference(actions, [
