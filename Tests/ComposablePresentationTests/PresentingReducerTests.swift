@@ -23,7 +23,7 @@ final class PresentingReducerTests: XCTestCase {
         case child(Child.Action)
       }
 
-      func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+      func reduce(into state: inout State, action: Action) -> Effect<Action> {
         switch action {
         case .presentChild:
           state.child = Child.State()
@@ -47,10 +47,10 @@ final class PresentingReducerTests: XCTestCase {
         case didPerformEffect
       }
 
-      var effect: () -> EffectTask<Void>
+      var effect: () -> Effect<Void>
       var onReduce: () -> Void
 
-      func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+      func reduce(into state: inout State, action: Action) -> Effect<Action> {
         onReduce()
         switch action {
         case .performEffect:
@@ -150,7 +150,7 @@ final class PresentingReducerTests: XCTestCase {
         case second(Second.Action)
       }
 
-      func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+      func reduce(into state: inout State, action: Action) -> Effect<Action> {
         switch action {
         case .presentFirst:
           state = .first(First.State())
@@ -174,10 +174,10 @@ final class PresentingReducerTests: XCTestCase {
         case didPerformEffect
       }
 
-      var effect: () -> EffectTask<Void>
+      var effect: () -> Effect<Void>
       var onReduce: () -> Void
 
-      func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+      func reduce(into state: inout State, action: Action) -> Effect<Action> {
         onReduce()
         switch action {
         case .performEffect:
@@ -199,10 +199,10 @@ final class PresentingReducerTests: XCTestCase {
         case didPerformEffect
       }
 
-      var effect: () -> EffectTask<Void>
+      var effect: () -> Effect<Void>
       var onReduce: () -> Void
 
-      func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+      func reduce(into state: inout State, action: Action) -> Effect<Action> {
         onReduce()
         switch action {
         case .performEffect:
@@ -355,7 +355,7 @@ final class PresentingReducerTests: XCTestCase {
         case child(Child.Action)
       }
 
-      func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+      func reduce(into state: inout State, action: Action) -> Effect<Action> {
         switch action {
         case .presentChild(let id):
           state.child = id.map(Child.State.init(id:))
@@ -377,10 +377,10 @@ final class PresentingReducerTests: XCTestCase {
         case performEffect
       }
 
-      var effect: (State.ID) -> EffectTask<Never>
+      var effect: (State.ID) -> Effect<Never>
       var onReduce: (State.ID) -> Void
 
-      func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+      func reduce(into state: inout State, action: Action) -> Effect<Action> {
         onReduce(state.id)
         switch action {
         case .performEffect:

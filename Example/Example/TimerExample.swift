@@ -16,10 +16,10 @@ struct TimerExample: Reducer {
     case tick
   }
 
-  func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+  func reduce(into state: inout State, action: Action) -> Effect<Action> {
     switch action {
     case .start:
-      return EffectTask.timer(id: state.id, every: .seconds(1), on: DispatchQueue.main)
+      return Effect.timer(id: state.id, every: .seconds(1), on: DispatchQueue.main)
         .map { _ in .tick }
 
     case .tick:

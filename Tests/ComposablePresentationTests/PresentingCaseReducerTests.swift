@@ -33,7 +33,7 @@ final class PresentingCaseReducerTests: XCTestCase {
         case second(Second.Action)
       }
 
-      func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+      func reduce(into state: inout State, action: Action) -> Effect<Action> {
         switch action {
         case .goto(let destination):
           state.destination = destination
@@ -52,7 +52,7 @@ final class PresentingCaseReducerTests: XCTestCase {
       var didFireEffect: () -> Void
       var didCancelEffect: () -> Void
 
-      func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+      func reduce(into state: inout State, action: Action) -> Effect<Action> {
         Empty(completeImmediately: false)
           .handleEvents(
             receiveSubscription: { _ in didFireEffect() },
@@ -69,7 +69,7 @@ final class PresentingCaseReducerTests: XCTestCase {
       var didFireEffect: () -> Void
       var didCancelEffect: () -> Void
 
-      func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+      func reduce(into state: inout State, action: Action) -> Effect<Action> {
         Empty(completeImmediately: false)
           .handleEvents(
             receiveSubscription: { _ in didFireEffect() },

@@ -113,7 +113,7 @@ public struct _PresentingReducer<
   public func reduce(
     into state: inout Parent.State,
     action: Parent.Action
-  ) -> EffectTask<Parent.Action> {
+  ) -> Effect<Parent.Action> {
     let oldState = state
     let oldPresentedState = toPresentedState(oldState)
     let oldPresentedID = toPresentedID(oldPresentedState)
@@ -123,7 +123,7 @@ public struct _PresentingReducer<
       presentedID: oldPresentedID
     )
     let shouldRunPresented = toPresentedAction.extract(from: action) != nil
-    let presentedEffects: EffectTask<Action>
+    let presentedEffects: Effect<Action>
     if shouldRunPresented {
       switch toPresentedState {
       case let .keyPath(keyPath):
@@ -161,7 +161,7 @@ public struct _PresentingReducer<
     let newPresentedState = toPresentedState(newState)
     let newPresentedID = toPresentedID(newPresentedState)
 
-    var presentationEffects: [EffectTask<Action>] = []
+    var presentationEffects: [Effect<Action>] = []
     if oldPresentedID != newPresentedID {
       if let oldPresentedState = oldPresentedState {
         presentationEffects.append(onDismiss.run(&state, oldPresentedState))
@@ -242,7 +242,7 @@ public struct PresentingReducerToPresentedID<State, ID: Hashable> {
 
 /// Describes presentation action, like `onPresent` or `onDismiss`.
 public struct PresentingReducerAction<State, PresentedState, Action> {
-  public typealias Run = (inout State, PresentedState) -> EffectTask<Action>
+  public typealias Run = (inout State, PresentedState) -> Effect<Action>
 
   /// An action that performs no state mutations and returns no effects.
   public static var empty: Self { .init { _, _ in .none } }
