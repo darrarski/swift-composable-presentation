@@ -106,16 +106,14 @@ struct NavigationStackExampleView: View {
           state: { Array($0.stack.ids) },
           action: NavigationStackExample.Action.updatePath
         )) {
-          WithViewStore(store.stateless) { viewStore in
-            Button {
-              viewStore.send(.start)
-            } label: {
-              Text("Start")
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .navigationTitle("Root")
+          Button {
+            ViewStore(store.stateless).send(.start)
+          } label: {
+            Text("Start")
           }
+          .buttonStyle(.borderedProminent)
+          .controlSize(.large)
+          .navigationTitle("Root")
           .navigationDestination(
             forEach: store.scope(state: \.stack),
             action: NavigationStackExample.Action.destination,
