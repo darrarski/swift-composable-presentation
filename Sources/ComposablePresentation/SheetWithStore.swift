@@ -19,7 +19,7 @@ extension View {
     content: @escaping (Store<State, Action>) -> Content
   ) -> some View {
     background(
-      WithViewStore(store.scope(state: { $0 != nil })) { viewStore in
+      WithViewStore(store, observe: { $0 != nil }) { viewStore in
         EmptyView()
           .sheet(
             isPresented: Binding(
