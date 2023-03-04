@@ -1,7 +1,7 @@
 import ComposableArchitecture
 import SwiftUI
 
-struct TimerExample: ReducerProtocol {
+struct TimerExample: Reducer {
   struct State: Identifiable {
     struct ID: Hashable {
       var uuid = UUID()

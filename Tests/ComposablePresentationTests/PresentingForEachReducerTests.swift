@@ -11,7 +11,7 @@ final class PresentingForEachReducerTests: XCTestCase {
     var didDismiss = [Element.State.ID]()
     var didCancelEffect = [Element.State.ID]()
 
-    struct Parent: ReducerProtocol {
+    struct Parent: Reducer {
       struct State: Equatable {
         var elements: IdentifiedArrayOf<Element.State>
       }
@@ -38,7 +38,7 @@ final class PresentingForEachReducerTests: XCTestCase {
       }
     }
 
-    struct Element: ReducerProtocol {
+    struct Element: Reducer {
       struct State: Equatable, Identifiable {
         var id: Int
       }

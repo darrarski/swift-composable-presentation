@@ -2,7 +2,7 @@ import ComposableArchitecture
 import ComposablePresentation
 import SwiftUI
 
-struct ForEachStoreExample: ReducerProtocol {
+struct ForEachStoreExample: Reducer {
   struct State {
     var timers: IdentifiedArrayOf<TimerExample.State> = []
   }
@@ -13,7 +13,7 @@ struct ForEachStoreExample: ReducerProtocol {
     case timer(id: TimerExample.State.ID, action: TimerExample.Action)
   }
 
-  var body: some ReducerProtocol<State, Action> {
+  var body: some Reducer<State, Action> {
     Reduce { state, action in
       switch action {
       case .didTapAddTimer:

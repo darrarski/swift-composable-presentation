@@ -17,7 +17,7 @@ final class PresentingCaseReducerTests: XCTestCase {
       case didCancelSecondEffect
     }
 
-    struct Main: ReducerProtocol {
+    struct Main: Reducer {
       struct State: Equatable {
         enum Destination: Equatable {
           case first(First.State)
@@ -45,7 +45,7 @@ final class PresentingCaseReducerTests: XCTestCase {
       }
     }
 
-    struct First: ReducerProtocol {
+    struct First: Reducer {
       struct State: Equatable {}
       struct Action {}
 
@@ -62,7 +62,7 @@ final class PresentingCaseReducerTests: XCTestCase {
       }
     }
 
-    struct Second: ReducerProtocol {
+    struct Second: Reducer {
       struct State: Equatable {}
       struct Action {}
 

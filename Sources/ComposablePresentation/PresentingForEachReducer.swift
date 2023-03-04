@@ -2,7 +2,7 @@ import ComposableArchitecture
 import Foundation
 import CoreMedia
 
-extension ReducerProtocol {
+extension Reducer {
   /// Combines the reducer with another reducer that operates on elements of `IdentifiedArray`.
   ///
   /// - All effects returned by the element reducer will be canceled when the element's state is removed from `IdentifiedArray`.
@@ -17,7 +17,7 @@ extension ReducerProtocol {
   ///   - element: Element reducer.
   /// - Returns: Combined reducer.
   @inlinable
-  public func presentingForEach<ID: Hashable, Element: ReducerProtocol>(
+  public func presentingForEach<ID: Hashable, Element: Reducer>(
     presentationID toPresentationID: ToPresentationID<State> = .typed(Element.self),
     state toElementState: WritableKeyPath<State, IdentifiedArray<ID, Element.State>>,
     action toElementAction: CasePath<Action, (ID, Element.Action)>,
@@ -44,10 +44,10 @@ extension ReducerProtocol {
 }
 
 public struct _PresentingForEachReducer<
-  Parent: ReducerProtocol,
+  Parent: Reducer,
   ID: Hashable,
-  Element: ReducerProtocol
->: ReducerProtocol {
+  Element: Reducer
+>: Reducer {
   @usableFromInline
   let parent: Parent
 

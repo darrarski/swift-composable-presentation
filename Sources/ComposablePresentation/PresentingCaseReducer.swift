@@ -1,7 +1,7 @@
 import ComposableArchitecture
 import Foundation
 
-extension ReducerProtocol {
+extension Reducer {
   /// Combines the reducer with another reducer that operates on optionally presented case of an enum.
   ///
   /// - All effects returned by the presented reducer are cancelled when presented `ID` changes.
@@ -17,7 +17,7 @@ extension ReducerProtocol {
   ///   - presented: Presented reducer.
   /// - Returns: Combined reducer
   @inlinable
-  public func presenting<ID: Hashable, Enum, Presented: ReducerProtocol>(
+  public func presenting<ID: Hashable, Enum, Presented: Reducer>(
     presentationID toPresentationID: ToPresentationID<State> = .typed(Presented.self),
     unwrapping toEnum: WritableKeyPath<State, Enum?>,
     case toCase: CasePath<Enum, Presented.State>,
@@ -48,11 +48,11 @@ extension ReducerProtocol {
 }
 
 public struct _PresentingCaseReducer<
-  Parent: ReducerProtocol,
+  Parent: Reducer,
   Enum,
   ID: Hashable,
-  Presented: ReducerProtocol
->: ReducerProtocol {
+  Presented: Reducer
+>: Reducer {
   @usableFromInline
   let parent: Parent
 

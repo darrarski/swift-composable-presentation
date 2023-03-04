@@ -1,7 +1,7 @@
 import ComposableArchitecture
 import Foundation
 
-extension ReducerProtocol {
+extension Reducer {
   /// Combines the reducer with another reducer that operates on optionally presented state.
   ///
   /// - All effects returned by the presented reducer are cancelled when presented `ID` changes.
@@ -16,7 +16,7 @@ extension ReducerProtocol {
   ///   - presented: Presented reducer.
   /// - Returns: Combined reducer.
   @inlinable
-  public func presenting<ID: Hashable, Presented: ReducerProtocol>(
+  public func presenting<ID: Hashable, Presented: Reducer>(
     presentationID toPresentationID: ToPresentationID<State> = .typed(Presented.self),
     state toPresentedState: PresentingReducerToPresentedState<State, Presented.State>,
     id toPresentedID: PresentingReducerToPresentedID<Presented.State, ID>,
@@ -45,10 +45,10 @@ extension ReducerProtocol {
 }
 
 public struct _PresentingReducer<
-  Parent: ReducerProtocol,
+  Parent: Reducer,
   ID: Hashable,
-  Presented: ReducerProtocol
->: ReducerProtocol {
+  Presented: Reducer
+>: Reducer {
   @usableFromInline
   let parent: Parent
 

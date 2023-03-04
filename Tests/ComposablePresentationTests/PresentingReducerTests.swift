@@ -12,7 +12,7 @@ final class PresentingReducerTests: XCTestCase {
     var didDismissChild = 0
     var didCancelChildEffect = 0
 
-    struct Parent: ReducerProtocol {
+    struct Parent: Reducer {
       struct State: Equatable {
         var child: Child.State?
       }
@@ -39,7 +39,7 @@ final class PresentingReducerTests: XCTestCase {
       }
     }
 
-    struct Child: ReducerProtocol {
+    struct Child: Reducer {
       struct State: Equatable {}
 
       enum Action: Equatable {
@@ -137,7 +137,7 @@ final class PresentingReducerTests: XCTestCase {
     var didDismissSecond = 0
     var didCancelSecondEffect = 0
 
-    struct Parent: ReducerProtocol {
+    struct Parent: Reducer {
       enum State: Equatable {
         case first(First.State)
         case second(Second.State)
@@ -166,7 +166,7 @@ final class PresentingReducerTests: XCTestCase {
       }
     }
 
-    struct First: ReducerProtocol {
+    struct First: Reducer {
       struct State: Equatable {}
 
       enum Action: Equatable {
@@ -191,7 +191,7 @@ final class PresentingReducerTests: XCTestCase {
       }
     }
 
-    struct Second: ReducerProtocol {
+    struct Second: Reducer {
       struct State: Equatable {}
 
       enum Action: Equatable {
@@ -345,7 +345,7 @@ final class PresentingReducerTests: XCTestCase {
     var didDismissChild = [Child.State.ID]()
     var didCancelChildEffect = [Child.State.ID]()
 
-    struct Parent: ReducerProtocol {
+    struct Parent: Reducer {
       struct State: Equatable {
         var child: Child.State?
       }
@@ -367,7 +367,7 @@ final class PresentingReducerTests: XCTestCase {
       }
     }
 
-    struct Child: ReducerProtocol {
+    struct Child: Reducer {
       struct State: Equatable {
         typealias ID = Int
         var id: ID
