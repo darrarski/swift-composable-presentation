@@ -4,8 +4,9 @@ import ComposableArchitecture
 import XCTest
 @testable import ComposablePresentation
 
+@MainActor
 final class PresentingReducerTests: XCTestCase {
-  func testPresentingWithKeyPath() {
+  func testPresentingWithKeyPath() async {
     var didPresentChild = 0
     var didRunChildReducer = 0
     var didFireChildEffect = 0
@@ -95,7 +96,7 @@ final class PresentingReducerTests: XCTestCase {
         )
     )
 
-    store.send(.presentChild) {
+    await store.send(.presentChild) {
       $0.child = Child.State()
     }
 
@@ -105,7 +106,7 @@ final class PresentingReducerTests: XCTestCase {
     XCTAssertEqual(didDismissChild, 0)
     XCTAssertEqual(didCancelChildEffect, 0)
 
-    store.send(.child(.performEffect))
+    await store.send(.child(.performEffect))
 
     XCTAssertEqual(didPresentChild, 1)
     XCTAssertEqual(didRunChildReducer, 1)
@@ -113,7 +114,7 @@ final class PresentingReducerTests: XCTestCase {
     XCTAssertEqual(didDismissChild, 0)
     XCTAssertEqual(didCancelChildEffect, 0)
 
-    store.send(.dismissChild) {
+    await store.send(.dismissChild) {
       $0.child = nil
     }
 
@@ -124,7 +125,7 @@ final class PresentingReducerTests: XCTestCase {
     XCTAssertEqual(didCancelChildEffect, 1)
   }
 
-  func testPresentingWithCasePath() {
+  func testPresentingWithCasePath() async {
     var didPresentFirst = 0
     var didRunFirstReducer = 0
     var didFireFirstEffect = 0
@@ -277,7 +278,7 @@ final class PresentingReducerTests: XCTestCase {
         )
     )
 
-    store.send(.first(.performEffect))
+    await store.send(.first(.performEffect))
 
     XCTAssertEqual(didPresentFirst, 0)
     XCTAssertEqual(didRunFirstReducer, 1)
@@ -291,7 +292,7 @@ final class PresentingReducerTests: XCTestCase {
     XCTAssertEqual(didDismissSecond, 0)
     XCTAssertEqual(didCancelSecondEffect, 0)
 
-    store.send(.presentSecond) {
+    await store.send(.presentSecond) {
       $0 = .second(Second.State())
     }
 
@@ -307,7 +308,7 @@ final class PresentingReducerTests: XCTestCase {
     XCTAssertEqual(didDismissSecond, 0)
     XCTAssertEqual(didCancelSecondEffect, 0)
 
-    store.send(.second(.performEffect))
+    await store.send(.second(.performEffect))
 
     XCTAssertEqual(didPresentFirst, 0)
     XCTAssertEqual(didRunFirstReducer, 1)
@@ -321,7 +322,7 @@ final class PresentingReducerTests: XCTestCase {
     XCTAssertEqual(didDismissSecond, 0)
     XCTAssertEqual(didCancelSecondEffect, 0)
 
-    store.send(.presentFirst) {
+    await store.send(.presentFirst) {
       $0 = .first(First.State())
     }
 
@@ -338,7 +339,7 @@ final class PresentingReducerTests: XCTestCase {
     XCTAssertEqual(didCancelSecondEffect, 1)
   }
 
-  func testPresentingWithId() {
+  func testPresentingWithId() async {
     var didPresentChild = [Child.State.ID]()
     var didRunChildReducer = [Child.State.ID]()
     var didFireChildEffect = [Child.State.ID]()
@@ -423,7 +424,7 @@ final class PresentingReducerTests: XCTestCase {
         )
     )
 
-    store.send(.presentChild(id: 1)) {
+    await store.send(.presentChild(id: 1)) {
       $0.child = Child.State(id: 1)
     }
 
@@ -433,7 +434,7 @@ final class PresentingReducerTests: XCTestCase {
     XCTAssertEqual(didDismissChild, [])
     XCTAssertEqual(didCancelChildEffect, [])
 
-    store.send(.child(.performEffect))
+    await store.send(.child(.performEffect))
 
     XCTAssertEqual(didPresentChild, [1])
     XCTAssertEqual(didRunChildReducer, [1])
@@ -441,7 +442,7 @@ final class PresentingReducerTests: XCTestCase {
     XCTAssertEqual(didDismissChild, [])
     XCTAssertEqual(didCancelChildEffect, [])
 
-    store.send(.presentChild(id: 2)) {
+    await store.send(.presentChild(id: 2)) {
       $0.child = Child.State(id: 2)
     }
 
@@ -451,7 +452,7 @@ final class PresentingReducerTests: XCTestCase {
     XCTAssertEqual(didDismissChild, [1])
     XCTAssertEqual(didCancelChildEffect, [1])
 
-    store.send(.child(.performEffect))
+    await store.send(.child(.performEffect))
 
     XCTAssertEqual(didPresentChild, [1, 2])
     XCTAssertEqual(didRunChildReducer, [1, 2])
@@ -459,7 +460,7 @@ final class PresentingReducerTests: XCTestCase {
     XCTAssertEqual(didDismissChild, [1])
     XCTAssertEqual(didCancelChildEffect, [1])
 
-    store.send(.presentChild(id: nil)) {
+    await store.send(.presentChild(id: nil)) {
       $0.child = nil
     }
 
