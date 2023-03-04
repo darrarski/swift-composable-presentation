@@ -19,6 +19,7 @@ struct TimerExample: ReducerProtocol {
   func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
     switch action {
     case .start:
+      // NB: Clocks are available on iOS ≥ 16
       return EffectTask.timer(id: state.id, every: .seconds(1), on: DispatchQueue.main)
         .map { _ in .tick }
 

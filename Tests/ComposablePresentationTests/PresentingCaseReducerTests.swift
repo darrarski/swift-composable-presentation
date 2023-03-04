@@ -54,12 +54,13 @@ final class PresentingCaseReducerTests: XCTestCase {
       var didCancelEffect: () -> Void
 
       func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
-        Empty(completeImmediately: false)
-          .handleEvents(
-            receiveSubscription: { _ in didFireEffect() },
-            receiveCancel: { didCancelEffect() }
-          )
-          .eraseToEffect()
+        .run { _ in
+          didFireEffect()
+          while !Task.isCancelled {
+            await Task.yield()
+          }
+          didCancelEffect()
+        }
       }
     }
 
@@ -71,12 +72,13 @@ final class PresentingCaseReducerTests: XCTestCase {
       var didCancelEffect: () -> Void
 
       func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
-        Empty(completeImmediately: false)
-          .handleEvents(
-            receiveSubscription: { _ in didFireEffect() },
-            receiveCancel: { didCancelEffect() }
-          )
-          .eraseToEffect()
+        .run { _ in
+          didFireEffect()
+          while !Task.isCancelled {
+            await Task.yield()
+          }
+          didCancelEffect()
+        }
       }
     }
 
