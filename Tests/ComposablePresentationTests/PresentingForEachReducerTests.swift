@@ -3,8 +3,9 @@ import ComposableArchitecture
 import XCTest
 @testable import ComposablePresentation
 
+@MainActor
 final class PresentingForEachReducerTests: XCTestCase {
-  func testPresentingWithIdentifiedArray() {
+  func testPresentingWithIdentifiedArray() async {
     var didPresent = [Element.State.ID]()
     var didRun = [Element.State.ID]()
     var didFireEffect = [Element.State.ID]()
@@ -97,7 +98,7 @@ final class PresentingForEachReducerTests: XCTestCase {
         )
     )
 
-    store.send(.addElement(id: 1)) {
+    await store.send(.addElement(id: 1)) {
       $0.elements.append(Element.State(id: 1))
     }
 
@@ -107,7 +108,7 @@ final class PresentingForEachReducerTests: XCTestCase {
     XCTAssertEqual(didDismiss, [])
     XCTAssertEqual(didCancelEffect, [])
 
-    store.send(.element(id: 1, action: .performEffect))
+    await store.send(.element(id: 1, action: .performEffect))
 
     XCTAssertEqual(didPresent, [1])
     XCTAssertEqual(didRun, [1])
@@ -115,7 +116,7 @@ final class PresentingForEachReducerTests: XCTestCase {
     XCTAssertEqual(didDismiss, [])
     XCTAssertEqual(didCancelEffect, [])
 
-    store.send(.addElement(id: 2)) {
+    await store.send(.addElement(id: 2)) {
       $0.elements.append(Element.State(id: 2))
     }
 
@@ -125,7 +126,7 @@ final class PresentingForEachReducerTests: XCTestCase {
     XCTAssertEqual(didDismiss, [])
     XCTAssertEqual(didCancelEffect, [])
 
-    store.send(.element(id: 2, action: .performEffect))
+    await store.send(.element(id: 2, action: .performEffect))
 
     XCTAssertEqual(didPresent, [1, 2])
     XCTAssertEqual(didRun, [1, 2])
@@ -133,7 +134,7 @@ final class PresentingForEachReducerTests: XCTestCase {
     XCTAssertEqual(didDismiss, [])
     XCTAssertEqual(didCancelEffect, [])
 
-    store.send(.removeElement(id: 1)) {
+    await store.send(.removeElement(id: 1)) {
       $0.elements.remove(id: 1)
     }
 
@@ -143,7 +144,7 @@ final class PresentingForEachReducerTests: XCTestCase {
     XCTAssertEqual(didDismiss, [1])
     XCTAssertEqual(didCancelEffect, [1])
 
-    store.send(.removeElement(id: 2)) {
+    await store.send(.removeElement(id: 2)) {
       $0.elements.remove(id: 2)
     }
 
