@@ -19,7 +19,7 @@ struct TimerExample: ReducerProtocol {
   func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
     switch action {
     case .start:
-      return Effect.timer(id: state.id, every: .seconds(1), on: DispatchQueue.main)
+      return EffectTask.timer(id: state.id, every: .seconds(1), on: DispatchQueue.main)
         .map { _ in .tick }
 
     case .tick:
