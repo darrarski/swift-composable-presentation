@@ -64,20 +64,20 @@ struct SheetExampleView: View {
   let store: StoreOf<SheetExample>
 
   var body: some View {
-    WithViewStore(store.stateless) { viewStore in
-      Button(action: { viewStore.send(.didTapDetailButton) }) {
-        Text("Detail")
-      }
-      .sheet(
-        store.scope(
-          state: \.detail,
-          action: SheetExample.Action.detail
-        ),
-        mapState: replayNonNil(),
-        onDismiss: { viewStore.send(.didDismissDetail) },
-        content: DetailView.init(store:)
-      )
+    Button {
+      ViewStore(store.stateless).send(.didTapDetailButton)
+    } label: {
+      Text("Detail")
     }
+    .sheet(
+      store.scope(
+        state: \.detail,
+        action: SheetExample.Action.detail
+      ),
+      mapState: replayNonNil(),
+      onDismiss: { ViewStore(store.stateless).send(.didDismissDetail) },
+      content: DetailView.init(store:)
+    )
   }
 
   // MARK: - Child Views
