@@ -147,121 +147,119 @@ struct MenuView: View {
   let store: StoreOf<Menu>
 
   var body: some View {
-    WithViewStore(store.stateless) { viewStore in
-      IfLetStore(
-        store.scope(state: \.destination),
-        then: { store in
-          VStack(spacing: 0) {
-            SwitchStore(store) {
-              CaseLet(
-                state: (/Menu.State.Destination.sheet).extract(from:),
-                action: { Menu.Action.destination(.sheet($0)) },
-                then: SheetExampleView.init(store:)
-              )
-              CaseLet(
-                state: (/Menu.State.Destination.fullScreenCover).extract(from:),
-                action: { Menu.Action.destination(.fullScreenCover($0)) },
-                then: FullScreenCoverExampleView.init(store:)
-              )
-              CaseLet(
-                state: (/Menu.State.Destination.navigationDestination).extract(from:),
-                action: { Menu.Action.destination(.navigationDestination($0)) },
-                then: NavigationDestinationExampleView.init(store:)
-              )
-              CaseLet(
-                state: (/Menu.State.Destination.forEachStore).extract(from:),
-                action: { Menu.Action.destination(.forEachStore($0)) },
-                then: ForEachStoreExampleView.init(store:)
-              )
-              CaseLet(
-                state: (/Menu.State.Destination.popToRoot).extract(from:),
-                action: { Menu.Action.destination(.popToRoot($0)) },
-                then: PopToRootExampleView.init(store:)
-              )
-              CaseLet(
-                state: (/Menu.State.Destination.switchStore).extract(from:),
-                action: { Menu.Action.destination(.switchStore($0)) },
-                then: SwitchStoreExampleView.init(store:)
-              )
-              CaseLet(
-                state: (/Menu.State.Destination.destination).extract(from:),
-                action: { Menu.Action.destination(.destination($0)) },
-                then: DestinationExampleView.init(store:)
-              )
-              CaseLet(
-                state: (/Menu.State.Destination.navigationStack).extract(from:),
-                action: { Menu.Action.destination(.navigationStack($0)) },
-                then: NavigationStackExampleView.init(store:)
-              )
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-
-            Divider()
-
-            Button {
-              viewStore.send(.present(.none))
-            } label: {
-              Text("Quit example").padding()
-            }
+    IfLetStore(
+      store.scope(state: \.destination),
+      then: { store in
+        VStack(spacing: 0) {
+          SwitchStore(store) {
+            CaseLet(
+              state: (/Menu.State.Destination.sheet).extract(from:),
+              action: { Menu.Action.destination(.sheet($0)) },
+              then: SheetExampleView.init(store:)
+            )
+            CaseLet(
+              state: (/Menu.State.Destination.fullScreenCover).extract(from:),
+              action: { Menu.Action.destination(.fullScreenCover($0)) },
+              then: FullScreenCoverExampleView.init(store:)
+            )
+            CaseLet(
+              state: (/Menu.State.Destination.navigationDestination).extract(from:),
+              action: { Menu.Action.destination(.navigationDestination($0)) },
+              then: NavigationDestinationExampleView.init(store:)
+            )
+            CaseLet(
+              state: (/Menu.State.Destination.forEachStore).extract(from:),
+              action: { Menu.Action.destination(.forEachStore($0)) },
+              then: ForEachStoreExampleView.init(store:)
+            )
+            CaseLet(
+              state: (/Menu.State.Destination.popToRoot).extract(from:),
+              action: { Menu.Action.destination(.popToRoot($0)) },
+              then: PopToRootExampleView.init(store:)
+            )
+            CaseLet(
+              state: (/Menu.State.Destination.switchStore).extract(from:),
+              action: { Menu.Action.destination(.switchStore($0)) },
+              then: SwitchStoreExampleView.init(store:)
+            )
+            CaseLet(
+              state: (/Menu.State.Destination.destination).extract(from:),
+              action: { Menu.Action.destination(.destination($0)) },
+              then: DestinationExampleView.init(store:)
+            )
+            CaseLet(
+              state: (/Menu.State.Destination.navigationStack).extract(from:),
+              action: { Menu.Action.destination(.navigationStack($0)) },
+              then: NavigationStackExampleView.init(store:)
+            )
           }
-        },
-        else: {
-          List {
-            Section {
-              Button {
-                viewStore.send(.present(.sheet(.init())))
-              } label: {
-                Text("SheetExample")
-              }
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-              Button {
-                viewStore.send(.present(.fullScreenCover(.init())))
-              } label: {
-                Text("FullScreenCoverExample")
-              }
+          Divider()
 
-              Button {
-                viewStore.send(.present(.navigationDestination(.init())))
-              } label: {
-                Text("NavigationDestinationExample")
-              }
-
-              Button {
-                viewStore.send(.present(.forEachStore(.init())))
-              } label: {
-                Text("ForEachStoreExample")
-              }
-
-              Button {
-                viewStore.send(.present(.popToRoot(.init())))
-              } label: {
-                Text("PopToRootExample")
-              }
-
-              Button {
-                viewStore.send(.present(.switchStore(.init())))
-              } label: {
-                Text("SwitchStoreExample")
-              }
-
-              Button {
-                viewStore.send(.present(.destination(.init())))
-              } label: {
-                Text("DestinationExample")
-              }
-
-              Button {
-                viewStore.send(.present(.navigationStack(.init())))
-              } label: {
-                Text("NavigationStackExample")
-              }
-            } header: {
-              Text("Examples")
-            }
+          Button {
+            ViewStore(store.stateless).send(.present(.none))
+          } label: {
+            Text("Quit example").padding()
           }
         }
-      )
-    }
+      },
+      else: {
+        List {
+          Section {
+            Button {
+              ViewStore(store.stateless).send(.present(.sheet(.init())))
+            } label: {
+              Text("SheetExample")
+            }
+
+            Button {
+              ViewStore(store.stateless).send(.present(.fullScreenCover(.init())))
+            } label: {
+              Text("FullScreenCoverExample")
+            }
+
+            Button {
+              ViewStore(store.stateless).send(.present(.navigationDestination(.init())))
+            } label: {
+              Text("NavigationDestinationExample")
+            }
+
+            Button {
+              ViewStore(store.stateless).send(.present(.forEachStore(.init())))
+            } label: {
+              Text("ForEachStoreExample")
+            }
+
+            Button {
+              ViewStore(store.stateless).send(.present(.popToRoot(.init())))
+            } label: {
+              Text("PopToRootExample")
+            }
+
+            Button {
+              ViewStore(store.stateless).send(.present(.switchStore(.init())))
+            } label: {
+              Text("SwitchStoreExample")
+            }
+
+            Button {
+              ViewStore(store.stateless).send(.present(.destination(.init())))
+            } label: {
+              Text("DestinationExample")
+            }
+
+            Button {
+              ViewStore(store.stateless).send(.present(.navigationStack(.init())))
+            } label: {
+              Text("NavigationStackExample")
+            }
+          } header: {
+            Text("Examples")
+          }
+        }
+      }
+    )
   }
 }
 
