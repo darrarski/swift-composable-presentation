@@ -40,36 +40,40 @@ struct ForEachStoreExampleView: View {
   let store: StoreOf<ForEachStoreExample>
 
   var body: some View {
-    WithViewStore(store.stateless) { viewStore in
-      VStack {
-        Button(action: { viewStore.send(.didTapAddTimer, animation: .default) }) {
-          Text("Add timer").padding()
-        }
-        ScrollView {
-          LazyVStack {
-            ForEachStore(
-              store.scope(
-                state: \.timers,
-                action: ForEachStoreExample.Action.timer(id:action:)
-              ),
-              content: { timerStore in
-                HStack {
-                  TimerExampleView(store: timerStore)
+    VStack {
+      Button {
+        ViewStore(store.stateless).send(.didTapAddTimer, animation: .default)
+      } label: {
+        Text("Add timer").padding()
+      }
+      ScrollView {
+        LazyVStack {
+          ForEachStore(
+            store.scope(
+              state: \.timers,
+              action: ForEachStoreExample.Action.timer(id:action:)
+            ),
+            content: { timerStore in
+              HStack {
+                TimerExampleView(store: timerStore)
 
-                  Spacer()
+                Spacer()
 
-                  Button(action: {
-                    let timerId = ViewStore(timerStore.scope(state: \.id)).state
-                    let viewStore = ViewStore(store.stateless)
-                    viewStore.send(.didTapDeleteTimer(id: timerId), animation: .default)
-                  }) {
+                WithViewStore(timerStore, observe: \.id) { viewStore in
+                  Button {
+                    ViewStore(store.stateless).send(
+                      .didTapDeleteTimer(id: viewStore.state),
+                      animation: .default
+                    )
+                  } label: {
                     Text("Delete").padding()
                   }
                 }
-                .padding()
+
               }
-            )
-          }
+              .padding()
+            }
+          )
         }
       }
     }

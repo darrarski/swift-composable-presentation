@@ -140,57 +140,55 @@ struct DestinationExampleView: View {
   let store: StoreOf<DestinationExample>
 
   var body: some View {
-    WithViewStore(store.stateless) { viewStore in
-      _NavigationStack {
-        VStack(alignment: .leading, spacing: 0) {
-          Button {
-            viewStore.send(.firstButtonTapped)
-          } label: {
-            Text("→ First (sheet)")
-              .padding()
-          }
-
-          Button {
-            viewStore.send(.secondButtonTapped)
-          } label: {
-            Text("→ Second (navigation link)")
-              .padding()
-          }
-
-          if #available(iOS 15.0, *) {
-            Button {
-              viewStore.send(.alertButtonTapped)
-            } label: {
-              Text("→ Alert")
-                .padding()
-            }
-            .alert(
-              store.scope(
-                state: { (/DestinationExample.State.Destination.alert).extract(from: $0.destination) },
-                action: DestinationExample.Action.alert
-              ),
-              dismiss: .dismissed
-            )
-          }
+    _NavigationStack {
+      VStack(alignment: .leading, spacing: 0) {
+        Button {
+          ViewStore(store.stateless).send(.firstButtonTapped)
+        } label: {
+          Text("→ First (sheet)")
+            .padding()
         }
-        .padding()
-        .sheet(
-          store.scope(
-            state: { (/DestinationExample.State.Destination.first).extract(from: $0.destination) },
-            action: DestinationExample.Action.first
-          ),
-          onDismiss: { viewStore.send(.didDismissFirst) },
-          content: FirstView.init(store:)
-        )
-        ._navigationDestination(
-          store.scope(
-            state: { (/DestinationExample.State.Destination.second).extract(from: $0.destination) },
-            action: DestinationExample.Action.second
-          ),
-          onDismiss: { viewStore.send(.didDismissSecond) },
-          destination: SecondView.init(store:)
-        )
+
+        Button {
+          ViewStore(store.stateless).send(.secondButtonTapped)
+        } label: {
+          Text("→ Second (navigation link)")
+            .padding()
+        }
+
+        if #available(iOS 15.0, *) {
+          Button {
+            ViewStore(store.stateless).send(.alertButtonTapped)
+          } label: {
+            Text("→ Alert")
+              .padding()
+          }
+          .alert(
+            store.scope(
+              state: { (/DestinationExample.State.Destination.alert).extract(from: $0.destination) },
+              action: DestinationExample.Action.alert
+            ),
+            dismiss: .dismissed
+          )
+        }
       }
+      .padding()
+      .sheet(
+        store.scope(
+          state: { (/DestinationExample.State.Destination.first).extract(from: $0.destination) },
+          action: DestinationExample.Action.first
+        ),
+        onDismiss: { ViewStore(store.stateless).send(.didDismissFirst) },
+        content: FirstView.init(store:)
+      )
+      ._navigationDestination(
+        store.scope(
+          state: { (/DestinationExample.State.Destination.second).extract(from: $0.destination) },
+          action: DestinationExample.Action.second
+        ),
+        onDismiss: { ViewStore(store.stateless).send(.didDismissSecond) },
+        destination: SecondView.init(store:)
+      )
     }
   }
 
