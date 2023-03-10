@@ -12,6 +12,7 @@ extension View {
   ///   - onDismiss: Invoked when sheet is dismissed.
   ///   - content: Creates content view with a store with unwrapped state.
   /// - Returns: View with sheet added in a background view.
+  @MainActor
   public func sheet<State, Action, Content: View>(
     _ store: Store<State?, Action>,
     mapState: @escaping (State?) -> State? = { $0 },
