@@ -1,8 +1,6 @@
 import ComposableArchitecture
 import SwiftUI
 
-#if os(iOS)
-
 extension View {
   /// Adds full screen cover using `Store` with an optional `State`
   ///
@@ -14,6 +12,8 @@ extension View {
   ///   - onDismiss: Invoked when full screen cover is dismissed.
   ///   - content: Creates content view with a store with unwrapped state.
   /// - Returns: View with full screen cover added in a background view.
+  @available(iOS 14, tvOS 14, watchOS 7, *)
+  @available(macOS, unavailable)
   @MainActor
   public func fullScreenCover<State, Action, Content: View>(
     _ store: Store<State?, Action>,
@@ -44,5 +44,3 @@ extension View {
     )
   }
 }
-
-#endif
