@@ -41,3 +41,17 @@ let package = Package(
     ),
   ]
 )
+
+//for target in package.targets {
+//  target.swiftSettings = target.swiftSettings ?? []
+//  target.swiftSettings?.append(
+//    .unsafeFlags([
+//      "-Xfrontend", "-warn-concurrency",
+//      "-Xfrontend", "-strict-concurrency=complete",
+//      "-Xfrontend", "-enable-actor-data-race-checks",
+//      "-enable-library-evolution",
+//      "-Xfrontend", "-debug-time-function-bodies",
+//      "-Xfrontend", "-debug-time-expression-type-checking",
+//    ])
+//  )
+//}
