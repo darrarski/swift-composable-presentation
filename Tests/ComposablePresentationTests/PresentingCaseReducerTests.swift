@@ -50,16 +50,16 @@ final class PresentingCaseReducerTests: XCTestCase {
       struct State: Equatable {}
       struct Action {}
 
-      var didFireEffect: () -> Void
-      var didCancelEffect: () -> Void
+      var didFireEffect: @Sendable @MainActor () -> Void
+      var didCancelEffect: @Sendable @MainActor () -> Void
 
       func reduce(into state: inout State, action: Action) -> Effect<Action> {
-        .run { _ in
-          didFireEffect()
+        .run { [didFireEffect, didCancelEffect] _ in
+          await didFireEffect()
           while !Task.isCancelled {
             await Task.yield()
           }
-          didCancelEffect()
+          await didCancelEffect()
         }
       }
     }
@@ -68,16 +68,16 @@ final class PresentingCaseReducerTests: XCTestCase {
       struct State: Equatable {}
       struct Action {}
 
-      var didFireEffect: () -> Void
-      var didCancelEffect: () -> Void
+      var didFireEffect: @Sendable @MainActor () -> Void
+      var didCancelEffect: @Sendable @MainActor () -> Void
 
       func reduce(into state: inout State, action: Action) -> Effect<Action> {
-        .run { _ in
-          didFireEffect()
+        .run { [didFireEffect, didCancelEffect] _ in
+          await didFireEffect()
           while !Task.isCancelled {
             await Task.yield()
           }
-          didCancelEffect()
+          await didCancelEffect()
         }
       }
     }

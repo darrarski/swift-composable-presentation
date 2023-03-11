@@ -13,6 +13,7 @@ extension View {
   ///   - content: Creates content view with a store with unwrapped state.
   /// - Returns: View with navigation destination applied.
   @available(iOS 16, macOS 13, *)
+  @MainActor
   public func navigationDestination<State, Action, Content: View>(
     _ store: Store<State?, Action>,
     mapState: @escaping (State?) -> State? = { $0 },

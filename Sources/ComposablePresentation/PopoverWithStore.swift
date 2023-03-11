@@ -16,6 +16,7 @@ extension View {
   ///       The default is `.top`.
   ///   - content: Creates content view with a store with unwrapped state.
   /// - Returns: View with popover added in a background view.
+  @MainActor
   public func popover<State, Action, Content: View>(
     _ store: Store<State?, Action>,
     mapState: @escaping (State?) -> State? = { $0 },
