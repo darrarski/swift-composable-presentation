@@ -15,6 +15,7 @@ struct _NavigationStack<Content: View>: View {
 }
 
 extension View {
+  @MainActor
   func _navigationDestination<State, Action, Destination: View>(
     _ store: Store<State?, Action>,
     mapState: @escaping (State?) -> State? = { $0 },
