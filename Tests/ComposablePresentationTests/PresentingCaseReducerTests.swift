@@ -18,7 +18,7 @@ final class PresentingCaseReducerTests: XCTestCase {
       case didCancelSecondEffect
     }
 
-    struct Main: ReducerProtocol {
+    struct Main: Reducer {
       struct State: Equatable {
         enum Destination: Equatable {
           case first(First.State)
@@ -34,7 +34,7 @@ final class PresentingCaseReducerTests: XCTestCase {
         case second(Second.Action)
       }
 
-      func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+      func reduce(into state: inout State, action: Action) -> Effect<Action> {
         switch action {
         case .goto(let destination):
           state.destination = destination
@@ -46,14 +46,14 @@ final class PresentingCaseReducerTests: XCTestCase {
       }
     }
 
-    struct First: ReducerProtocol {
+    struct First: Reducer {
       struct State: Equatable {}
       struct Action {}
 
       var didFireEffect: @Sendable @MainActor () -> Void
       var didCancelEffect: @Sendable @MainActor () -> Void
 
-      func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+      func reduce(into state: inout State, action: Action) -> Effect<Action> {
         .run { [didFireEffect, didCancelEffect] _ in
           await didFireEffect()
           while !Task.isCancelled {
@@ -64,14 +64,14 @@ final class PresentingCaseReducerTests: XCTestCase {
       }
     }
 
-    struct Second: ReducerProtocol {
+    struct Second: Reducer {
       struct State: Equatable {}
       struct Action {}
 
       var didFireEffect: @Sendable @MainActor () -> Void
       var didCancelEffect: @Sendable @MainActor () -> Void
 
-      func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+      func reduce(into state: inout State, action: Action) -> Effect<Action> {
         .run { [didFireEffect, didCancelEffect] _ in
           await didFireEffect()
           while !Task.isCancelled {

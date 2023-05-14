@@ -12,7 +12,7 @@ final class PresentingForEachReducerTests: XCTestCase {
     var didDismiss = [Element.State.ID]()
     let didCancelEffect = ActorIsolated([Element.State.ID]())
 
-    struct Parent: ReducerProtocol {
+    struct Parent: Reducer {
       struct State: Equatable {
         var elements: IdentifiedArrayOf<Element.State>
       }
@@ -23,7 +23,7 @@ final class PresentingForEachReducerTests: XCTestCase {
         case element(id: Int, action: Element.Action)
       }
 
-      func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+      func reduce(into state: inout State, action: Action) -> Effect<Action> {
         switch action {
         case .addElement(let id):
           state.elements.append(Element.State(id: id))
@@ -39,7 +39,7 @@ final class PresentingForEachReducerTests: XCTestCase {
       }
     }
 
-    struct Element: ReducerProtocol {
+    struct Element: Reducer {
       struct State: Equatable, Identifiable {
         var id: Int
       }
@@ -49,10 +49,10 @@ final class PresentingForEachReducerTests: XCTestCase {
         case didPerformEffect
       }
 
-      var effect: (State.ID) -> EffectTask<Void>
+      var effect: (State.ID) -> Effect<Void>
       var onReduce: (State.ID) -> Void
 
-      func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+      func reduce(into state: inout State, action: Action) -> Effect<Action> {
         onReduce(state.id)
         switch action {
         case .performEffect:
@@ -81,12 +81,18 @@ final class PresentingForEachReducerTests: XCTestCase {
           element: {
             Element(
               effect: { id in
-                EffectTask.run { [didFireEffect, didCancelEffect] _ in
+                Effect.run(priority: .userInitiated) { [didFireEffect, didCancelEffect] _ in
                   await didFireEffect.withValue { $0.append(id) }
-                  while !Task.isCancelled {
-                    await Task.yield()
+                  do {
+                    while true {
+                      try await Task.sleep(nanoseconds: 1 * NSEC_PER_MSEC)
+                      await Task.yield()
+                    }
+                  } catch {
+                    if error is CancellationError {
+                      await didCancelEffect.withValue { $0.append(id) }
+                    }
                   }
-                  await didCancelEffect.withValue { $0.append(id) }
                 }
               },
               onReduce: { id in

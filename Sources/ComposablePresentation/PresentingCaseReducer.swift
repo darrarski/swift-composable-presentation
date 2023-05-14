@@ -1,7 +1,7 @@
 import ComposableArchitecture
 import Foundation
 
-extension ReducerProtocol {
+extension Reducer {
   /// Combines the reducer with another reducer that operates on optionally presented case of an enum.
   ///
   /// - All effects returned by the presented reducer are cancelled when presented `ID` changes.
@@ -17,19 +17,23 @@ extension ReducerProtocol {
   ///   - presented: Presented reducer.
   /// - Returns: Combined reducer
   @inlinable
-  public func presenting<ID: Hashable, Enum, Presented: ReducerProtocol>(
+  public func presenting<ID, Enum, PresentedState, PresentedAction, Presented>(
     presentationID toPresentationID: ToPresentationID<State> = .typed(Presented.self),
     unwrapping toEnum: WritableKeyPath<State, Enum?>,
-    case toCase: CasePath<Enum, Presented.State>,
+    case toCase: CasePath<Enum, PresentedState>,
     id toPresentedID: _PresentingCaseReducer<Self, Enum, ID, Presented>.ToPresentedID,
-    action toPresentedAction: CasePath<Action, Presented.Action>,
+    action toPresentedAction: CasePath<Action, PresentedAction>,
     onPresent: _PresentingCaseReducer<Self, Enum, ID, Presented>.ActionHandler = .empty,
     onDismiss: _PresentingCaseReducer<Self, Enum, ID, Presented>.ActionHandler = .empty,
-    @ReducerBuilderOf<Presented> presented: () -> Presented,
-    file: StaticString = #file,
+    @ReducerBuilder<PresentedState, PresentedAction> presented: () -> Presented,
     fileID: StaticString = #fileID,
     line: UInt = #line
-  ) -> _PresentingCaseReducer<Self, Enum, ID, Presented> {
+  ) -> _PresentingCaseReducer<Self, Enum, ID, Presented>
+  where ID: Hashable,
+        Presented: Reducer,
+        Presented.State == PresentedState,
+        Presented.Action == PresentedAction
+  {
     .init(
       parent: self,
       presented: presented(),
@@ -40,7 +44,6 @@ extension ReducerProtocol {
       toPresentedAction: toPresentedAction,
       onPresent: onPresent,
       onDismiss: onDismiss,
-      file: file,
       fileID: fileID,
       line: line
     )
@@ -48,11 +51,11 @@ extension ReducerProtocol {
 }
 
 public struct _PresentingCaseReducer<
-  Parent: ReducerProtocol,
+  Parent: Reducer,
   Enum,
   ID: Hashable,
-  Presented: ReducerProtocol
->: ReducerProtocol {
+  Presented: Reducer
+>: Reducer {
   @usableFromInline
   let parent: Parent
 
@@ -81,9 +84,6 @@ public struct _PresentingCaseReducer<
   let onDismiss: ActionHandler
 
   @usableFromInline
-  let file: StaticString
-
-  @usableFromInline
   let fileID: StaticString
 
   @usableFromInline
@@ -100,7 +100,6 @@ public struct _PresentingCaseReducer<
     toPresentedAction: CasePath<Parent.Action, Presented.Action>,
     onPresent: ActionHandler,
     onDismiss: ActionHandler,
-    file: StaticString,
     fileID: StaticString,
     line: UInt
   ) {
@@ -113,7 +112,6 @@ public struct _PresentingCaseReducer<
     self.toPresentedAction = toPresentedAction
     self.onPresent = onPresent
     self.onDismiss = onDismiss
-    self.file = file
     self.fileID = fileID
     self.line = line
   }
@@ -122,7 +120,7 @@ public struct _PresentingCaseReducer<
   public func reduce(
     into state: inout Parent.State,
     action: Parent.Action
-  ) -> EffectTask<Parent.Action> {
+  ) -> Effect<Parent.Action> {
     func toPresentedState(_ state: Parent.State) -> Presented.State? {
       guard let `enum` = state[keyPath: toEnum] else { return nil }
       return toCase.extract(from: `enum`)
@@ -137,7 +135,7 @@ public struct _PresentingCaseReducer<
       presentedID: oldPresentedID
     )
     let shouldRunPresented = toPresentedAction.extract(from: action) != nil
-    let presentedEffects: EffectTask<Action>
+    let presentedEffects: Effect<Action>
     if shouldRunPresented {
       presentedEffects = EmptyReducer()
         .ifLet(
@@ -149,12 +147,10 @@ public struct _PresentingCaseReducer<
                 toCase,
                 action: /.self,
                 then: { presented },
-                file: file,
                 fileID: fileID,
                 line: line
               )
           },
-          file: file,
           fileID: fileID,
           line: line
         )
@@ -169,7 +165,7 @@ public struct _PresentingCaseReducer<
     let newPresentedState = toPresentedState(newState)
     let newPresentedID = toPresentedID.run(newPresentedState)
 
-    var presentationEffects: [EffectTask<Action>] = []
+    var presentationEffects: [Effect<Action>] = []
     if oldPresentedID != newPresentedID {
       if let oldPresentedState = oldPresentedState {
         presentationEffects.append(onDismiss.run(&state, oldPresentedState))
@@ -221,7 +217,7 @@ extension _PresentingCaseReducer {
 extension _PresentingCaseReducer {
   /// Handles presentation action, like `onPresent` or `onDismiss`.
   public struct ActionHandler {
-    public typealias Run = (inout Parent.State, Presented.State) -> EffectTask<Parent.Action>
+    public typealias Run = (inout Parent.State, Presented.State) -> Effect<Parent.Action>
 
     /// An action that performs no state mutations and returns no effects.
     public static var empty: Self { .init { _, _ in .none } }
@@ -229,7 +225,7 @@ extension _PresentingCaseReducer {
     /// Create action handler
     ///
     /// - Parameter run: Closure that handles the action. It takes inout `Parent.State`
-    ///   and `Presented.State` and returns `EffectTask<Parent.Action>`.
+    ///   and `Presented.State` and returns `Effect<Parent.Action>`.
     public init(run: @escaping Run) {
       self.run = run
     }

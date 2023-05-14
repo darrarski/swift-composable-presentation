@@ -2,7 +2,7 @@ import ComposableArchitecture
 import ComposablePresentation
 import SwiftUI
 
-struct Menu: ReducerProtocol {
+struct Menu: Reducer {
   struct State {
     enum Destination {
       case sheet(SheetExample.State)
@@ -34,7 +34,7 @@ struct Menu: ReducerProtocol {
     case destination(Menu.Action.Destination)
   }
 
-  var body: some ReducerProtocol<State, Action> {
+  var body: some Reducer<State, Action> {
     Reduce { state, action in
       switch action {
       case .present(let destination):
@@ -49,8 +49,8 @@ struct Menu: ReducerProtocol {
   }
 }
 
-extension ReducerProtocolOf<Menu> {
-  func presentingDestinations() -> some ReducerProtocol<State, Action> {
+extension ReducerOf<Menu> {
+  func presentingDestinations() -> some Reducer<State, Action> {
     self
       .presentingSheetExample()
       .presentingFullScreenCoverExample()
@@ -62,7 +62,7 @@ extension ReducerProtocolOf<Menu> {
       .presentingNavigationStackExample()
   }
 
-  func presentingSheetExample() -> some ReducerProtocol<State, Action> {
+  func presentingSheetExample() -> some Reducer<State, Action> {
     presenting(
       unwrapping: \.destination,
       case: /State.Destination.sheet,
@@ -72,7 +72,7 @@ extension ReducerProtocolOf<Menu> {
     )
   }
 
-  func presentingFullScreenCoverExample() -> some ReducerProtocol<State, Action> {
+  func presentingFullScreenCoverExample() -> some Reducer<State, Action> {
     presenting(
       unwrapping: \.destination,
       case: /State.Destination.fullScreenCover,
@@ -82,7 +82,7 @@ extension ReducerProtocolOf<Menu> {
     )
   }
 
-  func presentingNavigationDestinationExample() -> some ReducerProtocol<State, Action> {
+  func presentingNavigationDestinationExample() -> some Reducer<State, Action> {
     presenting(
       unwrapping: \.destination,
       case: /State.Destination.navigationDestination,
@@ -92,7 +92,7 @@ extension ReducerProtocolOf<Menu> {
     )
   }
 
-  func presentingForEachStoreExample() -> some ReducerProtocol<State, Action> {
+  func presentingForEachStoreExample() -> some Reducer<State, Action> {
     presenting(
       unwrapping: \.destination,
       case: /State.Destination.forEachStore,
@@ -102,7 +102,7 @@ extension ReducerProtocolOf<Menu> {
     )
   }
 
-  func presentingPopToRootExample() -> some ReducerProtocol<State, Action> {
+  func presentingPopToRootExample() -> some Reducer<State, Action> {
     presenting(
       unwrapping: \.destination,
       case: /State.Destination.popToRoot,
@@ -112,7 +112,7 @@ extension ReducerProtocolOf<Menu> {
     )
   }
 
-  func presentingSwitchStoreExample() -> some ReducerProtocol<State, Action> {
+  func presentingSwitchStoreExample() -> some Reducer<State, Action> {
     presenting(
       unwrapping: \.destination,
       case: /State.Destination.switchStore,
@@ -122,7 +122,7 @@ extension ReducerProtocolOf<Menu> {
     )
   }
 
-  func presentingDestinationExample() -> some ReducerProtocol<State, Action> {
+  func presentingDestinationExample() -> some Reducer<State, Action> {
     presenting(
       unwrapping: \.destination,
       case: /State.Destination.destination,
@@ -132,7 +132,7 @@ extension ReducerProtocolOf<Menu> {
     )
   }
 
-  func presentingNavigationStackExample() -> some ReducerProtocol<State, Action> {
+  func presentingNavigationStackExample() -> some Reducer<State, Action> {
     presenting(
       unwrapping: \.destination,
       case: /State.Destination.navigationStack,
@@ -148,7 +148,7 @@ struct MenuView: View {
 
   var body: some View {
     IfLetStore(
-      store.scope(state: \.destination),
+      store.scope(state: \.destination, action: { $0 }),
       then: { store in
         VStack(spacing: 0) {
           SwitchStore(store) {

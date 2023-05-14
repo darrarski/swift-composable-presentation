@@ -2,7 +2,7 @@ import ComposableArchitecture
 import ComposablePresentation
 import SwiftUI
 
-struct DestinationExample: ReducerProtocol {
+struct DestinationExample: Reducer {
   struct State {
     enum Destination {
       case first(First.State)
@@ -30,7 +30,7 @@ struct DestinationExample: ReducerProtocol {
     case alert(Action.Alert)
   }
 
-  var body: some ReducerProtocol<State, Action> {
+  var body: some Reducer<State, Action> {
     Reduce { state, action in
       switch action {
       case .firstButtonTapped, .alert(.firstTapped):
@@ -103,7 +103,7 @@ struct DestinationExample: ReducerProtocol {
 
   // MARK: - Child Reducers
 
-  struct First: ReducerProtocol {
+  struct First: Reducer {
     struct State {
       var timer = TimerExample.State()
     }
@@ -112,14 +112,14 @@ struct DestinationExample: ReducerProtocol {
       case timer(TimerExample.Action)
     }
 
-    var body: some ReducerProtocol<State, Action> {
+    var body: some Reducer<State, Action> {
       Scope(state: \.timer, action: /Action.timer) {
         TimerExample()
       }
     }
   }
 
-  struct Second: ReducerProtocol {
+  struct Second: Reducer {
     struct State {
       var timer = TimerExample.State()
     }
@@ -128,7 +128,7 @@ struct DestinationExample: ReducerProtocol {
       case timer(TimerExample.Action)
     }
 
-    var body: some ReducerProtocol<State, Action> {
+    var body: some Reducer<State, Action> {
       Scope(state: \.timer, action: /Action.timer) {
         TimerExample()
       }

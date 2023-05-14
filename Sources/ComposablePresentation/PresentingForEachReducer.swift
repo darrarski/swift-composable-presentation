@@ -2,7 +2,7 @@ import ComposableArchitecture
 import Foundation
 import CoreMedia
 
-extension ReducerProtocol {
+extension Reducer {
   /// Combines the reducer with another reducer that operates on elements of `IdentifiedArray`.
   ///
   /// - All effects returned by the element reducer will be canceled when the element's state is removed from `IdentifiedArray`.
@@ -17,17 +17,21 @@ extension ReducerProtocol {
   ///   - element: Element reducer.
   /// - Returns: Combined reducer.
   @inlinable
-  public func presentingForEach<ID: Hashable, Element: ReducerProtocol>(
+  public func presentingForEach<ID, ElementState, ElementAction, Element>(
     presentationID toPresentationID: ToPresentationID<State> = .typed(Element.self),
-    state toElementState: WritableKeyPath<State, IdentifiedArray<ID, Element.State>>,
-    action toElementAction: CasePath<Action, (ID, Element.Action)>,
+    state toElementState: WritableKeyPath<State, IdentifiedArray<ID, ElementState>>,
+    action toElementAction: CasePath<Action, (ID, ElementAction)>,
     onPresent: PresentingForEachReducerAction<ID, State, Action> = .empty,
     onDismiss: PresentingForEachReducerAction<ID, State, Action> = .empty,
-    @ReducerBuilderOf<Element> element: () -> Element,
-    file: StaticString = #file,
+    @ReducerBuilder<ElementState, ElementAction> element: () -> Element,
     fileID: StaticString = #fileID,
     line: UInt = #line
-  ) -> _PresentingForEachReducer<Self, ID, Element> {
+  ) -> _PresentingForEachReducer<Self, ID, Element>
+  where ID: Hashable,
+        Element: Reducer,
+        Element.State == ElementState,
+        Element.Action == ElementAction
+  {
     .init(
       parent: self,
       toPresentationID: toPresentationID,
@@ -36,7 +40,6 @@ extension ReducerProtocol {
       onPresent: onPresent,
       onDismiss: onDismiss,
       element: element(),
-      file: file,
       fileID: fileID,
       line: line
     )
@@ -44,10 +47,10 @@ extension ReducerProtocol {
 }
 
 public struct _PresentingForEachReducer<
-  Parent: ReducerProtocol,
+  Parent: Reducer,
   ID: Hashable,
-  Element: ReducerProtocol
->: ReducerProtocol {
+  Element: Reducer
+>: Reducer {
   @usableFromInline
   let parent: Parent
 
@@ -70,9 +73,6 @@ public struct _PresentingForEachReducer<
   let element: Element
 
   @usableFromInline
-  let file: StaticString
-
-  @usableFromInline
   let fileID: StaticString
 
   @usableFromInline
@@ -87,7 +87,6 @@ public struct _PresentingForEachReducer<
     onPresent: PresentingForEachReducerAction<ID, State, Action> = .empty,
     onDismiss: PresentingForEachReducerAction<ID, State, Action> = .empty,
     element: Element,
-    file: StaticString = #file,
     fileID: StaticString = #fileID,
     line: UInt = #line
   ) {
@@ -98,7 +97,6 @@ public struct _PresentingForEachReducer<
     self.onPresent = onPresent
     self.onDismiss = onDismiss
     self.element = element
-    self.file = file
     self.fileID = fileID
     self.line = line
   }
@@ -106,7 +104,7 @@ public struct _PresentingForEachReducer<
   public func reduce(
     into state: inout Parent.State,
     action: Parent.Action
-  ) -> EffectTask<Parent.Action> {
+  ) -> Effect<Parent.Action> {
     func elementID(for action: Action) -> ID? {
       guard let (id, _) = toElementAction.extract(from: action) else {
         return nil
@@ -122,7 +120,7 @@ public struct _PresentingForEachReducer<
     }
 
     let oldIds = state[keyPath: toElementState].ids
-    let elementEffects: EffectTask<Action>
+    let elementEffects: Effect<Action>
 
     if let id = elementID(for: action) {
       elementEffects = EmptyReducer()
@@ -130,7 +128,6 @@ public struct _PresentingForEachReducer<
           toElementState,
           action: toElementAction,
           element: { element },
-          file: file,
           fileID: fileID,
           line: line
         )
@@ -144,7 +141,7 @@ public struct _PresentingForEachReducer<
     let newIds = state[keyPath: toElementState].ids
     let presentedIds = newIds.subtracting(oldIds)
     let dismissedIds = oldIds.subtracting(newIds)
-    var presentationEffects: [EffectTask<Action>] = []
+    var presentationEffects: [Effect<Action>] = []
 
     dismissedIds.forEach { id in
       presentationEffects.append(onDismiss.run(id, &state))
@@ -165,7 +162,7 @@ public struct _PresentingForEachReducer<
 
 /// Describes for-each presentation action, like `onPresent` or `onDismiss`.
 public struct PresentingForEachReducerAction<ID, State, Action> {
-  public typealias Run = (ID, inout State) -> EffectTask<Action>
+  public typealias Run = (ID, inout State) -> Effect<Action>
 
   /// An action that performs no state mutations and returns no effects.
   public static var empty: Self { .init { _, _ in .none } }

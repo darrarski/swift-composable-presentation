@@ -1,7 +1,7 @@
 import ComposableArchitecture
 import SwiftUI
 
-struct TimerExample: ReducerProtocol {
+struct TimerExample: Reducer {
   struct State: Identifiable {
     struct ID: Hashable {
       var uuid = UUID()
@@ -16,11 +16,11 @@ struct TimerExample: ReducerProtocol {
     case tick
   }
 
-  func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+  func reduce(into state: inout State, action: Action) -> Effect<Action> {
     switch action {
     case .start:
       // NB: Clocks are available on iOS ≥ 16
-      return EffectTask.timer(id: state.id, every: .seconds(1), on: DispatchQueue.main)
+      return Effect.timer(id: state.id, every: .seconds(1), on: DispatchQueue.main)
         .map { _ in .tick }
 
     case .tick:

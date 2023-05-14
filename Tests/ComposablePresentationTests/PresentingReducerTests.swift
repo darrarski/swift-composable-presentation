@@ -13,7 +13,7 @@ final class PresentingReducerTests: XCTestCase {
     var didDismissChild = 0
     let didCancelChildEffect = ActorIsolated(0)
 
-    struct Parent: ReducerProtocol {
+    struct Parent: Reducer {
       struct State: Equatable {
         var child: Child.State?
       }
@@ -24,7 +24,7 @@ final class PresentingReducerTests: XCTestCase {
         case child(Child.Action)
       }
 
-      func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+      func reduce(into state: inout State, action: Action) -> Effect<Action> {
         switch action {
         case .presentChild:
           state.child = Child.State()
@@ -40,7 +40,7 @@ final class PresentingReducerTests: XCTestCase {
       }
     }
 
-    struct Child: ReducerProtocol {
+    struct Child: Reducer {
       struct State: Equatable {}
 
       enum Action: Equatable {
@@ -48,10 +48,10 @@ final class PresentingReducerTests: XCTestCase {
         case didPerformEffect
       }
 
-      var effect: () -> EffectTask<Void>
+      var effect: () -> Effect<Void>
       var onReduce: () -> Void
 
-      func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+      func reduce(into state: inout State, action: Action) -> Effect<Action> {
         onReduce()
         switch action {
         case .performEffect:
@@ -138,7 +138,7 @@ final class PresentingReducerTests: XCTestCase {
     var didDismissSecond = 0
     let didCancelSecondEffect = ActorIsolated(0)
 
-    struct Parent: ReducerProtocol {
+    struct Parent: Reducer {
       enum State: Equatable {
         case first(First.State)
         case second(Second.State)
@@ -151,7 +151,7 @@ final class PresentingReducerTests: XCTestCase {
         case second(Second.Action)
       }
 
-      func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+      func reduce(into state: inout State, action: Action) -> Effect<Action> {
         switch action {
         case .presentFirst:
           state = .first(First.State())
@@ -167,7 +167,7 @@ final class PresentingReducerTests: XCTestCase {
       }
     }
 
-    struct First: ReducerProtocol {
+    struct First: Reducer {
       struct State: Equatable {}
 
       enum Action: Equatable {
@@ -175,10 +175,10 @@ final class PresentingReducerTests: XCTestCase {
         case didPerformEffect
       }
 
-      var effect: () -> EffectTask<Void>
+      var effect: () -> Effect<Void>
       var onReduce: () -> Void
 
-      func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+      func reduce(into state: inout State, action: Action) -> Effect<Action> {
         onReduce()
         switch action {
         case .performEffect:
@@ -190,7 +190,7 @@ final class PresentingReducerTests: XCTestCase {
       }
     }
 
-    struct Second: ReducerProtocol {
+    struct Second: Reducer {
       struct State: Equatable {}
 
       enum Action: Equatable {
@@ -198,10 +198,10 @@ final class PresentingReducerTests: XCTestCase {
         case didPerformEffect
       }
 
-      var effect: () -> EffectTask<Void>
+      var effect: () -> Effect<Void>
       var onReduce: () -> Void
 
-      func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+      func reduce(into state: inout State, action: Action) -> Effect<Action> {
         onReduce()
         switch action {
         case .performEffect:
@@ -344,7 +344,7 @@ final class PresentingReducerTests: XCTestCase {
     var didDismissChild = [Child.State.ID]()
     let didCancelChildEffect = ActorIsolated([Child.State.ID]())
 
-    struct Parent: ReducerProtocol {
+    struct Parent: Reducer {
       struct State: Equatable {
         var child: Child.State?
       }
@@ -354,7 +354,7 @@ final class PresentingReducerTests: XCTestCase {
         case child(Child.Action)
       }
 
-      func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+      func reduce(into state: inout State, action: Action) -> Effect<Action> {
         switch action {
         case .presentChild(let id):
           state.child = id.map(Child.State.init(id:))
@@ -366,7 +366,7 @@ final class PresentingReducerTests: XCTestCase {
       }
     }
 
-    struct Child: ReducerProtocol {
+    struct Child: Reducer {
       struct State: Equatable {
         typealias ID = Int
         var id: ID
@@ -376,10 +376,10 @@ final class PresentingReducerTests: XCTestCase {
         case performEffect
       }
 
-      var effect: (State.ID) -> EffectPublisher<Action, Never>
+      var effect: (State.ID) -> Effect<Action>
       var onReduce: (State.ID) -> Void
 
-      func reduce(into state: inout State, action: Action) -> EffectTask<Action> {
+      func reduce(into state: inout State, action: Action) -> Effect<Action> {
         onReduce(state.id)
         switch action {
         case .performEffect:

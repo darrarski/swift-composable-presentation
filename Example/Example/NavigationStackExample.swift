@@ -2,7 +2,7 @@ import ComposableArchitecture
 import ComposablePresentation
 import SwiftUI
 
-struct NavigationStackExample: ReducerProtocol {
+struct NavigationStackExample: Reducer {
   struct State {
     var stack: IdentifiedArrayOf<Destination.State> = []
   }
@@ -15,7 +15,7 @@ struct NavigationStackExample: ReducerProtocol {
     case destination(_ id: Destination.State.ID, _ action: Destination.Action)
   }
 
-  var body: some ReducerProtocol<State, Action> {
+  var body: some Reducer<State, Action> {
     Reduce { state, action in
       switch action {
       case .updatePath(let path):
@@ -73,7 +73,7 @@ struct NavigationStackExample: ReducerProtocol {
 
   // MARK: - Child Reducers
 
-  struct Destination: ReducerProtocol {
+  struct Destination: Reducer {
     struct State: Identifiable {
       var id: String
       var timer = TimerExample.State()
@@ -88,7 +88,7 @@ struct NavigationStackExample: ReducerProtocol {
       case timer(TimerExample.Action)
     }
 
-    var body: some ReducerProtocol<State, Action> {
+    var body: some Reducer<State, Action> {
       Scope(state: \.timer, action: /Action.timer) {
         TimerExample()
       }
@@ -115,7 +115,7 @@ struct NavigationStackExampleView: View {
           .controlSize(.large)
           .navigationTitle("Root")
           .navigationDestination(
-            forEach: store.scope(state: \.stack),
+            forEach: store.scope(state: \.stack, action: { $0 }),
             action: NavigationStackExample.Action.destination,
             destination: DestinationView.init(store:)
           )

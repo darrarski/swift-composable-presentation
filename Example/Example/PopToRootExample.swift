@@ -2,7 +2,7 @@ import ComposableArchitecture
 import ComposablePresentation
 import SwiftUI
 
-struct PopToRootExample: ReducerProtocol {
+struct PopToRootExample: Reducer {
   struct State {
     var timer = TimerExample.State()
     var first: First.State?
@@ -15,7 +15,7 @@ struct PopToRootExample: ReducerProtocol {
     case first(First.Action)
   }
 
-  var body: some ReducerProtocol<State, Action> {
+  var body: some Reducer<State, Action> {
     Scope(state: \.timer, action: /Action.timer) {
       TimerExample()
     }
@@ -51,7 +51,7 @@ struct PopToRootExample: ReducerProtocol {
 
   // MARK: - Child Reducers
 
-  struct First: ReducerProtocol {
+  struct First: Reducer {
     struct State {
       var timer = TimerExample.State()
       var second: Second.State?
@@ -64,7 +64,7 @@ struct PopToRootExample: ReducerProtocol {
       case second(Second.Action)
     }
 
-    var body: some ReducerProtocol<State, Action> {
+    var body: some Reducer<State, Action> {
       Scope(state: \.timer, action: /Action.timer) {
         TimerExample()
       }
@@ -92,7 +92,7 @@ struct PopToRootExample: ReducerProtocol {
     }
   }
 
-  struct Second: ReducerProtocol {
+  struct Second: Reducer {
     struct State {
       var timer = TimerExample.State()
     }
@@ -102,7 +102,7 @@ struct PopToRootExample: ReducerProtocol {
       case timer(TimerExample.Action)
     }
 
-    var body: some ReducerProtocol<State, Action> {
+    var body: some Reducer<State, Action> {
       Scope(state: \.timer, action: /Action.timer) {
         TimerExample()
       }

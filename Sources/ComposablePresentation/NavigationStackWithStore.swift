@@ -24,7 +24,7 @@ public struct NavigationStackWithStore<ID: Hashable, Root: View>: View {
   let root: () -> Root
 
   public var body: some View {
-    WithViewStore(store) { viewStore in
+    WithViewStore(store, observe: { $0 }) { viewStore in
       NavigationStack(
         path: viewStore.binding(send: { $0 }),
         root: root
