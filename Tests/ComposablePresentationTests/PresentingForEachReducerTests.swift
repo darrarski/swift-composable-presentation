@@ -81,12 +81,18 @@ final class PresentingForEachReducerTests: XCTestCase {
           element: {
             Element(
               effect: { id in
-                EffectTask.run { [didFireEffect, didCancelEffect] _ in
+                Effect.run(priority: .userInitiated) { [didFireEffect, didCancelEffect] _ in
                   await didFireEffect.withValue { $0.append(id) }
-                  while !Task.isCancelled {
-                    await Task.yield()
+                  do {
+                    while true {
+                      try await Task.sleep(nanoseconds: 1 * NSEC_PER_MSEC)
+                      await Task.yield()
+                    }
+                  } catch {
+                    if error is CancellationError {
+                      await didCancelEffect.withValue { $0.append(id) }
+                    }
                   }
-                  await didCancelEffect.withValue { $0.append(id) }
                 }
               },
               onReduce: { id in

@@ -16,18 +16,23 @@ extension Reducer {
   ///   - presented: Presented reducer.
   /// - Returns: Combined reducer.
   @inlinable
-  public func presenting<ID: Hashable, Presented: Reducer>(
+  public func presenting<ID, PresentedState, PresentedAction, Presented>(
     presentationID toPresentationID: ToPresentationID<State> = .typed(Presented.self),
-    state toPresentedState: PresentingReducerToPresentedState<State, Presented.State>,
-    id toPresentedID: PresentingReducerToPresentedID<Presented.State, ID>,
-    action toPresentedAction: CasePath<Action, Presented.Action>,
-    onPresent: PresentingReducerAction<State, Presented.State, Action> = .empty,
-    onDismiss: PresentingReducerAction<State, Presented.State, Action> = .empty,
-    @ReducerBuilderOf<Presented> presented: () -> Presented,
+    state toPresentedState: PresentingReducerToPresentedState<State, PresentedState>,
+    id toPresentedID: PresentingReducerToPresentedID<PresentedState, ID>,
+    action toPresentedAction: CasePath<Action, PresentedAction>,
+    onPresent: PresentingReducerAction<State, PresentedState, Action> = .empty,
+    onDismiss: PresentingReducerAction<State, PresentedState, Action> = .empty,
+    @ReducerBuilder<PresentedState, PresentedAction> presented: () -> Presented,
     file: StaticString = #file,
     fileID: StaticString = #fileID,
     line: UInt = #line
-  ) -> _PresentingReducer<Self, ID, Presented> {
+  ) -> _PresentingReducer<Self, ID, Presented>
+  where ID: Hashable,
+        Presented: Reducer,
+        Presented.State == PresentedState,
+        Presented.Action == PresentedAction
+  {
     .init(
       parent: self,
       presented: presented(),

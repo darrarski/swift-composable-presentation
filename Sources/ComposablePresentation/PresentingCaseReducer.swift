@@ -17,19 +17,24 @@ extension Reducer {
   ///   - presented: Presented reducer.
   /// - Returns: Combined reducer
   @inlinable
-  public func presenting<ID: Hashable, Enum, Presented: Reducer>(
+  public func presenting<ID, Enum, PresentedState, PresentedAction, Presented>(
     presentationID toPresentationID: ToPresentationID<State> = .typed(Presented.self),
     unwrapping toEnum: WritableKeyPath<State, Enum?>,
-    case toCase: CasePath<Enum, Presented.State>,
+    case toCase: CasePath<Enum, PresentedState>,
     id toPresentedID: _PresentingCaseReducer<Self, Enum, ID, Presented>.ToPresentedID,
-    action toPresentedAction: CasePath<Action, Presented.Action>,
+    action toPresentedAction: CasePath<Action, PresentedAction>,
     onPresent: _PresentingCaseReducer<Self, Enum, ID, Presented>.ActionHandler = .empty,
     onDismiss: _PresentingCaseReducer<Self, Enum, ID, Presented>.ActionHandler = .empty,
-    @ReducerBuilderOf<Presented> presented: () -> Presented,
+    @ReducerBuilder<PresentedState, PresentedAction> presented: () -> Presented,
     file: StaticString = #file,
     fileID: StaticString = #fileID,
     line: UInt = #line
-  ) -> _PresentingCaseReducer<Self, Enum, ID, Presented> {
+  ) -> _PresentingCaseReducer<Self, Enum, ID, Presented>
+  where ID: Hashable,
+        Presented: Reducer,
+        Presented.State == PresentedState,
+        Presented.Action == PresentedAction
+  {
     .init(
       parent: self,
       presented: presented(),

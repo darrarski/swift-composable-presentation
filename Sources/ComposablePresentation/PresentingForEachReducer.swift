@@ -17,17 +17,22 @@ extension Reducer {
   ///   - element: Element reducer.
   /// - Returns: Combined reducer.
   @inlinable
-  public func presentingForEach<ID: Hashable, Element: Reducer>(
+  public func presentingForEach<ID, ElementState, ElementAction, Element>(
     presentationID toPresentationID: ToPresentationID<State> = .typed(Element.self),
-    state toElementState: WritableKeyPath<State, IdentifiedArray<ID, Element.State>>,
-    action toElementAction: CasePath<Action, (ID, Element.Action)>,
+    state toElementState: WritableKeyPath<State, IdentifiedArray<ID, ElementState>>,
+    action toElementAction: CasePath<Action, (ID, ElementAction)>,
     onPresent: PresentingForEachReducerAction<ID, State, Action> = .empty,
     onDismiss: PresentingForEachReducerAction<ID, State, Action> = .empty,
-    @ReducerBuilderOf<Element> element: () -> Element,
+    @ReducerBuilder<ElementState, ElementAction> element: () -> Element,
     file: StaticString = #file,
     fileID: StaticString = #fileID,
     line: UInt = #line
-  ) -> _PresentingForEachReducer<Self, ID, Element> {
+  ) -> _PresentingForEachReducer<Self, ID, Element>
+  where ID: Hashable,
+        Element: Reducer,
+        Element.State == ElementState,
+        Element.Action == ElementAction
+  {
     .init(
       parent: self,
       toPresentationID: toPresentationID,
