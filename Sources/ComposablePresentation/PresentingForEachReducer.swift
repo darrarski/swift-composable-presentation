@@ -24,7 +24,6 @@ extension Reducer {
     onPresent: PresentingForEachReducerAction<ID, State, Action> = .empty,
     onDismiss: PresentingForEachReducerAction<ID, State, Action> = .empty,
     @ReducerBuilder<ElementState, ElementAction> element: () -> Element,
-    file: StaticString = #file,
     fileID: StaticString = #fileID,
     line: UInt = #line
   ) -> _PresentingForEachReducer<Self, ID, Element>
@@ -41,7 +40,6 @@ extension Reducer {
       onPresent: onPresent,
       onDismiss: onDismiss,
       element: element(),
-      file: file,
       fileID: fileID,
       line: line
     )
@@ -75,9 +73,6 @@ public struct _PresentingForEachReducer<
   let element: Element
 
   @usableFromInline
-  let file: StaticString
-
-  @usableFromInline
   let fileID: StaticString
 
   @usableFromInline
@@ -92,7 +87,6 @@ public struct _PresentingForEachReducer<
     onPresent: PresentingForEachReducerAction<ID, State, Action> = .empty,
     onDismiss: PresentingForEachReducerAction<ID, State, Action> = .empty,
     element: Element,
-    file: StaticString = #file,
     fileID: StaticString = #fileID,
     line: UInt = #line
   ) {
@@ -103,7 +97,6 @@ public struct _PresentingForEachReducer<
     self.onPresent = onPresent
     self.onDismiss = onDismiss
     self.element = element
-    self.file = file
     self.fileID = fileID
     self.line = line
   }
@@ -135,7 +128,6 @@ public struct _PresentingForEachReducer<
           toElementState,
           action: toElementAction,
           element: { element },
-          file: file,
           fileID: fileID,
           line: line
         )

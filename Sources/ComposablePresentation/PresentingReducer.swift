@@ -24,7 +24,6 @@ extension Reducer {
     onPresent: PresentingReducerAction<State, PresentedState, Action> = .empty,
     onDismiss: PresentingReducerAction<State, PresentedState, Action> = .empty,
     @ReducerBuilder<PresentedState, PresentedAction> presented: () -> Presented,
-    file: StaticString = #file,
     fileID: StaticString = #fileID,
     line: UInt = #line
   ) -> _PresentingReducer<Self, ID, Presented>
@@ -42,7 +41,6 @@ extension Reducer {
       toPresentedAction: toPresentedAction,
       onPresent: onPresent,
       onDismiss: onDismiss,
-      file: file,
       fileID: fileID,
       line: line
     )
@@ -79,9 +77,6 @@ public struct _PresentingReducer<
   let onDismiss: PresentingReducerAction<Parent.State, Presented.State, Parent.Action>
 
   @usableFromInline
-  let file: StaticString
-
-  @usableFromInline
   let fileID: StaticString
 
   @usableFromInline
@@ -97,7 +92,6 @@ public struct _PresentingReducer<
     toPresentedAction: CasePath<Parent.Action, Presented.Action>,
     onPresent: PresentingReducerAction<Parent.State, Presented.State, Parent.Action>,
     onDismiss: PresentingReducerAction<Parent.State, Presented.State, Parent.Action>,
-    file: StaticString,
     fileID: StaticString,
     line: UInt
   ) {
@@ -109,7 +103,6 @@ public struct _PresentingReducer<
     self.toPresentedAction = toPresentedAction
     self.onPresent = onPresent
     self.onDismiss = onDismiss
-    self.file = file
     self.fileID = fileID
     self.line = line
   }
@@ -137,7 +130,6 @@ public struct _PresentingReducer<
             keyPath,
             action: toPresentedAction,
             then: { presented },
-            file: file,
             fileID: fileID,
             line: line
           )
@@ -150,7 +142,6 @@ public struct _PresentingReducer<
             casePath,
             action: toPresentedAction,
             then: { presented },
-            file: file,
             fileID: fileID,
             line: line
           )
