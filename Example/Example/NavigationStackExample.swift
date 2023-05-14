@@ -115,7 +115,7 @@ struct NavigationStackExampleView: View {
           .controlSize(.large)
           .navigationTitle("Root")
           .navigationDestination(
-            forEach: store.scope(state: \.stack),
+            forEach: store.scope(state: \.stack, action: { $0 }),
             action: NavigationStackExample.Action.destination,
             destination: DestinationView.init(store:)
           )

@@ -33,7 +33,7 @@ extension View {
             ),
             content: {
               IfLetStore(
-                store.scope(state: mapState),
+                store.scope(state: mapState, action: { $0 }),
                 then: content
               )
             }

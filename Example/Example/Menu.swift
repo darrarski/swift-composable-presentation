@@ -148,7 +148,7 @@ struct MenuView: View {
 
   var body: some View {
     IfLetStore(
-      store.scope(state: \.destination),
+      store.scope(state: \.destination, action: { $0 }),
       then: { store in
         VStack(spacing: 0) {
           SwitchStore(store) {
